@@ -1,0 +1,121 @@
+<?xml version="1.0"?>
+<!--
+Copyright (c) 2023 Project CHIP Authors
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<configurator>
+  <domain name="CHIP"/>
+
+  <enum name="MeasurementTypeEnum" type="ENUM8">
+    <cluster code="0x6661"/>
+    <item name="Unspecified"    value="0x00"  optional="false"/>
+    <item name="Voltage"        value="0x01"  optional="false"/>
+    <item name="Current"        value="0x02"  optional="false"/>
+    <item name="ActivePower"    value="0x03"  optional="false"/>
+    <item name="RMSCurrent"     value="0x04"  optional="true" />
+    <item name="RMSPower"       value="0x05"  optional="true" />
+    <item name="ApparentPower"  value="0x06"  optional="true" />
+    <item name="ReactivePower"  value="0x07"  optional="true" />
+    <item name="Frequency"      value="0x08"  optional="true" />
+    <item name="PowerFactor"    value="0x09"  optional="true" />
+    <item name="LineCurrent"    value="0x0a"  optional="true" />
+    <item name="NeutralCurrent" value="0x0b"  optional="true" />
+  </enum>
+
+
+  <enum name="PowerModeEnum" type="ENUM8">
+    <cluster code="0x6661"/>
+    <item name="Unspecified" value="0x00"  optional="false"/>
+    <item name="DC"          value="0x01"  optional="true"/>
+    <item name="AC"          value="0x02"  optional="true"/>
+  </enum>
+
+
+  <struct name="MeasurementAccuracyStruct">
+    <cluster code="0x6661"/>
+    <item name="MeasurementType"   type="MeasurementTypeEnum"  optional="false"/>
+    <item name="Measured"          type="BOOLEAN"              optional="false"/>
+    <item name="PercentTypical"    type="percent100ths"        optional="true"/>
+    <item name="PercentMin"        type="percent100ths"        optional="true"/>
+    <item name="PercentMax"        type="percent100ths"        optional="true"/>
+    <item name="FixedTypical"      type="INT64S"               optional="true"/>
+    <item name="FixedMin"          type="INT64S"               optional="true"/>
+    <item name="FixedMax"          type="INT64S"               optional="true"/>
+  </struct>
+
+  <struct name="MeasurementRangeStruct">
+    <cluster code="0x6661"/>
+    <item name="MeasurementType"   type="MeasurementTypeEnum"  optional="false" isNullable="false"/>
+    <item name="Min"               type="INT64S"               optional="false" isNullable="true"/>
+    <item name="MinTimestamp"      type="epoch_s"              optional="false" isNullable="true"/>
+    <item name="Max"               type="INT64S"               optional="false" isNullable="true"/>
+    <item name="MaxTimestamp"      type="epoch_s"              optional="false" isNullable="true"/>
+  </struct>
+
+
+  <struct name="HarmonicMeasurementStruct">
+    <cluster code="0x6661"/>
+    <item name="Order"         type="INT8U"   optional="false"  isNullable="false"/>
+    <item name="Measurement"   type="INT32S"  optional="false"  isNullable="true" />
+  </struct>
+
+
+  <cluster>
+    <name>Electrical Power Measurement</name>
+    <domain>Measurement &amp; Sensing</domain>
+    <description>This cluster provides a mechanism for querying data about electrical power as measured by the device.</description>
+    <code>0x6661</code>
+    <define>ELECTRICAL_POWER_MEASUREMENT_CLUSTER</define>
+    <client init="false" tick="false">true</client>
+    <server init="false" tick="false">true</server> 
+    <attribute side="server" code="0x0000" define="POWER_MODE"        type="PowerModeEnum" writable="false" optional="false" isNullable="false">PowerMode</attribute>
+    <attribute side="server" code="0x0001" define="ACCURACY"          type="ARRAY"         writable="false" optional="false" isNullable="false"  entryType="MeasurementAccuracyStruct" >Accuracy</attribute> <!-- length="???" -->
+    <attribute side="server" code="0x0002" define="RANGES"            type="ARRAY"         writable="false" optional="false" isNullable="false"  entryType="MeasurementRangeStruct"    >Ranges</attribute>   <!-- length="???" -->
+    <attribute side="server" code="0x0003" define="VOLTAGE"           type="INT64S" writable="false" optional="false" isNullable="true">Voltage</attribute>
+    <attribute side="server" code="0x0004" define="CURRENT"           type="INT64S" writable="false" optional="false" isNullable="true">Current</attribute>
+    <attribute side="server" code="0x0005" define="ACTIVE_POWER"      type="INT64S" writable="false" optional="false" isNullable="true">ActivePower</attribute>
+    <attribute side="server" code="0x0006" define="RMS_CURRENT"       type="INT64S" writable="false" optional="true"  isNullable="true">RmsCurrent</attribute >
+    <attribute side="server" code="0x0007" define="RMS_POWER"         type="INT64S" writable="false" optional="true"  isNullable="true">RmsPower</attribute >
+    <attribute side="server" code="0x0008" define="APPARENT_POWER"    type="INT64S" writable="false" optional="true"  isNullable="true">ApparentPower</attribute >
+    <attribute side="server" code="0x0009" define="REACTIVE_POWER"    type="INT64S" writable="false" optional="true"  isNullable="true">ReactivePower</attribute >
+    <attribute side="server" code="0x000a" define="FREQUENCY"         type="INT64S" writable="false" optional="true"  isNullable="true" min="0" max="1000000">Frequency</attribute >
+    <attribute side="server" code="0x000b" define="HARMONIC_CURRENT"  type="ARRAY"  writable="false" optional="true"  isNullable="true" entryType="HarmonicMeasurementStruct" >HarmonicCurrents</attribute > <!-- length="???" -->
+    <attribute side="server" code="0x000c" define="HARMONIC_PHASES"   type="ARRAY"  writable="false" optional="true"  isNullable="true" entryType="HarmonicMeasurementStruct" >HarmonicPhases</attribute >   <!-- length="???" -->
+    <attribute side="server" code="0x000d" define="POWER_FACTOR"      type="INT64S" writable="false" optional="true"  isNullable="true" min="-10000" max="10000">PowerFactor</attribute >
+    <attribute side="server" code="0x000e" define="LINE_CURRENT"      type="INT64S" writable="false" optional="true"  isNullable="true">LineCurrent</attribute >
+    <attribute side="server" code="0x000f" define="NEUTRAL_CURRENT"   type="INT64S" writable="false" optional="true"  isNullable="true">NeutralCurrent</attribute >
+
+    <event code="0x0000" name="MeasurementPeriodRange" priority="info" side="server" optional="false">
+      <description>Generated when ? zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz missing spec.</description>
+      <field id="0" name="MeasurementType" type="MeasurementTypeEnum"  optional="false" />
+      <field id="1" name="PeriodStart"     type="epoch_s"    optional="false"/>
+      <field id="2" name="PeriodEnd"       type="epoch_s"    optional="false"/>
+      <field id="3" name="Min"             type="INT64S"     optional="false"/>
+      <field id="4" name="MinTimestamp"    type="epoch_s"    optional="false"/>
+      <field id="5" name="Max"             type="INT64S"     optional="false"/>
+      <field id="6" name="MaxTimestamp"    type="epoch_s"    optional="false"/>
+    </event>
+  </cluster>
+
+
+  <bitmap name="Feature" type="BITMAP32">
+    <cluster code="0x6661"/>
+    <field mask="0x1"  name="DirectCurrent" />
+    <field mask="0x2"  name="AlternatingCurrent" />
+    <field mask="0x4"  name="ThreePhasePower" />
+    <field mask="0x8"  name="Harmonics" />
+    <field mask="0x10" name="PowerQuality" />
+  </bitmap>
+</configurator>

@@ -65,6 +65,20 @@ pw_proto_library("button_service") {
   prefix = "button_service"
 }
 
+pw_proto_library("elec_service") {
+  sources = [ "protos/elec_service.proto" ]
+  deps = [ "$dir_pw_protobuf:common_protos" ]
+  strip_prefix = "protos"
+  prefix = "elec_service"
+}
+
+pw_proto_library("evse_service") {
+  sources = [ "protos/evse_service.proto" ]
+  deps = [ "$dir_pw_protobuf:common_protos" ]
+  strip_prefix = "protos"
+  prefix = "evse_service"
+}
+
 pw_proto_library("lighting_service") {
   sources = [ "protos/lighting_service.proto" ]
   deps = [ "$dir_pw_protobuf:common_protos" ]

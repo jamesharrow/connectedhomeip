@@ -1,0 +1,222 @@
+<?xml version="1.0"?>
+<!--
+Copyright (c) 2023 Project CHIP Authors
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<configurator>
+  <domain name="CHIP"/>
+
+  <enum name="CostTypeEnum" type="enum8">
+    <cluster code="0x0098"/>
+    <item name="Financial"            value="0"/>
+    <item name="GHGEmissions"         value="1"/>
+    <item name="Comfort"              value="2"/>
+    <item name="Temperature"          value="3"/>
+  </enum>
+
+  <enum name="EsaTypeEnum" type="enum8">
+    <cluster code="0x0098"/>
+    <item name="EVSE"                 value="0"/>
+    <item name="SpaceHeating"         value="1"/>
+    <item name="WaterHeating"         value="2"/>
+    <item name="SpaceCooling"         value="3"/>
+    <item name="SpaceHeatingCooling"  value="4"/>
+    <item name="BatteryStorage"       value="5"/>
+    <item name="SolarPV"              value="6"/>
+    <item name="FridgeFreezer"        value="7"/>
+    <item name="WashingMachine"       value="8"/>
+    <item name="Dishwasher"           value="9"/>
+    <item name="Cooking"              value="10"/>
+    <item name="Other"                value="255"/>
+  </enum>
+
+  <enum name="EsaStateEnum" type="enum8">
+    <cluster code="0x0098"/>
+    <item name="Offline"              value="0"/>
+    <item name="Online"               value="1"/>
+    <item name="Fault"                value="2"/>
+    <item name="UserOptOut"           value="3"/>
+    <item name="PowerAdjustActive"    value="4"/>
+    <item name="Paused"               value="5"/>
+  </enum>
+
+  <enum name="CauseEnum" type="enum8">
+    <cluster code="0x0098"/>
+    <item name="NormalCompletion"     value="0"/>
+    <item name="Offline"              value="1"/>
+    <item name="Fault"                value="2"/>
+    <item name="UserOptout"           value="3"/>
+  </enum>
+
+  <struct name="CostStruct">
+    <cluster code="0x0098"/>
+    <item name="CostType"      type="CostTypeEnum"  optional="false"/>
+    <item name="Value"         type="INT32S"        optional="false"/>
+    <item name="DecimalPoints" type="INT8U"         optional="false"/>
+    <item name="Currency"      type="INT16U"        optional="true" />
+  </struct>
+
+  <struct name="PowerAdjustStruct">
+    <cluster code="0x0098"/>
+    <!-- Consider if this should be power-mW standard type? -->
+    <item name="MinPower"    type="INT32S"          optional="false"/>
+    <!-- Consider if this should be power-mW standard type? -->
+    <item name="MaxPower"    type="INT32S"          optional="false"/>
+    <item name="MinDuration" type="elapsed_s"       optional="false"/>
+    <item name="MaxDuration" type="elapsed_s"       optional="false"/>
+  </struct>
+
+
+  <struct name="ForecastStruct">
+    <cluster code="0x0098"/>
+    <item name="ForecastId"         type="INT16U"   optional="false"/>
+    <item name="ActiveSlotNumber"   type="INT16U"   optional="false" isNullable="true"/>
+    <item name="StartTime"          type="epoch_s"  optional="false"/>
+    <item name="EndTime"            type="epoch_s"  optional="true"/>
+    <item name="EarliestStartTime"  type="epoch_s"  optional="true" isNullable="true"/>
+    <item name="LatestEndTime"      type="epoch_s"  optional="true"/>
+    <item name="IsPauseable"        type="BOOLEAN"  optional="false"/>
+    <item name="Slots"              type="SlotStruct" optional="false" array="true" length="16"/>
+  </struct>
+
+  <struct name="SlotStruct">
+    <cluster code="0x0098"/>
+    <item name="MinDuration"        type="elapsed_s"  optional="false"/>
+    <item name="MaxDuration"        type="elapsed_s"  optional="false"/>
+    <item name="DefaultDuration"    type="elapsed_s"  optional="false"/>
+    <item name="ElapsedSlotTime"    type="elapsed_s"  optional="false"/>
+    <item name="RemainingSlotTime"  type="elapsed_s"  optional="false"/>
+    <item name="SlotIsPauseable"    type="BOOLEAN"    optional="true"/>
+    <item name="ManufacturerESAState" type="INT16U"    optional="true"/>
+    <!-- Consider if this should be power-mW standard type? -->
+    <item name="NominalPower"       type="INT32S"     optional="true"/>
+    <!-- Consider if this should be power-mW standard type? -->
+    <item name="MinPower"           type="INT32S"     optional="true"/>
+    <!-- Consider if this should be power-mW standard type? -->
+    <item name="MaxPower"           type="INT32S"     optional="true"/>
+    <!-- Consider if this should be energy-Wh standard type? -->
+    <item name="NominalEnergy"      type="INT32S"     optional="true"/>
+    <item name="Costs"              type="CostStruct" optional="true" array="true" length="5"/>
+    <!-- Consider if this should be power-mW standard type? -->
+    <item name="MinPowerAdjustment" type="INT32S"     optional="true"/>
+    <!-- Consider if this should be power-mW standard type? -->
+    <item name="MaxPowerAdjustment" type="INT32S"     optional="true"/>
+    <item name="MinDurationAdjustment" type="elapsed_s"  optional="true"/>
+    <item name="MaxDurationAdjustment" type="elapsed_s"  optional="true"/>
+  </struct>
+
+  <struct name="SlotAdjustmentStruct">
+    <cluster code="0x0098"/>
+    <item name="SlotIndex"    type="INT8U"     optional="false"/>
+    <!-- Consider if this should be power-mW standard type? -->    
+    <item name="NominalPower" type="INT32S"    optional="false"/>
+    <item name="Duration"     type="elapsed_s" optional="false"/>
+  </struct>
+
+  <struct name="ConstraintsStruct">
+    <cluster code="0x0098"/>
+    <item name="StartTime"     type="epoch_s"   optional="false"/>
+    <item name="Duration"      type="elapsed_s" optional="false"/>
+    <!-- Consider if this should be power-mW standard type? -->
+    <item name="NominalPower"  type="INT32S"    optional="true"/>
+    <!-- Consider if this should be energy-Wh standard type? -->   
+    <item name="MaximumEnergy" type="INT32S"    optional="true"/>
+    <item name="LoadControl"   type="INT8S"     optional="true"/>
+  </struct>
+
+  <cluster>
+    <name>Device Energy Management</name>
+    <domain>Energy Management</domain>
+    <description>This cluster allows a client to manage the energy usage of a device. An example of such a client could be an Energy Management System (EMS) which controls an Energy Smart Appliance (ESA).</description>
+    <code>0x0098</code>
+    <define>DEVICE_ENERGY_MANAGEMENT_CLUSTER</define>
+    <client init="false" tick="false">true</client>
+    <server init="false" tick="false">true</server> 
+    <attribute side="server" code="0x0000" define="ESA_TYPE"                    type="EsaTypeEnum"    writable="false" optional="false"  isNullable="false" default="255">EsaType</attribute>
+    <attribute side="server" code="0x0001" define="ESA_IS_GENERATOR"            type="BOOLEAN"        writable="false" optional="false"  isNullable="false" default="false">EsaIsGenerator</attribute>
+    <attribute side="server" code="0x0002" define="ESA_STATE"                   type="EsaStateEnum"   writable="false" optional="false"  isNullable="false" default="0">EsaState</attribute>
+    <!-- Consider if this should be power-mW standard type? -->
+    <attribute side="server" code="0x0003" define="ABS_MIN_POWER"               type="INT32S"         writable="false" optional="false"  isNullable="false" default="0">AbsMinPower</attribute>
+    <!-- Consider if this should be power-mW standard type? -->
+    <attribute side="server" code="0x0004" define="ABS_MAX_POWER"               type="INT32S"         writable="false" optional="false"  isNullable="false" default="0">AbsMaxPower</attribute>
+    <attribute side="server" code="0x0005" define="POWER_ADJUSTMENT_CAPABILITY" type="ARRAY"          writable="false" optional="true"   isNullable="true"  default="" entryType="PowerAdjustStruct" length="16">PowerAdjustmentCapability</attribute>
+    <attribute side="server" code="0x0006" define="FORECAST"                    type="ForecastStruct" writable="false" optional="true"   isNullable="true"  default="">Forecast</attribute >
+
+    <command source="client" code="0x00" name="PowerAdjustRequest" optional="true">
+      <description>Given valid args, the ESA begins to adjust its power consumption or generation to the level requested.</description>
+    <!-- Consider if this should be power-mW standard type? -->
+      <arg name="Power"    type="INT32S" optional="false"/>
+      <arg name="Duration" type="elapsed_s" optional="false"/>
+    </command>
+
+    <!-- Consider if this PA should be optional -->
+    <command source="client" code="0x01" name="CancelPowerAdjustRequest" optional="true">
+      <description>The ESA SHALL end the active Power adjustment session and return to normal (or idle) power levels.</description>
+    </command>
+
+    <command source="client" code="0x02" name="StartTimeAdjustRequest" optional="true">
+      <description>If the ESA supports Forecast Adjustment and the EsaState is not UserOptOut, it may have its start time shifted after the EarliestStartTime.</description>
+      <arg name="RequestedStartTime" type="epoch_s"   optional="false"/>
+    </command>
+
+    <command source="client" code="0x03" name="PauseRequest" optional="true">
+      <description>The ESA may pause its current operation, given various conditions.</description>
+    </command>
+
+    <command source="client" code="0x04" name="ResumeRequest" optional="true">
+      <description>The ESA may resume its current operation, given various conditions.</description>
+    </command>
+
+    <command source="client" code="0x05" name="ModifyForecastRequest" optional="true">
+      <description>If the ESA supports FA, and the EsaState is not UserOptout it may have its forecast adjusted by a client.</description>
+      <arg name="ForecastId"      type="INT32U"               optional="false"/>
+      <arg name="SlotAdjustments" type="SlotAdjustmentStruct" optional="false" array="true" length="16"/>
+    </command>
+
+    <command source="client" code="0x06" name="RequestConstraintBasedForecast" optional="true">
+      <description>If the ESA supports FA, and the EsaState is not UserOptout it may be requested to generate a new forecast by a client.</description>
+      <arg name="Constraints"     type="ConstraintsStruct"    optional="false" array="true" length="10"/>
+    </command>
+
+    <event code="0x00" name="PowerAdjustStart" priority="info" side="server" optional="true">
+      <description>Generated when the Power Adjustment session is started.</description>
+    </event>
+
+    <event code="0x01" name="PowerAdjustEnd" priority="info" side="server" optional="true">
+      <description>Generated when the Power Adjustment session ends.</description>
+      <field id="0" name="Cause"     type="CauseEnum"/>
+      <field id="1" name="Duration"  type="elapsed_s"/>
+<!-- Consider if this should be energy-Wh standard type? -->       
+      <field id="2" name="EnergyUse" type="INT32S"/>
+    </event>
+
+    <event code="0x02" name="Paused" priority="info" side="server" optional="true">
+      <description>Generated when the ESA enters the Paused state.</description>
+    </event>
+
+    <event code="0x03" name="Resumed" priority="info" side="server" optional="true">
+      <description>Generated when the ESA leaves the Paused state and resumes operation.</description>
+    </event>
+
+  </cluster>
+
+  <bitmap name="Feature" type="BITMAP32">
+    <cluster code="0x0098"/>
+    <field mask="0x1" name="PowerAdjustment"/>
+    <field mask="0x2" name="PowerForecastReporting"/>
+    <field mask="0x4" name="StateForecastReporting"/>
+    <field mask="0x8" name="ForecastAdjustment"/>
+  </bitmap>
+</configurator>

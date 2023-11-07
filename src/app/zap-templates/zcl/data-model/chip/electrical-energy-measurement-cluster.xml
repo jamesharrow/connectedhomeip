@@ -1,0 +1,94 @@
+<?xml version="1.0"?>
+<!--
+Copyright (c) 2023 Project CHIP Authors
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<configurator>
+  <domain name="CHIP"/>
+
+  <cluster>
+    <name>Electrical Energy Measurement</name>
+    <domain>Measurement &amp; Sensing</domain>
+    <description>This cluster provides a mechanism for querying data about the electrical energy consumed or provided by the device.</description>
+    <code>0x6662</code>
+    <define>ELECTRICAL_ENERGY_MEASUREMENT_CLUSTER</define>
+    <client init="false" tick="false">true</client>
+    <server init="false" tick="false">true</server> 
+
+    <attribute side="server" code="0x0000" define="MEASURED"                             type="BOOLEAN"       writable="false" optional="false" isNullable="false">Measured</attribute>
+    <attribute side="server" code="0x0001" define="CUMULATIVE_ENERGY_IMPORTED_TIME"      type="epoch_s"       writable="false" optional="false" isNullable="true" >CumulativeEnergyImportedTime</attribute>
+    <attribute side="server" code="0x0002" define="CUMULATIVE_ENERGY_IMPORTED"           type="INT64U"        writable="false" optional="false" isNullable="true" >CumulativeEnergyImported</attribute>
+    <attribute side="server" code="0x0003" define="CUMULATIVE_ENERGY_EXPORTED_TIME"      type="epoch_s"       writable="false" optional="false" isNullable="true" >CumulativeEnergyExportedTime</attribute>
+    <attribute side="server" code="0x0004" define="CUMULATIVE_ENERGY_EXPORTED"           type="INT64U"        writable="false" optional="false" isNullable="true" >CumulativeEnergyExported</attribute>
+    <attribute side="server" code="0x0005" define="PERIODIC_ENERGY_IMPORTED_START_TIME"  type="epoch_s"       writable="false" optional="false" isNullable="true" >PeriodicEnergyImportedStartTime</attribute>
+    <attribute side="server" code="0x0006" define="PERIODIC_ENERGY_IMPORTED_END_TIME"    type="epoch_s"       writable="false" optional="false" isNullable="true" >PeriodicEnergyImportedEndTime</attribute>
+    <attribute side="server" code="0x0007" define="PERIODIC_ENERGY_IMPORTED"             type="INT64U"        writable="false" optional="false" isNullable="true" >PeriodicEnergyImported</attribute>
+    <attribute side="server" code="0x0008" define="PERIODIC_ENERGY_EXPORTED_START_TIME"  type="epoch_s"       writable="false" optional="false" isNullable="true" >PeriodicEnergyExportedStartTime</attribute>
+    <attribute side="server" code="0x0009" define="PERIODIC_ENERGY_EXPORTED_END_TIME"    type="epoch_s"       writable="false" optional="false" isNullable="true" >PeriodicEnergyExportedEndTime</attribute>
+    <attribute side="server" code="0x000a" define="PERIODIC_ENERGY_EXPORTED"             type="INT64U"        writable="false" optional="false" isNullable="true" >PeriodicEnergyExported</attribute>
+    <attribute side="server" code="0x000b" define="EPHEMERAL_ENERGY_IMPORTED"            type="INT64U"        writable="false" optional="false" isNullable="true" >EphemeralEnergyImported</attribute>
+    <attribute side="server" code="0x000c" define="EPHEMERAL_ENERGY_EXPORTED"            type="INT64U"        writable="false" optional="false" isNullable="true" >EphemeralEnergyExported</attribute>
+
+
+    <event code="0x0000" name="CumulativeEnergyImported" priority="info" side="server" optional="false">
+      <description>Generated when EnergyImported was measured.</description>
+      <field id="0" name="ImportedTimestamp" type="epoch_s"  optional="false" />
+      <field id="1" name="EnergyImported"    type="INT64U"   optional="false" />
+    </event>
+
+    <event code="0x0001" name="CumulativeEnergyExported" priority="info" side="server" optional="false">
+      <description>Generated when the electrical energy delievered was measured.</description>
+      <field id="0" name="ExportedTimestamp" type="epoch_s"  optional="false" />
+      <field id="1" name="EnergyExported"    type="INT64U"   optional="false" />
+    </event>
+
+    <event code="0x0003" name="PeriodicEnergyImported" priority="info" side="server" optional="false">
+      <description>Generated when the electrical energy consumed was measured.</description>
+      <field id="0" name="PeriodStart"       type="epoch_s"  optional="false" />
+      <field id="1" name="PeriodEnd"         type="epoch_s"  optional="false" />
+      <field id="2" name="EnergyImported"    type="INT64U"   optional="false" />
+    </event>
+
+    <event code="0x0004" name="PeriodicEnergyExported" priority="info" side="server" optional="false">
+      <description>Generated when the electrical energy delievered is measured.</description>
+      <field id="0" name="PeriodStart"       type="epoch_s"  optional="false" />
+      <field id="1" name="PeriodEnd"         type="epoch_s"  optional="false" />
+      <field id="2" name="EnergyExported"    type="INT64U"   optional="false" />
+    </event>
+
+    <event code="0x0005" name="EphemeralEnergyImported" priority="info" side="server" optional="false">
+      <description>Generated when the electrical energy consumed is measured.</description>
+      <field id="0" name="ImportedTimestamp"  type="systime_ms"  optional="false" />
+      <field id="1" name="EnergyImported"     type="INT64U"      optional="false" />
+    </event>
+
+    <event code="0x0006" name="EphemeralEnergyExported" priority="info" side="server" optional="false">
+      <description>Generated when the electrical energy consumed is measured.</description>
+      <field id="0" name="ExportedTimestamp"  type="systime_ms"  optional="false" />
+      <field id="1" name="EnergyExported"     type="INT64U"      optional="false" />
+    </event>
+
+  </cluster>
+
+
+  <bitmap name="Feature" type="BITMAP32">
+    <cluster code="0x6662"/>
+    <field mask="0x1"  name="ImportedEnergy" />
+    <field mask="0x2"  name="ExportedEnergy" />
+    <field mask="0x4"  name="CumulativeEnergy" />
+    <field mask="0x8"  name="PeriodicEnergy" />
+    <field mask="0x10" name="EphemeralEnergy" />
+  </bitmap>
+</configurator>
