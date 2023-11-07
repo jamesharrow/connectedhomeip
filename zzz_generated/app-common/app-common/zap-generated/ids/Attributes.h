@@ -3418,9 +3418,9 @@ namespace MaximumChargeCurrent {
 static constexpr AttributeId Id = 0x00000007;
 } // namespace MaximumChargeCurrent
 
-namespace MaximumdDischargeCurrent {
+namespace MaximumDischargeCurrent {
 static constexpr AttributeId Id = 0x00000008;
-} // namespace MaximumdDischargeCurrent
+} // namespace MaximumDischargeCurrent
 
 namespace UserMaximumChargeCurrent {
 static constexpr AttributeId Id = 0x00000009;

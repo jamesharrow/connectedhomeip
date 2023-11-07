@@ -1812,10 +1812,10 @@ EmberAfStatus Get(chip::EndpointId endpoint, uint32_t * value); // int32u
 EmberAfStatus Set(chip::EndpointId endpoint, uint32_t value);
 } // namespace MaximumChargeCurrent
 
-namespace MaximumdDischargeCurrent {
+namespace MaximumDischargeCurrent {
 EmberAfStatus Get(chip::EndpointId endpoint, uint32_t * value); // int32u
 EmberAfStatus Set(chip::EndpointId endpoint, uint32_t value);
-} // namespace MaximumdDischargeCurrent
+} // namespace MaximumDischargeCurrent
 
 namespace UserMaximumChargeCurrent {
 EmberAfStatus Get(chip::EndpointId endpoint, uint32_t * value); // int32u

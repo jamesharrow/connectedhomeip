@@ -13943,8 +13943,8 @@ CHIP_ERROR TypeInfo::DecodableType::Decode(TLV::TLVReader & reader, const Concre
         return DataModel::Decode(reader, minimumChargeCurrent);
     case Attributes::MaximumChargeCurrent::TypeInfo::GetAttributeId():
         return DataModel::Decode(reader, maximumChargeCurrent);
-    case Attributes::MaximumdDischargeCurrent::TypeInfo::GetAttributeId():
-        return DataModel::Decode(reader, maximumdDischargeCurrent);
+    case Attributes::MaximumDischargeCurrent::TypeInfo::GetAttributeId():
+        return DataModel::Decode(reader, maximumDischargeCurrent);
     case Attributes::UserMaximumChargeCurrent::TypeInfo::GetAttributeId():
         return DataModel::Decode(reader, userMaximumChargeCurrent);
     case Attributes::RandomisationDelayWindow::TypeInfo::GetAttributeId():

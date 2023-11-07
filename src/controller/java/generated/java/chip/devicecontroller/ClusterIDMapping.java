@@ -8431,7 +8431,7 @@ public class ClusterIDMapping {
             CircuitCapacity(5L),
             MinimumChargeCurrent(6L),
             MaximumChargeCurrent(7L),
-            MaximumdDischargeCurrent(8L),
+            MaximumDischargeCurrent(8L),
             UserMaximumChargeCurrent(9L),
             RandomisationDelayWindow(10L),
             NumberOfWeeklyTargets(33L),

@@ -8406,17 +8406,17 @@ public class ClusterReadMapping {
           readEnergyEvseMaximumChargeCurrentCommandParams
         );
         result.put("readMaximumChargeCurrentAttribute", readEnergyEvseMaximumChargeCurrentAttributeInteractionInfo);
-     Map<String, CommandParameterInfo> readEnergyEvseMaximumdDischargeCurrentCommandParams = new LinkedHashMap<String, CommandParameterInfo>();
-        InteractionInfo readEnergyEvseMaximumdDischargeCurrentAttributeInteractionInfo = new InteractionInfo(
+     Map<String, CommandParameterInfo> readEnergyEvseMaximumDischargeCurrentCommandParams = new LinkedHashMap<String, CommandParameterInfo>();
+        InteractionInfo readEnergyEvseMaximumDischargeCurrentAttributeInteractionInfo = new InteractionInfo(
           (cluster, callback, commandArguments) -> {
-            ((ChipClusters.EnergyEvseCluster) cluster).readMaximumdDischargeCurrentAttribute(
+            ((ChipClusters.EnergyEvseCluster) cluster).readMaximumDischargeCurrentAttribute(
               (ChipClusters.LongAttributeCallback) callback
             );
           },
           () -> new ClusterInfoMapping.DelegatedLongAttributeCallback(),
-          readEnergyEvseMaximumdDischargeCurrentCommandParams
+          readEnergyEvseMaximumDischargeCurrentCommandParams
         );
-        result.put("readMaximumdDischargeCurrentAttribute", readEnergyEvseMaximumdDischargeCurrentAttributeInteractionInfo);
+        result.put("readMaximumDischargeCurrentAttribute", readEnergyEvseMaximumDischargeCurrentAttributeInteractionInfo);
      Map<String, CommandParameterInfo> readEnergyEvseUserMaximumChargeCurrentCommandParams = new LinkedHashMap<String, CommandParameterInfo>();
         InteractionInfo readEnergyEvseUserMaximumChargeCurrentAttributeInteractionInfo = new InteractionInfo(
           (cluster, callback, commandArguments) -> {

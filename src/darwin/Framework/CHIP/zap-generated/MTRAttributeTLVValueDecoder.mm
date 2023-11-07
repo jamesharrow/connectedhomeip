@@ -7552,8 +7552,8 @@ static id _Nullable DecodeAttributeValueForEnergyEVSECluster(AttributeId aAttrib
     }
 #endif // MTR_ENABLE_PROVISIONAL
 #if MTR_ENABLE_PROVISIONAL
-    case Attributes::MaximumdDischargeCurrent::Id: {
-        using TypeInfo = Attributes::MaximumdDischargeCurrent::TypeInfo;
+    case Attributes::MaximumDischargeCurrent::Id: {
+        using TypeInfo = Attributes::MaximumDischargeCurrent::TypeInfo;
         TypeInfo::DecodableType cppValue;
         *aError = DataModel::Decode(aReader, cppValue);
         if (*aError != CHIP_NO_ERROR) {

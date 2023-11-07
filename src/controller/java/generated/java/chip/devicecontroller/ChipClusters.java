@@ -15592,14 +15592,14 @@ public class ChipClusters {
         subscribeMaximumChargeCurrentAttribute(chipClusterPtr, callback, minInterval, maxInterval);
     }
 
-    public void readMaximumdDischargeCurrentAttribute(
+    public void readMaximumDischargeCurrentAttribute(
         LongAttributeCallback callback) {
-        readMaximumdDischargeCurrentAttribute(chipClusterPtr, callback);
+        readMaximumDischargeCurrentAttribute(chipClusterPtr, callback);
     }
 
-    public void subscribeMaximumdDischargeCurrentAttribute(
+    public void subscribeMaximumDischargeCurrentAttribute(
         LongAttributeCallback callback, int minInterval, int maxInterval) {
-        subscribeMaximumdDischargeCurrentAttribute(chipClusterPtr, callback, minInterval, maxInterval);
+        subscribeMaximumDischargeCurrentAttribute(chipClusterPtr, callback, minInterval, maxInterval);
     }
 
     public void readUserMaximumChargeCurrentAttribute(
@@ -15888,9 +15888,9 @@ public class ChipClusters {
 
     private native void subscribeMaximumChargeCurrentAttribute(long chipClusterPtr, LongAttributeCallback callback, int minInterval, int maxInterval);
 
-    private native void readMaximumdDischargeCurrentAttribute(long chipClusterPtr, LongAttributeCallback callback);
+    private native void readMaximumDischargeCurrentAttribute(long chipClusterPtr, LongAttributeCallback callback);
 
-    private native void subscribeMaximumdDischargeCurrentAttribute(long chipClusterPtr, LongAttributeCallback callback, int minInterval, int maxInterval);
+    private native void subscribeMaximumDischargeCurrentAttribute(long chipClusterPtr, LongAttributeCallback callback, int minInterval, int maxInterval);
 
     private native void readUserMaximumChargeCurrentAttribute(long chipClusterPtr, LongAttributeCallback callback);
 

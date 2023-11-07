@@ -2736,7 +2736,7 @@ static BOOL AttributeIsSpecifiedInEnergyEVSECluster(AttributeId aAttributeId)
     case Attributes::MaximumChargeCurrent::Id: {
         return YES;
     }
-    case Attributes::MaximumdDischargeCurrent::Id: {
+    case Attributes::MaximumDischargeCurrent::Id: {
         return YES;
     }
     case Attributes::UserMaximumChargeCurrent::Id: {

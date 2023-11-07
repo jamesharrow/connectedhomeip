@@ -19579,7 +19579,7 @@ struct TypeInfo
     static constexpr bool MustUseTimedWrite() { return false; }
 };
 } // namespace MaximumChargeCurrent
-namespace MaximumdDischargeCurrent {
+namespace MaximumDischargeCurrent {
 struct TypeInfo
 {
     using Type             = uint32_t;
@@ -19587,10 +19587,10 @@ struct TypeInfo
     using DecodableArgType = uint32_t;
 
     static constexpr ClusterId GetClusterId() { return Clusters::EnergyEvse::Id; }
-    static constexpr AttributeId GetAttributeId() { return Attributes::MaximumdDischargeCurrent::Id; }
+    static constexpr AttributeId GetAttributeId() { return Attributes::MaximumDischargeCurrent::Id; }
     static constexpr bool MustUseTimedWrite() { return false; }
 };
-} // namespace MaximumdDischargeCurrent
+} // namespace MaximumDischargeCurrent
 namespace UserMaximumChargeCurrent {
 struct TypeInfo
 {
@@ -19851,7 +19851,7 @@ struct TypeInfo
         Attributes::CircuitCapacity::TypeInfo::DecodableType circuitCapacity                   = static_cast<uint32_t>(0);
         Attributes::MinimumChargeCurrent::TypeInfo::DecodableType minimumChargeCurrent         = static_cast<uint32_t>(0);
         Attributes::MaximumChargeCurrent::TypeInfo::DecodableType maximumChargeCurrent         = static_cast<uint32_t>(0);
-        Attributes::MaximumdDischargeCurrent::TypeInfo::DecodableType maximumdDischargeCurrent = static_cast<uint32_t>(0);
+        Attributes::MaximumDischargeCurrent::TypeInfo::DecodableType maximumDischargeCurrent   = static_cast<uint32_t>(0);
         Attributes::UserMaximumChargeCurrent::TypeInfo::DecodableType userMaximumChargeCurrent = static_cast<uint32_t>(0);
         Attributes::RandomisationDelayWindow::TypeInfo::DecodableType randomisationDelayWindow = static_cast<uint32_t>(0);
         Attributes::NumberOfWeeklyTargets::TypeInfo::DecodableType numberOfWeeklyTargets       = static_cast<uint8_t>(0);

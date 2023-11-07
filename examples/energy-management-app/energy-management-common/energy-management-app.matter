@@ -2010,7 +2010,7 @@ provisional server cluster EnergyEvse = 153 {
   readonly attribute int32u circuitCapacity = 5;
   readonly attribute int32u minimumChargeCurrent = 6;
   readonly attribute int32u maximumChargeCurrent = 7;
-  readonly attribute int32u maximumdDischargeCurrent = 8;
+  readonly attribute int32u maximumDischargeCurrent = 8;
   attribute access(write: manage) int32u userMaximumChargeCurrent = 9;
   attribute access(write: manage) elapsed_s randomisationDelayWindow = 10;
   readonly attribute int8u numberOfWeeklyTargets = 33;
@@ -3883,7 +3883,7 @@ endpoint 1 {
     ram      attribute circuitCapacity default = 0x0;
     ram      attribute minimumChargeCurrent default = 0x1770;
     ram      attribute maximumChargeCurrent default = 0x0;
-    ram      attribute maximumdDischargeCurrent default = 0x0;
+    ram      attribute maximumDischargeCurrent default = 0x0;
     ram      attribute userMaximumChargeCurrent default = 0x0;
     ram      attribute randomisationDelayWindow default = 600;
     ram      attribute numberOfWeeklyTargets default = 0x0;

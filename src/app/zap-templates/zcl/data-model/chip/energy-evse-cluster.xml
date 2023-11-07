@@ -101,7 +101,7 @@ limitations under the License.
     <attribute side="server" code="0x0005" define="CIRCUIT_CAPACITY"            type="INT32U"  writable="false" default="0x0"    optional="false" isNullable="false">CircuitCapacity</attribute>
     <attribute side="server" code="0x0006" define="MINIMUM_CHARGE_CURRENT"      type="INT32U"  writable="false" default="6000"   optional="false" isNullable="false">MinimumChargeCurrent</attribute>
     <attribute side="server" code="0x0007" define="MAXIMUM_CHARGE_CURRENT"      type="INT32U"  writable="false" default="0x0"    optional="false" isNullable="false">MaximumChargeCurrent</attribute>
-    <attribute side="server" code="0x0008" define="MAXIMUM_DISCHARGE_CURRENT"   type="INT32U"  writable="false" default="0x0"    optional="false" isNullable="false">MaximumdDischargeCurrent</attribute>
+    <attribute side="server" code="0x0008" define="MAXIMUM_DISCHARGE_CURRENT"   type="INT32U"  writable="false" default="0x0"    optional="false" isNullable="false">MaximumDischargeCurrent</attribute>
 
     <attribute side="server" code="0x0009" define="USER_MAXIMUM_CHARGE_CURRENT" type="INT32U"  writable="true"  default="0x0"    optional="true"  isNullable="false">
       <description>UserMaximumChargeCurrent</description>

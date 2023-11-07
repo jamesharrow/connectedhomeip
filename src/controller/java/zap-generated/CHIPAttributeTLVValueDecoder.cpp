@@ -18515,8 +18515,8 @@ jobject DecodeAttributeValue(const app::ConcreteAttributePath & aPath, TLV::TLVR
                                                                         jnivalue, value);
             return value;
         }
-        case Attributes::MaximumdDischargeCurrent::Id: {
-            using TypeInfo = Attributes::MaximumdDischargeCurrent::TypeInfo;
+        case Attributes::MaximumDischargeCurrent::Id: {
+            using TypeInfo = Attributes::MaximumDischargeCurrent::TypeInfo;
             TypeInfo::DecodableType cppValue;
             *aError = app::DataModel::Decode(aReader, cppValue);
             if (*aError != CHIP_NO_ERROR)

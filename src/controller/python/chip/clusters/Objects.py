@@ -20902,7 +20902,7 @@ class EnergyEvse(Cluster):
                 ClusterObjectFieldDescriptor(Label="circuitCapacity", Tag=0x00000005, Type=uint),
                 ClusterObjectFieldDescriptor(Label="minimumChargeCurrent", Tag=0x00000006, Type=uint),
                 ClusterObjectFieldDescriptor(Label="maximumChargeCurrent", Tag=0x00000007, Type=uint),
-                ClusterObjectFieldDescriptor(Label="maximumdDischargeCurrent", Tag=0x00000008, Type=uint),
+                ClusterObjectFieldDescriptor(Label="maximumDischargeCurrent", Tag=0x00000008, Type=uint),
                 ClusterObjectFieldDescriptor(Label="userMaximumChargeCurrent", Tag=0x00000009, Type=typing.Optional[uint]),
                 ClusterObjectFieldDescriptor(Label="randomisationDelayWindow", Tag=0x0000000A, Type=typing.Optional[uint]),
                 ClusterObjectFieldDescriptor(Label="numberOfWeeklyTargets", Tag=0x00000021, Type=uint),
@@ -20936,7 +20936,7 @@ class EnergyEvse(Cluster):
     circuitCapacity: 'uint' = None
     minimumChargeCurrent: 'uint' = None
     maximumChargeCurrent: 'uint' = None
-    maximumdDischargeCurrent: 'uint' = None
+    maximumDischargeCurrent: 'uint' = None
     userMaximumChargeCurrent: 'typing.Optional[uint]' = None
     randomisationDelayWindow: 'typing.Optional[uint]' = None
     numberOfWeeklyTargets: 'uint' = None
@@ -21316,7 +21316,7 @@ class EnergyEvse(Cluster):
             value: 'uint' = 0
 
         @dataclass
-        class MaximumdDischargeCurrent(ClusterAttributeDescriptor):
+        class MaximumDischargeCurrent(ClusterAttributeDescriptor):
             @ChipUtility.classproperty
             def cluster_id(cls) -> int:
                 return 0x00000099

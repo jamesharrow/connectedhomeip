@@ -9328,7 +9328,7 @@ EmberAfStatus Set(chip::EndpointId endpoint, uint32_t value)
 
 } // namespace MaximumChargeCurrent
 
-namespace MaximumdDischargeCurrent {
+namespace MaximumDischargeCurrent {
 
 EmberAfStatus Get(chip::EndpointId endpoint, uint32_t * value)
 {
@@ -9357,7 +9357,7 @@ EmberAfStatus Set(chip::EndpointId endpoint, uint32_t value)
     return emberAfWriteAttribute(endpoint, Clusters::EnergyEvse::Id, Id, writable, ZCL_INT32U_ATTRIBUTE_TYPE);
 }
 
-} // namespace MaximumdDischargeCurrent
+} // namespace MaximumDischargeCurrent
 
 namespace UserMaximumChargeCurrent {
 

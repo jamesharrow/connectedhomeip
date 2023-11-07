@@ -3565,7 +3565,7 @@ provisional server cluster EnergyEvse = 153 {
   readonly attribute int32u circuitCapacity = 5;
   readonly attribute int32u minimumChargeCurrent = 6;
   readonly attribute int32u maximumChargeCurrent = 7;
-  readonly attribute int32u maximumdDischargeCurrent = 8;
+  readonly attribute int32u maximumDischargeCurrent = 8;
   readonly attribute int8u numberOfWeeklyTargets = 33;
   readonly attribute int8u numberOfDailyTargets = 34;
   readonly attribute nullable epoch_s nextChargeStartTime = 35;
@@ -6530,7 +6530,7 @@ endpoint 1 {
     ram      attribute circuitCapacity default = 0x0;
     ram      attribute minimumChargeCurrent default = 6000;
     ram      attribute maximumChargeCurrent default = 0x0;
-    ram      attribute maximumdDischargeCurrent default = 0x0;
+    ram      attribute maximumDischargeCurrent default = 0x0;
     ram      attribute numberOfWeeklyTargets default = 0x0;
     ram      attribute numberOfDailyTargets default = 0x1;
     ram      attribute nextChargeStartTime;

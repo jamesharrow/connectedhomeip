@@ -6227,7 +6227,7 @@ private:
 | * CircuitCapacity                                                   | 0x0005 |
 | * MinimumChargeCurrent                                              | 0x0006 |
 | * MaximumChargeCurrent                                              | 0x0007 |
-| * MaximumdDischargeCurrent                                          | 0x0008 |
+| * MaximumDischargeCurrent                                           | 0x0008 |
 | * UserMaximumChargeCurrent                                          | 0x0009 |
 | * RandomisationDelayWindow                                          | 0x000A |
 | * NumberOfWeeklyTargets                                             | 0x0021 |
@@ -17394,17 +17394,16 @@ void registerClusterEnergyEvse(Commands & commands, CredentialIssuerCommands * c
         //
         // Attributes
         //
-        make_unique<ReadAttribute>(Id, credsIssuerConfig),                                                                 //
-        make_unique<ReadAttribute>(Id, "state", Attributes::State::Id, credsIssuerConfig),                                 //
-        make_unique<ReadAttribute>(Id, "supply-state", Attributes::SupplyState::Id, credsIssuerConfig),                    //
-        make_unique<ReadAttribute>(Id, "fault-state", Attributes::FaultState::Id, credsIssuerConfig),                      //
-        make_unique<ReadAttribute>(Id, "enable-charge-time", Attributes::EnableChargeTime::Id, credsIssuerConfig),         //
-        make_unique<ReadAttribute>(Id, "enable-discharge-time", Attributes::EnableDischargeTime::Id, credsIssuerConfig),   //
-        make_unique<ReadAttribute>(Id, "circuit-capacity", Attributes::CircuitCapacity::Id, credsIssuerConfig),            //
-        make_unique<ReadAttribute>(Id, "minimum-charge-current", Attributes::MinimumChargeCurrent::Id, credsIssuerConfig), //
-        make_unique<ReadAttribute>(Id, "maximum-charge-current", Attributes::MaximumChargeCurrent::Id, credsIssuerConfig), //
-        make_unique<ReadAttribute>(Id, "maximumd-discharge-current", Attributes::MaximumdDischargeCurrent::Id,
-                                   credsIssuerConfig), //
+        make_unique<ReadAttribute>(Id, credsIssuerConfig),                                                                       //
+        make_unique<ReadAttribute>(Id, "state", Attributes::State::Id, credsIssuerConfig),                                       //
+        make_unique<ReadAttribute>(Id, "supply-state", Attributes::SupplyState::Id, credsIssuerConfig),                          //
+        make_unique<ReadAttribute>(Id, "fault-state", Attributes::FaultState::Id, credsIssuerConfig),                            //
+        make_unique<ReadAttribute>(Id, "enable-charge-time", Attributes::EnableChargeTime::Id, credsIssuerConfig),               //
+        make_unique<ReadAttribute>(Id, "enable-discharge-time", Attributes::EnableDischargeTime::Id, credsIssuerConfig),         //
+        make_unique<ReadAttribute>(Id, "circuit-capacity", Attributes::CircuitCapacity::Id, credsIssuerConfig),                  //
+        make_unique<ReadAttribute>(Id, "minimum-charge-current", Attributes::MinimumChargeCurrent::Id, credsIssuerConfig),       //
+        make_unique<ReadAttribute>(Id, "maximum-charge-current", Attributes::MaximumChargeCurrent::Id, credsIssuerConfig),       //
+        make_unique<ReadAttribute>(Id, "maximum-discharge-current", Attributes::MaximumDischargeCurrent::Id, credsIssuerConfig), //
         make_unique<ReadAttribute>(Id, "user-maximum-charge-current", Attributes::UserMaximumChargeCurrent::Id,
                                    credsIssuerConfig), //
         make_unique<ReadAttribute>(Id, "randomisation-delay-window", Attributes::RandomisationDelayWindow::Id,
@@ -17450,8 +17449,8 @@ void registerClusterEnergyEvse(Commands & commands, CredentialIssuerCommands * c
                                               WriteCommandType::kForceWrite, credsIssuerConfig), //
         make_unique<WriteAttribute<uint32_t>>(Id, "maximum-charge-current", 0, UINT32_MAX, Attributes::MaximumChargeCurrent::Id,
                                               WriteCommandType::kForceWrite, credsIssuerConfig), //
-        make_unique<WriteAttribute<uint32_t>>(Id, "maximumd-discharge-current", 0, UINT32_MAX,
-                                              Attributes::MaximumdDischargeCurrent::Id, WriteCommandType::kForceWrite,
+        make_unique<WriteAttribute<uint32_t>>(Id, "maximum-discharge-current", 0, UINT32_MAX,
+                                              Attributes::MaximumDischargeCurrent::Id, WriteCommandType::kForceWrite,
                                               credsIssuerConfig), //
         make_unique<WriteAttribute<uint32_t>>(Id, "user-maximum-charge-current", 0, UINT32_MAX,
                                               Attributes::UserMaximumChargeCurrent::Id, WriteCommandType::kWrite,
@@ -17520,7 +17519,7 @@ void registerClusterEnergyEvse(Commands & commands, CredentialIssuerCommands * c
         make_unique<SubscribeAttribute>(Id, "circuit-capacity", Attributes::CircuitCapacity::Id, credsIssuerConfig),            //
         make_unique<SubscribeAttribute>(Id, "minimum-charge-current", Attributes::MinimumChargeCurrent::Id, credsIssuerConfig), //
         make_unique<SubscribeAttribute>(Id, "maximum-charge-current", Attributes::MaximumChargeCurrent::Id, credsIssuerConfig), //
-        make_unique<SubscribeAttribute>(Id, "maximumd-discharge-current", Attributes::MaximumdDischargeCurrent::Id,
+        make_unique<SubscribeAttribute>(Id, "maximum-discharge-current", Attributes::MaximumDischargeCurrent::Id,
                                         credsIssuerConfig), //
         make_unique<SubscribeAttribute>(Id, "user-maximum-charge-current", Attributes::UserMaximumChargeCurrent::Id,
                                         credsIssuerConfig), //

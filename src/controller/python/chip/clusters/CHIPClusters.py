@@ -6024,7 +6024,7 @@ class ChipClusters:
                 "reportable": True,
             },
             0x00000008: {
-                "attributeName": "MaximumdDischargeCurrent",
+                "attributeName": "MaximumDischargeCurrent",
                 "attributeId": 0x00000008,
                 "type": "int",
                 "reportable": True,

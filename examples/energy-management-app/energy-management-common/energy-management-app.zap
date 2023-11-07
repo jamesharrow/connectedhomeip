@@ -5765,7 +5765,7 @@
               "reportableChange": 0
             },
             {
-              "name": "MaximumdDischargeCurrent",
+              "name": "MaximumDischargeCurrent",
               "code": 8,
               "mfgCode": null,
               "side": "server",

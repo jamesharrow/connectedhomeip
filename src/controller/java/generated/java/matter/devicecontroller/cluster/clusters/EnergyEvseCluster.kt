@@ -204,11 +204,11 @@ class EnergyEvseCluster(private val controller: MatterController, private val en
     // Implementation needs to be added here
   }
 
-  suspend fun readMaximumdDischargeCurrentAttribute(): UInt {
+  suspend fun readMaximumDischargeCurrentAttribute(): UInt {
     // Implementation needs to be added here
   }
 
-  suspend fun subscribeMaximumdDischargeCurrentAttribute(minInterval: Int, maxInterval: Int): UInt {
+  suspend fun subscribeMaximumDischargeCurrentAttribute(minInterval: Int, maxInterval: Int): UInt {
     // Implementation needs to be added here
   }
 
