@@ -839,6 +839,78 @@ static constexpr CommandId Id = 0x00000000;
 } // namespace Commands
 } // namespace ActivatedCarbonFilterMonitoring
 
+namespace DeviceEnergyManagement {
+namespace Commands {
+
+namespace PowerAdjustRequest {
+static constexpr CommandId Id = 0x00000000;
+} // namespace PowerAdjustRequest
+
+namespace CancelPowerAdjustRequest {
+static constexpr CommandId Id = 0x00000001;
+} // namespace CancelPowerAdjustRequest
+
+namespace StartTimeAdjustRequest {
+static constexpr CommandId Id = 0x00000002;
+} // namespace StartTimeAdjustRequest
+
+namespace PauseRequest {
+static constexpr CommandId Id = 0x00000003;
+} // namespace PauseRequest
+
+namespace ResumeRequest {
+static constexpr CommandId Id = 0x00000004;
+} // namespace ResumeRequest
+
+namespace ModifyForecastRequest {
+static constexpr CommandId Id = 0x00000005;
+} // namespace ModifyForecastRequest
+
+namespace RequestConstraintBasedForecast {
+static constexpr CommandId Id = 0x00000006;
+} // namespace RequestConstraintBasedForecast
+
+} // namespace Commands
+} // namespace DeviceEnergyManagement
+
+namespace EnergyEvse {
+namespace Commands {
+
+namespace GetTargetsResponse {
+static constexpr CommandId Id = 0x00000000;
+} // namespace GetTargetsResponse
+
+namespace Disable {
+static constexpr CommandId Id = 0x00000001;
+} // namespace Disable
+
+namespace EnableCharging {
+static constexpr CommandId Id = 0x00000002;
+} // namespace EnableCharging
+
+namespace EnableDischarging {
+static constexpr CommandId Id = 0x00000003;
+} // namespace EnableDischarging
+
+namespace StartDiagnostics {
+static constexpr CommandId Id = 0x00000004;
+} // namespace StartDiagnostics
+
+namespace SetTargets {
+static constexpr CommandId Id = 0x00000005;
+} // namespace SetTargets
+
+namespace GetTargets {
+static constexpr CommandId Id = 0x00000006;
+} // namespace GetTargets
+
+namespace ClearTargets {
+static constexpr CommandId Id = 0x00000007;
+} // namespace ClearTargets
+
+} // namespace Commands
+} // namespace EnergyEvse
+
 namespace DoorLock {
 namespace Commands {
 

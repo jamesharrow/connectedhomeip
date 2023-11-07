@@ -536,6 +536,24 @@ static BOOL CommandNeedsTimedInvokeInActivatedCarbonFilterMonitoringCluster(Attr
     }
     }
 }
+static BOOL CommandNeedsTimedInvokeInDeviceEnergyManagementCluster(AttributeId aAttributeId)
+{
+    using namespace Clusters::DeviceEnergyManagement;
+    switch (aAttributeId) {
+    default: {
+        return NO;
+    }
+    }
+}
+static BOOL CommandNeedsTimedInvokeInEnergyEVSECluster(AttributeId aAttributeId)
+{
+    using namespace Clusters::EnergyEvse;
+    switch (aAttributeId) {
+    default: {
+        return NO;
+    }
+    }
+}
 static BOOL CommandNeedsTimedInvokeInDoorLockCluster(AttributeId aAttributeId)
 {
     using namespace Clusters::DoorLock;
@@ -911,6 +929,24 @@ static BOOL CommandNeedsTimedInvokeInElectricalMeasurementCluster(AttributeId aA
     }
     }
 }
+static BOOL CommandNeedsTimedInvokeInElectricalPowerMeasurementCluster(AttributeId aAttributeId)
+{
+    using namespace Clusters::ElectricalPowerMeasurement;
+    switch (aAttributeId) {
+    default: {
+        return NO;
+    }
+    }
+}
+static BOOL CommandNeedsTimedInvokeInElectricalEnergyMeasurementCluster(AttributeId aAttributeId)
+{
+    using namespace Clusters::ElectricalEnergyMeasurement;
+    switch (aAttributeId) {
+    default: {
+        return NO;
+    }
+    }
+}
 static BOOL CommandNeedsTimedInvokeInUnitTestingCluster(AttributeId aAttributeId)
 {
     using namespace Clusters::UnitTesting;
@@ -1107,6 +1143,12 @@ BOOL MTRCommandNeedsTimedInvoke(NSNumber * _Nonnull aClusterID, NSNumber * _Nonn
     case Clusters::ActivatedCarbonFilterMonitoring::Id: {
         return CommandNeedsTimedInvokeInActivatedCarbonFilterMonitoringCluster(commandID);
     }
+    case Clusters::DeviceEnergyManagement::Id: {
+        return CommandNeedsTimedInvokeInDeviceEnergyManagementCluster(commandID);
+    }
+    case Clusters::EnergyEvse::Id: {
+        return CommandNeedsTimedInvokeInEnergyEVSECluster(commandID);
+    }
     case Clusters::DoorLock::Id: {
         return CommandNeedsTimedInvokeInDoorLockCluster(commandID);
     }
@@ -1220,6 +1262,12 @@ BOOL MTRCommandNeedsTimedInvoke(NSNumber * _Nonnull aClusterID, NSNumber * _Nonn
     }
     case Clusters::ElectricalMeasurement::Id: {
         return CommandNeedsTimedInvokeInElectricalMeasurementCluster(commandID);
+    }
+    case Clusters::ElectricalPowerMeasurement::Id: {
+        return CommandNeedsTimedInvokeInElectricalPowerMeasurementCluster(commandID);
+    }
+    case Clusters::ElectricalEnergyMeasurement::Id: {
+        return CommandNeedsTimedInvokeInElectricalEnergyMeasurementCluster(commandID);
     }
     case Clusters::UnitTesting::Id: {
         return CommandNeedsTimedInvokeInUnitTestingCluster(commandID);

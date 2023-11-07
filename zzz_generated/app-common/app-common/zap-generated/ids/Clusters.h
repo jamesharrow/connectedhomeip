@@ -202,6 +202,12 @@ static constexpr ClusterId Id = 0x00000071;
 namespace ActivatedCarbonFilterMonitoring {
 static constexpr ClusterId Id = 0x00000072;
 } // namespace ActivatedCarbonFilterMonitoring
+namespace DeviceEnergyManagement {
+static constexpr ClusterId Id = 0x00000098;
+} // namespace DeviceEnergyManagement
+namespace EnergyEvse {
+static constexpr ClusterId Id = 0x00000099;
+} // namespace EnergyEvse
 namespace DoorLock {
 static constexpr ClusterId Id = 0x00000101;
 } // namespace DoorLock
@@ -316,6 +322,12 @@ static constexpr ClusterId Id = 0x0000050E;
 namespace ElectricalMeasurement {
 static constexpr ClusterId Id = 0x00000B04;
 } // namespace ElectricalMeasurement
+namespace ElectricalPowerMeasurement {
+static constexpr ClusterId Id = 0x00006661;
+} // namespace ElectricalPowerMeasurement
+namespace ElectricalEnergyMeasurement {
+static constexpr ClusterId Id = 0x00006662;
+} // namespace ElectricalEnergyMeasurement
 namespace UnitTesting {
 static constexpr ClusterId Id = 0xFFF1FC05;
 } // namespace UnitTesting

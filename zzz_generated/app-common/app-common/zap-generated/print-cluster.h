@@ -402,6 +402,19 @@
 #define CHIP_PRINTCLUSTER_ACTIVATED_CARBON_FILTER_MONITORING_CLUSTER
 #endif
 
+#if defined(ZCL_USING_DEVICE_ENERGY_MANAGEMENT_CLUSTER_SERVER) || defined(ZCL_USING_DEVICE_ENERGY_MANAGEMENT_CLUSTER_CLIENT)
+#define CHIP_PRINTCLUSTER_DEVICE_ENERGY_MANAGEMENT_CLUSTER                                                                         \
+    { chip::app::Clusters::DeviceEnergyManagement::Id, "Device Energy Management" },
+#else
+#define CHIP_PRINTCLUSTER_DEVICE_ENERGY_MANAGEMENT_CLUSTER
+#endif
+
+#if defined(ZCL_USING_ENERGY_EVSE_CLUSTER_SERVER) || defined(ZCL_USING_ENERGY_EVSE_CLUSTER_CLIENT)
+#define CHIP_PRINTCLUSTER_ENERGY_EVSE_CLUSTER { chip::app::Clusters::EnergyEvse::Id, "Energy EVSE" },
+#else
+#define CHIP_PRINTCLUSTER_ENERGY_EVSE_CLUSTER
+#endif
+
 #if defined(ZCL_USING_DOOR_LOCK_CLUSTER_SERVER) || defined(ZCL_USING_DOOR_LOCK_CLUSTER_CLIENT)
 #define CHIP_PRINTCLUSTER_DOOR_LOCK_CLUSTER { chip::app::Clusters::DoorLock::Id, "Door Lock" },
 #else
@@ -660,6 +673,21 @@
 #define CHIP_PRINTCLUSTER_ELECTRICAL_MEASUREMENT_CLUSTER
 #endif
 
+#if defined(ZCL_USING_ELECTRICAL_POWER_MEASUREMENT_CLUSTER_SERVER) || defined(ZCL_USING_ELECTRICAL_POWER_MEASUREMENT_CLUSTER_CLIENT)
+#define CHIP_PRINTCLUSTER_ELECTRICAL_POWER_MEASUREMENT_CLUSTER                                                                     \
+    { chip::app::Clusters::ElectricalPowerMeasurement::Id, "Electrical Power Measurement" },
+#else
+#define CHIP_PRINTCLUSTER_ELECTRICAL_POWER_MEASUREMENT_CLUSTER
+#endif
+
+#if defined(ZCL_USING_ELECTRICAL_ENERGY_MEASUREMENT_CLUSTER_SERVER) ||                                                             \
+    defined(ZCL_USING_ELECTRICAL_ENERGY_MEASUREMENT_CLUSTER_CLIENT)
+#define CHIP_PRINTCLUSTER_ELECTRICAL_ENERGY_MEASUREMENT_CLUSTER                                                                    \
+    { chip::app::Clusters::ElectricalEnergyMeasurement::Id, "Electrical Energy Measurement" },
+#else
+#define CHIP_PRINTCLUSTER_ELECTRICAL_ENERGY_MEASUREMENT_CLUSTER
+#endif
+
 #if defined(ZCL_USING_UNIT_TESTING_CLUSTER_SERVER) || defined(ZCL_USING_UNIT_TESTING_CLUSTER_CLIENT)
 #define CHIP_PRINTCLUSTER_UNIT_TESTING_CLUSTER { chip::app::Clusters::UnitTesting::Id, "Unit Testing" },
 #else
@@ -738,6 +766,8 @@
     CHIP_PRINTCLUSTER_OPERATIONAL_STATE_RVC_CLUSTER                                                                                \
     CHIP_PRINTCLUSTER_HEPA_FILTER_MONITORING_CLUSTER                                                                               \
     CHIP_PRINTCLUSTER_ACTIVATED_CARBON_FILTER_MONITORING_CLUSTER                                                                   \
+    CHIP_PRINTCLUSTER_DEVICE_ENERGY_MANAGEMENT_CLUSTER                                                                             \
+    CHIP_PRINTCLUSTER_ENERGY_EVSE_CLUSTER                                                                                          \
     CHIP_PRINTCLUSTER_DOOR_LOCK_CLUSTER                                                                                            \
     CHIP_PRINTCLUSTER_WINDOW_COVERING_CLUSTER                                                                                      \
     CHIP_PRINTCLUSTER_BARRIER_CONTROL_CLUSTER                                                                                      \
@@ -776,6 +806,8 @@
     CHIP_PRINTCLUSTER_APPLICATION_BASIC_CLUSTER                                                                                    \
     CHIP_PRINTCLUSTER_ACCOUNT_LOGIN_CLUSTER                                                                                        \
     CHIP_PRINTCLUSTER_ELECTRICAL_MEASUREMENT_CLUSTER                                                                               \
+    CHIP_PRINTCLUSTER_ELECTRICAL_POWER_MEASUREMENT_CLUSTER                                                                         \
+    CHIP_PRINTCLUSTER_ELECTRICAL_ENERGY_MEASUREMENT_CLUSTER                                                                        \
     CHIP_PRINTCLUSTER_UNIT_TESTING_CLUSTER                                                                                         \
     CHIP_PRINTCLUSTER_FAULT_INJECTION_CLUSTER                                                                                      \
     CHIP_PRINTCLUSTER_SAMPLE_MEI_CLUSTER

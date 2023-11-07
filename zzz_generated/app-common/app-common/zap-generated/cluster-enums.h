@@ -2045,6 +2045,182 @@ enum class Feature : uint32_t
 };
 } // namespace ActivatedCarbonFilterMonitoring
 
+namespace DeviceEnergyManagement {
+
+// Enum for CauseEnum
+enum class CauseEnum : uint8_t
+{
+    kNormalCompletion = 0x00,
+    kOffline          = 0x01,
+    kFault            = 0x02,
+    kUserOptout       = 0x03,
+    // All received enum values that are not listed above will be mapped
+    // to kUnknownEnumValue. This is a helper enum value that should only
+    // be used by code to process how it handles receiving and unknown
+    // enum value. This specific should never be transmitted.
+    kUnknownEnumValue = 4,
+};
+
+// Enum for CostTypeEnum
+enum class CostTypeEnum : uint8_t
+{
+    kFinancial    = 0x00,
+    kGHGEmissions = 0x01,
+    kComfort      = 0x02,
+    kTemperature  = 0x03,
+    // All received enum values that are not listed above will be mapped
+    // to kUnknownEnumValue. This is a helper enum value that should only
+    // be used by code to process how it handles receiving and unknown
+    // enum value. This specific should never be transmitted.
+    kUnknownEnumValue = 4,
+};
+
+// Enum for EsaStateEnum
+enum class EsaStateEnum : uint8_t
+{
+    kOffline           = 0x00,
+    kOnline            = 0x01,
+    kFault             = 0x02,
+    kUserOptOut        = 0x03,
+    kPowerAdjustActive = 0x04,
+    kPaused            = 0x05,
+    // All received enum values that are not listed above will be mapped
+    // to kUnknownEnumValue. This is a helper enum value that should only
+    // be used by code to process how it handles receiving and unknown
+    // enum value. This specific should never be transmitted.
+    kUnknownEnumValue = 6,
+};
+
+// Enum for EsaTypeEnum
+enum class EsaTypeEnum : uint8_t
+{
+    kEvse                = 0x00,
+    kSpaceHeating        = 0x01,
+    kWaterHeating        = 0x02,
+    kSpaceCooling        = 0x03,
+    kSpaceHeatingCooling = 0x04,
+    kBatteryStorage      = 0x05,
+    kSolarPV             = 0x06,
+    kFridgeFreezer       = 0x07,
+    kWashingMachine      = 0x08,
+    kDishwasher          = 0x09,
+    kCooking             = 0x0A,
+    kOther               = 0xFF,
+    // All received enum values that are not listed above will be mapped
+    // to kUnknownEnumValue. This is a helper enum value that should only
+    // be used by code to process how it handles receiving and unknown
+    // enum value. This specific should never be transmitted.
+    kUnknownEnumValue = 11,
+};
+
+// Bitmap for Feature
+enum class Feature : uint32_t
+{
+    kPowerAdjustment        = 0x1,
+    kPowerForecastReporting = 0x2,
+    kStateForecastReporting = 0x4,
+    kForecastAdjustment     = 0x8,
+};
+} // namespace DeviceEnergyManagement
+
+namespace EnergyEvse {
+
+// Enum for EnergyTransferStoppedReasonEnum
+enum class EnergyTransferStoppedReasonEnum : uint8_t
+{
+    kEvStopped   = 0x00,
+    kEvseStopped = 0x01,
+    kOther       = 0x02,
+    // All received enum values that are not listed above will be mapped
+    // to kUnknownEnumValue. This is a helper enum value that should only
+    // be used by code to process how it handles receiving and unknown
+    // enum value. This specific should never be transmitted.
+    kUnknownEnumValue = 3,
+};
+
+// Enum for EvseStateEnum
+enum class EvseStateEnum : uint8_t
+{
+    kNotPluggedIn         = 0x00,
+    kPluggedInNoDemand    = 0x01,
+    kPluggedInDemand      = 0x02,
+    kPluggedInCharging    = 0x03,
+    kPluggedInDischarging = 0x04,
+    kSessionEnding        = 0x05,
+    kFault                = 0x06,
+    // All received enum values that are not listed above will be mapped
+    // to kUnknownEnumValue. This is a helper enum value that should only
+    // be used by code to process how it handles receiving and unknown
+    // enum value. This specific should never be transmitted.
+    kUnknownEnumValue = 7,
+};
+
+// Enum for FaultStateEnum
+enum class FaultStateEnum : uint8_t
+{
+    kNoError           = 0x00,
+    kEvseMeterFailure  = 0x01,
+    kOverVoltage       = 0x02,
+    kUnderVoltage      = 0x03,
+    kOverCurrent       = 0x04,
+    kContactWetFailure = 0x05,
+    kContactDryFailure = 0x06,
+    kGroundFault       = 0x07,
+    kPowerLoss         = 0x08,
+    kPowerQuality      = 0x09,
+    kPilotShortCircuit = 0x0A,
+    kEmergencyStop     = 0x0B,
+    kEvDisconnected    = 0x0C,
+    kWrongPowerSupply  = 0x0D,
+    kLiveNeutralSwap   = 0x0E,
+    kOverTemperature   = 0x0F,
+    kOther             = 0xFF,
+    // All received enum values that are not listed above will be mapped
+    // to kUnknownEnumValue. This is a helper enum value that should only
+    // be used by code to process how it handles receiving and unknown
+    // enum value. This specific should never be transmitted.
+    kUnknownEnumValue = 16,
+};
+
+// Enum for SupplyStateEnum
+enum class SupplyStateEnum : uint8_t
+{
+    kDisabled            = 0x00,
+    kChargingEnabled     = 0x01,
+    kDischargingEnabled  = 0x02,
+    kDisabledError       = 0x03,
+    kDisabledDiagnostics = 0x04,
+    // All received enum values that are not listed above will be mapped
+    // to kUnknownEnumValue. This is a helper enum value that should only
+    // be used by code to process how it handles receiving and unknown
+    // enum value. This specific should never be transmitted.
+    kUnknownEnumValue = 5,
+};
+
+// Bitmap for Feature
+enum class Feature : uint32_t
+{
+    kChargingPreferences = 0x1,
+    kSessions            = 0x2,
+    kSoCReporting        = 0x4,
+    kPlugAndCharge       = 0x8,
+    kRfid                = 0x10,
+    kV2x                 = 0x20,
+};
+
+// Bitmap for TargetDayOfWeekBitmap
+enum class TargetDayOfWeekBitmap : uint8_t
+{
+    kSunday    = 0x1,
+    kMonday    = 0x2,
+    kTuesday   = 0x4,
+    kWednesday = 0x8,
+    kThursday  = 0x10,
+    kFriday    = 0x20,
+    kSaturday  = 0x40,
+};
+} // namespace EnergyEvse
+
 namespace DoorLock {
 
 // Enum for AlarmCodeEnum
@@ -4125,6 +4301,67 @@ enum class ApplicationStatusEnum : uint8_t
 namespace AccountLogin {} // namespace AccountLogin
 
 namespace ElectricalMeasurement {} // namespace ElectricalMeasurement
+
+namespace ElectricalPowerMeasurement {
+
+// Enum for MeasurementTypeEnum
+enum class MeasurementTypeEnum : uint8_t
+{
+    kUnspecified    = 0x00,
+    kVoltage        = 0x01,
+    kCurrent        = 0x02,
+    kActivePower    = 0x03,
+    kRMSCurrent     = 0x04,
+    kRMSPower       = 0x05,
+    kApparentPower  = 0x06,
+    kReactivePower  = 0x07,
+    kFrequency      = 0x08,
+    kPowerFactor    = 0x09,
+    kLineCurrent    = 0x0A,
+    kNeutralCurrent = 0x0B,
+    // All received enum values that are not listed above will be mapped
+    // to kUnknownEnumValue. This is a helper enum value that should only
+    // be used by code to process how it handles receiving and unknown
+    // enum value. This specific should never be transmitted.
+    kUnknownEnumValue = 12,
+};
+
+// Enum for PowerModeEnum
+enum class PowerModeEnum : uint8_t
+{
+    kUnspecified = 0x00,
+    kDc          = 0x01,
+    kAc          = 0x02,
+    // All received enum values that are not listed above will be mapped
+    // to kUnknownEnumValue. This is a helper enum value that should only
+    // be used by code to process how it handles receiving and unknown
+    // enum value. This specific should never be transmitted.
+    kUnknownEnumValue = 3,
+};
+
+// Bitmap for Feature
+enum class Feature : uint32_t
+{
+    kDirectCurrent      = 0x1,
+    kAlternatingCurrent = 0x2,
+    kThreePhasePower    = 0x4,
+    kHarmonics          = 0x8,
+    kPowerQuality       = 0x10,
+};
+} // namespace ElectricalPowerMeasurement
+
+namespace ElectricalEnergyMeasurement {
+
+// Bitmap for Feature
+enum class Feature : uint32_t
+{
+    kImportedEnergy   = 0x1,
+    kExportedEnergy   = 0x2,
+    kCumulativeEnergy = 0x4,
+    kPeriodicEnergy   = 0x8,
+    kEphemeralEnergy  = 0x10,
+};
+} // namespace ElectricalEnergyMeasurement
 
 namespace UnitTesting {
 

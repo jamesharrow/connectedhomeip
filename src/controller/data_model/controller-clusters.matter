@@ -3649,6 +3649,355 @@ client cluster ActivatedCarbonFilterMonitoring = 114 {
   command ResetCondition(): DefaultSuccess = 0;
 }
 
+/** This cluster allows a client to manage the energy usage of a device. An example of such a client could be an Energy Management System (EMS) which controls an Energy Smart Appliance (ESA). */
+client cluster DeviceEnergyManagement = 152 {
+  enum CauseEnum : enum8 {
+    kNormalCompletion = 0;
+    kOffline = 1;
+    kFault = 2;
+    kUserOptout = 3;
+  }
+
+  enum CostTypeEnum : enum8 {
+    kFinancial = 0;
+    kGHGEmissions = 1;
+    kComfort = 2;
+    kTemperature = 3;
+  }
+
+  enum EsaStateEnum : enum8 {
+    kOffline = 0;
+    kOnline = 1;
+    kFault = 2;
+    kUserOptOut = 3;
+    kPowerAdjustActive = 4;
+    kPaused = 5;
+  }
+
+  enum EsaTypeEnum : enum8 {
+    kEVSE = 0;
+    kSpaceHeating = 1;
+    kWaterHeating = 2;
+    kSpaceCooling = 3;
+    kSpaceHeatingCooling = 4;
+    kBatteryStorage = 5;
+    kSolarPV = 6;
+    kFridgeFreezer = 7;
+    kWashingMachine = 8;
+    kDishwasher = 9;
+    kCooking = 10;
+    kOther = 255;
+  }
+
+  bitmap Feature : bitmap32 {
+    kPowerAdjustment = 0x1;
+    kPowerForecastReporting = 0x2;
+    kStateForecastReporting = 0x4;
+    kForecastAdjustment = 0x8;
+  }
+
+  struct CostStruct {
+    CostTypeEnum costType = 0;
+    int32s value = 1;
+    int8u decimalPoints = 2;
+    optional int16u currency = 3;
+  }
+
+  struct SlotStruct {
+    elapsed_s minDuration = 0;
+    elapsed_s maxDuration = 1;
+    elapsed_s defaultDuration = 2;
+    elapsed_s elapsedSlotTime = 3;
+    elapsed_s remainingSlotTime = 4;
+    optional boolean slotIsPauseable = 5;
+    optional int16u manufacturerESAState = 6;
+    optional int32s nominalPower = 7;
+    optional int32s minPower = 8;
+    optional int32s maxPower = 9;
+    optional int32s nominalEnergy = 10;
+    optional CostStruct costs[] = 11;
+    optional int32s minPowerAdjustment = 12;
+    optional int32s maxPowerAdjustment = 13;
+    optional elapsed_s minDurationAdjustment = 14;
+    optional elapsed_s maxDurationAdjustment = 15;
+  }
+
+  struct ForecastStruct {
+    int16u forecastId = 0;
+    nullable int16u activeSlotNumber = 1;
+    epoch_s startTime = 2;
+    optional epoch_s endTime = 3;
+    optional nullable epoch_s earliestStartTime = 4;
+    optional epoch_s latestEndTime = 5;
+    boolean isPauseable = 6;
+    SlotStruct slots[] = 7;
+  }
+
+  struct ConstraintsStruct {
+    epoch_s startTime = 0;
+    elapsed_s duration = 1;
+    optional int32s nominalPower = 2;
+    optional int32s maximumEnergy = 3;
+    optional int8s loadControl = 4;
+  }
+
+  struct PowerAdjustStruct {
+    int32s minPower = 0;
+    int32s maxPower = 1;
+    elapsed_s minDuration = 2;
+    elapsed_s maxDuration = 3;
+  }
+
+  struct SlotAdjustmentStruct {
+    int8u slotIndex = 0;
+    int32s nominalPower = 1;
+    elapsed_s duration = 2;
+  }
+
+  info event PowerAdjustStart = 0 {
+  }
+
+  info event PowerAdjustEnd = 1 {
+    CauseEnum cause = 0;
+    elapsed_s duration = 1;
+    INT32S energyUse = 2;
+  }
+
+  info event Paused = 2 {
+  }
+
+  info event Resumed = 3 {
+  }
+
+  readonly attribute EsaTypeEnum esaType = 0;
+  readonly attribute boolean esaIsGenerator = 1;
+  readonly attribute EsaStateEnum esaState = 2;
+  readonly attribute int32s absMinPower = 3;
+  readonly attribute int32s absMaxPower = 4;
+  readonly attribute optional nullable PowerAdjustStruct powerAdjustmentCapability[] = 5;
+  readonly attribute optional nullable ForecastStruct forecast = 6;
+  readonly attribute command_id generatedCommandList[] = 65528;
+  readonly attribute command_id acceptedCommandList[] = 65529;
+  readonly attribute event_id eventList[] = 65530;
+  readonly attribute attrib_id attributeList[] = 65531;
+  readonly attribute bitmap32 featureMap = 65532;
+  readonly attribute int16u clusterRevision = 65533;
+
+  request struct PowerAdjustRequestRequest {
+    INT32S power = 0;
+    elapsed_s duration = 1;
+  }
+
+  request struct StartTimeAdjustRequestRequest {
+    epoch_s requestedStartTime = 0;
+  }
+
+  request struct ModifyForecastRequestRequest {
+    INT32U forecastId = 0;
+    SlotAdjustmentStruct slotAdjustments[] = 1;
+  }
+
+  request struct RequestConstraintBasedForecastRequest {
+    ConstraintsStruct constraints[] = 0;
+  }
+
+  /** Given valid args, the ESA begins to adjust its power consumption or generation to the level requested. */
+  command PowerAdjustRequest(PowerAdjustRequestRequest): DefaultSuccess = 0;
+  /** The ESA SHALL end the active Power adjustment session and return to normal (or idle) power levels. */
+  command CancelPowerAdjustRequest(): DefaultSuccess = 1;
+  /** If the ESA supports Forecast Adjustment and the EsaState is not UserOptOut, it may have its start time shifted after the EarliestStartTime. */
+  command StartTimeAdjustRequest(StartTimeAdjustRequestRequest): DefaultSuccess = 2;
+  /** The ESA may pause its current operation, given various conditions. */
+  command PauseRequest(): DefaultSuccess = 3;
+  /** The ESA may resume its current operation, given various conditions. */
+  command ResumeRequest(): DefaultSuccess = 4;
+  /** If the ESA supports FA, and the EsaState is not UserOptout it may have its forecast adjusted by a client. */
+  command ModifyForecastRequest(ModifyForecastRequestRequest): DefaultSuccess = 5;
+  /** If the ESA supports FA, and the EsaState is not UserOptout it may be requested to generate a new forecast by a client. */
+  command RequestConstraintBasedForecast(RequestConstraintBasedForecastRequest): DefaultSuccess = 6;
+}
+
+/** This cluster provides an interface for the management of Electric Vehicle Supply Equipment (EVSE). */
+provisional client cluster EnergyEvse = 153 {
+  enum EnergyTransferStoppedReasonEnum : enum8 {
+    kEvStopped = 0;
+    kEvseStopped = 1;
+    kOther = 2;
+  }
+
+  enum EvseStateEnum : enum8 {
+    kNotPluggedIn = 0;
+    kPluggedInNoDemand = 1;
+    kPluggedInDemand = 2;
+    kPluggedInCharging = 3;
+    kPluggedInDischarging = 4;
+    kSessionEnding = 5;
+    kFault = 6;
+  }
+
+  enum FaultStateEnum : enum8 {
+    kNoError = 0;
+    kEvseMeterFailure = 1;
+    kOverVoltage = 2;
+    kUnderVoltage = 3;
+    kOverCurrent = 4;
+    kContactWetFailure = 5;
+    kContactDryFailure = 6;
+    kGroundFault = 7;
+    kPowerLoss = 8;
+    kPowerQuality = 9;
+    kPilotShortCircuit = 10;
+    kEmergencyStop = 11;
+    kEvDisconnected = 12;
+    kWrongPowerSupply = 13;
+    kLiveNeutralSwap = 14;
+    kOverTemperature = 15;
+    kOther = 255;
+  }
+
+  enum SupplyStateEnum : enum8 {
+    kDisabled = 0;
+    kChargingEnabled = 1;
+    kDischargingEnabled = 2;
+    kDisabledError = 3;
+    kDisabledDiagnostics = 4;
+  }
+
+  bitmap Feature : bitmap32 {
+    kChargingPreferences = 0x1;
+    kSessions = 0x2;
+    kSoCReporting = 0x4;
+    kPlugAndCharge = 0x8;
+    kRFID = 0x10;
+    kV2X = 0x20;
+  }
+
+  bitmap TargetDayOfWeekBitmap : bitmap8 {
+    kSunday = 0x1;
+    kMonday = 0x2;
+    kTuesday = 0x4;
+    kWednesday = 0x8;
+    kThursday = 0x10;
+    kFriday = 0x20;
+    kSaturday = 0x40;
+  }
+
+  struct ChargingTargetStruct {
+    int16u targetTime = 0;
+    optional percent targetSoC = 1;
+    optional int32s addedEnergy = 2;
+  }
+
+  info event EVConnected = 0 {
+    INT32U sessionId = 0;
+  }
+
+  info event EVNotDetected = 1 {
+    INT32U sessionId = 0;
+    EvseStateEnum state = 1;
+    elapsed_s sessionDuration = 2;
+    INT32S sessionEnergyCharged = 3;
+    INT32S sessionEnergyDischarged = 4;
+  }
+
+  info event EnergyTransferStarted = 2 {
+    INT32U sessionId = 0;
+    EvseStateEnum state = 1;
+    INT32U maximumCurrent = 2;
+  }
+
+  info event EnergyTransferStopped = 3 {
+    INT32U sessionId = 0;
+    EvseStateEnum state = 1;
+    EnergyTransferStoppedReasonEnum reason = 2;
+    INT32S energyTransferred = 4;
+  }
+
+  critical event Fault = 4 {
+    INT32U sessionId = 0;
+    EvseStateEnum state = 1;
+    EvseStateEnum faultStatePreviousState = 2;
+    EvseStateEnum faultStateCurrentState = 4;
+  }
+
+  info event RFID = 5 {
+    OCTET_STRING uid = 0;
+  }
+
+  readonly attribute nullable EvseStateEnum state = 0;
+  readonly attribute SupplyStateEnum supplyState = 1;
+  readonly attribute FaultStateEnum faultState = 2;
+  readonly attribute nullable elapsed_s enableChargeTime = 3;
+  readonly attribute nullable elapsed_s enableDischargeTime = 4;
+  readonly attribute int32u circuitCapacity = 5;
+  readonly attribute int32u minimumChargeCurrent = 6;
+  readonly attribute int32u maximumChargeCurrent = 7;
+  readonly attribute int32u maximumdDischargeCurrent = 8;
+  attribute access(write: manage) optional int32u userMaximumChargeCurrent = 9;
+  attribute access(write: manage) optional elapsed_s randomisationDelayWindow = 10;
+  readonly attribute int8u numberOfWeeklyTargets = 33;
+  readonly attribute int8u numberOfDailyTargets = 34;
+  readonly attribute optional nullable epoch_s nextChargeStartTime = 35;
+  readonly attribute optional nullable epoch_s nextChargeTargetTime = 36;
+  readonly attribute optional nullable int32s nextChargeRequiredEnergy = 37;
+  readonly attribute optional nullable int8u nextChargeTargetSoc = 38;
+  attribute access(write: manage) optional nullable int16u approxEvEfficiency = 39;
+  readonly attribute optional nullable Percent stateOfCharge = 48;
+  readonly attribute optional nullable int32s batteryCapacity = 49;
+  readonly attribute optional nullable char_string<32> vehicleId = 50;
+  readonly attribute optional int32u sessionId = 64;
+  readonly attribute optional int16u eventSequenceNumber = 65;
+  readonly attribute optional elapsed_s sessionDuration = 66;
+  readonly attribute optional int32s sessionEnergyCharged = 67;
+  readonly attribute optional int32s sessionEnergyDischarged = 68;
+  readonly attribute command_id generatedCommandList[] = 65528;
+  readonly attribute command_id acceptedCommandList[] = 65529;
+  readonly attribute event_id eventList[] = 65530;
+  readonly attribute attrib_id attributeList[] = 65531;
+  readonly attribute bitmap32 featureMap = 65532;
+  readonly attribute int16u clusterRevision = 65533;
+
+  response struct GetTargetsResponse = 0 {
+    TargetDayOfWeekBitmap dayOfWeekForSequence = 0;
+    ChargingTargetStruct chargingTargets[] = 1;
+  }
+
+  request struct EnableChargingRequest {
+    nullable elapsed_s enableChargeTime = 0;
+    INT32U minimumChargeCurrent = 1;
+    INT32U maximumChargeCurrent = 2;
+  }
+
+  request struct EnableDischargingRequest {
+    nullable elapsed_s enableDischargeTime = 0;
+    INT32U maximumDischargeCurrent = 1;
+  }
+
+  request struct SetTargetsRequest {
+    TargetDayOfWeekBitmap dayOfWeekForSequence = 0;
+    ChargingTargetStruct chargingTargets[] = 1;
+  }
+
+  request struct GetTargetsRequest {
+    TargetDayOfWeekBitmap daysToReturn = 0;
+  }
+
+  /** Stops the power flow between the EV and the EVSE. */
+  command Disable(): DefaultSuccess = 1;
+  /** Allows the EVSE to charge the EV for the specified time within the limits specified in the fields of the command. */
+  command EnableCharging(EnableChargingRequest): DefaultSuccess = 2;
+  /** Allows the EVSE to discharge the EV for the specified time within the limits specified in the fields of the command. */
+  command EnableDischarging(EnableDischargingRequest): DefaultSuccess = 3;
+  /** The EVSE SHALL enter a Diagnostics state only if the SupplyState attribute is in the Disabled state. */
+  command StartDiagnostics(): DefaultSuccess = 4;
+  /** The charging targets SHALL be stored in the EVSE and SHOULD begin at the time of receipt. A status code SHALL be sent in response. */
+  command SetTargets(SetTargetsRequest): DefaultSuccess = 5;
+  /** The EVSE will send in return the Get Charging Targets Response command. */
+  command GetTargets(GetTargetsRequest): DefaultSuccess = 6;
+  /** This clears the weekly schedule. */
+  command ClearTargets(): DefaultSuccess = 7;
+}
+
 /** An interface to a generic way to secure a door */
 client cluster DoorLock = 257 {
   enum AlarmCodeEnum : enum8 {
@@ -6679,6 +7028,158 @@ client cluster ElectricalMeasurement = 2820 {
   command GetProfileInfoCommand(): DefaultSuccess = 0;
   /** A function which retrieves an electricity measurement profile from the electricity measurement server for a specific attribute Id requested. */
   command GetMeasurementProfileCommand(GetMeasurementProfileCommandRequest): DefaultSuccess = 1;
+}
+
+/** This cluster provides a mechanism for querying data about electrical power as measured by the device. */
+client cluster ElectricalPowerMeasurement = 26209 {
+  enum MeasurementTypeEnum : enum8 {
+    kUnspecified = 0;
+    kVoltage = 1;
+    kCurrent = 2;
+    kActivePower = 3;
+    kRMSCurrent = 4;
+    kRMSPower = 5;
+    kApparentPower = 6;
+    kReactivePower = 7;
+    kFrequency = 8;
+    kPowerFactor = 9;
+    kLineCurrent = 10;
+    kNeutralCurrent = 11;
+  }
+
+  enum PowerModeEnum : enum8 {
+    kUnspecified = 0;
+    kDC = 1;
+    kAC = 2;
+  }
+
+  bitmap Feature : bitmap32 {
+    kDirectCurrent = 0x1;
+    kAlternatingCurrent = 0x2;
+    kThreePhasePower = 0x4;
+    kHarmonics = 0x8;
+    kPowerQuality = 0x10;
+  }
+
+  struct HarmonicMeasurementStruct {
+    int8u order = 0;
+    nullable int32s measurement = 1;
+  }
+
+  struct MeasurementAccuracyStruct {
+    MeasurementTypeEnum measurementType = 0;
+    boolean measured = 1;
+    optional percent100ths percentTypical = 2;
+    optional percent100ths percentMin = 3;
+    optional percent100ths percentMax = 4;
+    optional int64s fixedTypical = 5;
+    optional int64s fixedMin = 6;
+    optional int64s fixedMax = 7;
+  }
+
+  struct MeasurementRangeStruct {
+    MeasurementTypeEnum measurementType = 0;
+    nullable int64s min = 1;
+    nullable epoch_s minTimestamp = 2;
+    nullable int64s max = 3;
+    nullable epoch_s maxTimestamp = 4;
+  }
+
+  info event MeasurementPeriodRange = 0 {
+    MeasurementTypeEnum measurementType = 0;
+    epoch_s periodStart = 1;
+    epoch_s periodEnd = 2;
+    INT64S min = 3;
+    epoch_s minTimestamp = 4;
+    INT64S max = 5;
+    epoch_s maxTimestamp = 6;
+  }
+
+  readonly attribute PowerModeEnum powerMode = 0;
+  readonly attribute MeasurementAccuracyStruct accuracy[] = 1;
+  readonly attribute MeasurementRangeStruct ranges[] = 2;
+  readonly attribute nullable int64s voltage = 3;
+  readonly attribute nullable int64s current = 4;
+  readonly attribute nullable int64s activePower = 5;
+  readonly attribute optional nullable int64s rmsCurrent = 6;
+  readonly attribute optional nullable int64s rmsPower = 7;
+  readonly attribute optional nullable int64s apparentPower = 8;
+  readonly attribute optional nullable int64s reactivePower = 9;
+  readonly attribute optional nullable int64s frequency = 10;
+  readonly attribute optional nullable HarmonicMeasurementStruct harmonicCurrents[] = 11;
+  readonly attribute optional nullable HarmonicMeasurementStruct harmonicPhases[] = 12;
+  readonly attribute optional nullable int64s powerFactor = 13;
+  readonly attribute optional nullable int64s lineCurrent = 14;
+  readonly attribute optional nullable int64s neutralCurrent = 15;
+  readonly attribute command_id generatedCommandList[] = 65528;
+  readonly attribute command_id acceptedCommandList[] = 65529;
+  readonly attribute event_id eventList[] = 65530;
+  readonly attribute attrib_id attributeList[] = 65531;
+  readonly attribute bitmap32 featureMap = 65532;
+  readonly attribute int16u clusterRevision = 65533;
+}
+
+/** This cluster provides a mechanism for querying data about the electrical energy consumed or provided by the device. */
+client cluster ElectricalEnergyMeasurement = 26210 {
+  bitmap Feature : bitmap32 {
+    kImportedEnergy = 0x1;
+    kExportedEnergy = 0x2;
+    kCumulativeEnergy = 0x4;
+    kPeriodicEnergy = 0x8;
+    kEphemeralEnergy = 0x10;
+  }
+
+  info event CumulativeEnergyImported = 0 {
+    epoch_s importedTimestamp = 0;
+    INT64U energyImported = 1;
+  }
+
+  info event CumulativeEnergyExported = 1 {
+    epoch_s exportedTimestamp = 0;
+    INT64U energyExported = 1;
+  }
+
+  info event PeriodicEnergyImported = 3 {
+    epoch_s periodStart = 0;
+    epoch_s periodEnd = 1;
+    INT64U energyImported = 2;
+  }
+
+  info event PeriodicEnergyExported = 4 {
+    epoch_s periodStart = 0;
+    epoch_s periodEnd = 1;
+    INT64U energyExported = 2;
+  }
+
+  info event EphemeralEnergyImported = 5 {
+    systime_ms importedTimestamp = 0;
+    INT64U energyImported = 1;
+  }
+
+  info event EphemeralEnergyExported = 6 {
+    systime_ms exportedTimestamp = 0;
+    INT64U energyExported = 1;
+  }
+
+  readonly attribute boolean measured = 0;
+  readonly attribute nullable epoch_s cumulativeEnergyImportedTime = 1;
+  readonly attribute nullable int64u cumulativeEnergyImported = 2;
+  readonly attribute nullable epoch_s cumulativeEnergyExportedTime = 3;
+  readonly attribute nullable int64u cumulativeEnergyExported = 4;
+  readonly attribute nullable epoch_s periodicEnergyImportedStartTime = 5;
+  readonly attribute nullable epoch_s periodicEnergyImportedEndTime = 6;
+  readonly attribute nullable int64u periodicEnergyImported = 7;
+  readonly attribute nullable epoch_s periodicEnergyExportedStartTime = 8;
+  readonly attribute nullable epoch_s periodicEnergyExportedEndTime = 9;
+  readonly attribute nullable int64u periodicEnergyExported = 10;
+  readonly attribute nullable int64u ephemeralEnergyImported = 11;
+  readonly attribute nullable int64u ephemeralEnergyExported = 12;
+  readonly attribute command_id generatedCommandList[] = 65528;
+  readonly attribute command_id acceptedCommandList[] = 65529;
+  readonly attribute event_id eventList[] = 65530;
+  readonly attribute attrib_id attributeList[] = 65531;
+  readonly attribute bitmap32 featureMap = 65532;
+  readonly attribute int16u clusterRevision = 65533;
 }
 
 /** The Test Cluster is meant to validate the generated code */

@@ -365,6 +365,58 @@ static constexpr EventId Id = 0x00000001;
 } // namespace Events
 } // namespace RvcOperationalState
 
+namespace DeviceEnergyManagement {
+namespace Events {
+
+namespace PowerAdjustStart {
+static constexpr EventId Id = 0x00000000;
+} // namespace PowerAdjustStart
+
+namespace PowerAdjustEnd {
+static constexpr EventId Id = 0x00000001;
+} // namespace PowerAdjustEnd
+
+namespace Paused {
+static constexpr EventId Id = 0x00000002;
+} // namespace Paused
+
+namespace Resumed {
+static constexpr EventId Id = 0x00000003;
+} // namespace Resumed
+
+} // namespace Events
+} // namespace DeviceEnergyManagement
+
+namespace EnergyEvse {
+namespace Events {
+
+namespace EVConnected {
+static constexpr EventId Id = 0x00000000;
+} // namespace EVConnected
+
+namespace EVNotDetected {
+static constexpr EventId Id = 0x00000001;
+} // namespace EVNotDetected
+
+namespace EnergyTransferStarted {
+static constexpr EventId Id = 0x00000002;
+} // namespace EnergyTransferStarted
+
+namespace EnergyTransferStopped {
+static constexpr EventId Id = 0x00000003;
+} // namespace EnergyTransferStopped
+
+namespace Fault {
+static constexpr EventId Id = 0x00000004;
+} // namespace Fault
+
+namespace Rfid {
+static constexpr EventId Id = 0x00000005;
+} // namespace Rfid
+
+} // namespace Events
+} // namespace EnergyEvse
+
 namespace DoorLock {
 namespace Events {
 
@@ -464,6 +516,46 @@ static constexpr EventId Id = 0x00000010;
 
 } // namespace Events
 } // namespace PumpConfigurationAndControl
+
+namespace ElectricalPowerMeasurement {
+namespace Events {
+
+namespace MeasurementPeriodRange {
+static constexpr EventId Id = 0x00000000;
+} // namespace MeasurementPeriodRange
+
+} // namespace Events
+} // namespace ElectricalPowerMeasurement
+
+namespace ElectricalEnergyMeasurement {
+namespace Events {
+
+namespace CumulativeEnergyImported {
+static constexpr EventId Id = 0x00000000;
+} // namespace CumulativeEnergyImported
+
+namespace CumulativeEnergyExported {
+static constexpr EventId Id = 0x00000001;
+} // namespace CumulativeEnergyExported
+
+namespace PeriodicEnergyImported {
+static constexpr EventId Id = 0x00000003;
+} // namespace PeriodicEnergyImported
+
+namespace PeriodicEnergyExported {
+static constexpr EventId Id = 0x00000004;
+} // namespace PeriodicEnergyExported
+
+namespace EphemeralEnergyImported {
+static constexpr EventId Id = 0x00000005;
+} // namespace EphemeralEnergyImported
+
+namespace EphemeralEnergyExported {
+static constexpr EventId Id = 0x00000006;
+} // namespace EphemeralEnergyExported
+
+} // namespace Events
+} // namespace ElectricalEnergyMeasurement
 
 namespace UnitTesting {
 namespace Events {

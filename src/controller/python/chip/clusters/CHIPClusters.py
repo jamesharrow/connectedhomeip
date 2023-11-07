@@ -5785,6 +5785,393 @@ class ChipClusters:
             },
         },
     }
+    _DEVICE_ENERGY_MANAGEMENT_CLUSTER_INFO = {
+        "clusterName": "DeviceEnergyManagement",
+        "clusterId": 0x00000098,
+        "commands": {
+            0x00000000: {
+                "commandId": 0x00000000,
+                "commandName": "PowerAdjustRequest",
+                "args": {
+                    "power": "int",
+                    "duration": "int",
+                },
+            },
+            0x00000001: {
+                "commandId": 0x00000001,
+                "commandName": "CancelPowerAdjustRequest",
+                "args": {
+                },
+            },
+            0x00000002: {
+                "commandId": 0x00000002,
+                "commandName": "StartTimeAdjustRequest",
+                "args": {
+                    "requestedStartTime": "int",
+                },
+            },
+            0x00000003: {
+                "commandId": 0x00000003,
+                "commandName": "PauseRequest",
+                "args": {
+                },
+            },
+            0x00000004: {
+                "commandId": 0x00000004,
+                "commandName": "ResumeRequest",
+                "args": {
+                },
+            },
+            0x00000005: {
+                "commandId": 0x00000005,
+                "commandName": "ModifyForecastRequest",
+                "args": {
+                    "forecastId": "int",
+                    "slotAdjustments": "SlotAdjustmentStruct",
+                },
+            },
+            0x00000006: {
+                "commandId": 0x00000006,
+                "commandName": "RequestConstraintBasedForecast",
+                "args": {
+                    "constraints": "ConstraintsStruct",
+                },
+            },
+        },
+        "attributes": {
+            0x00000000: {
+                "attributeName": "EsaType",
+                "attributeId": 0x00000000,
+                "type": "int",
+                "reportable": True,
+            },
+            0x00000001: {
+                "attributeName": "EsaIsGenerator",
+                "attributeId": 0x00000001,
+                "type": "bool",
+                "reportable": True,
+            },
+            0x00000002: {
+                "attributeName": "EsaState",
+                "attributeId": 0x00000002,
+                "type": "int",
+                "reportable": True,
+            },
+            0x00000003: {
+                "attributeName": "AbsMinPower",
+                "attributeId": 0x00000003,
+                "type": "int",
+                "reportable": True,
+            },
+            0x00000004: {
+                "attributeName": "AbsMaxPower",
+                "attributeId": 0x00000004,
+                "type": "int",
+                "reportable": True,
+            },
+            0x00000005: {
+                "attributeName": "PowerAdjustmentCapability",
+                "attributeId": 0x00000005,
+                "type": "",
+                "reportable": True,
+            },
+            0x00000006: {
+                "attributeName": "Forecast",
+                "attributeId": 0x00000006,
+                "type": "",
+                "reportable": True,
+            },
+            0x0000FFF8: {
+                "attributeName": "GeneratedCommandList",
+                "attributeId": 0x0000FFF8,
+                "type": "int",
+                "reportable": True,
+            },
+            0x0000FFF9: {
+                "attributeName": "AcceptedCommandList",
+                "attributeId": 0x0000FFF9,
+                "type": "int",
+                "reportable": True,
+            },
+            0x0000FFFA: {
+                "attributeName": "EventList",
+                "attributeId": 0x0000FFFA,
+                "type": "int",
+                "reportable": True,
+            },
+            0x0000FFFB: {
+                "attributeName": "AttributeList",
+                "attributeId": 0x0000FFFB,
+                "type": "int",
+                "reportable": True,
+            },
+            0x0000FFFC: {
+                "attributeName": "FeatureMap",
+                "attributeId": 0x0000FFFC,
+                "type": "int",
+                "reportable": True,
+            },
+            0x0000FFFD: {
+                "attributeName": "ClusterRevision",
+                "attributeId": 0x0000FFFD,
+                "type": "int",
+                "reportable": True,
+            },
+        },
+    }
+    _ENERGY_EVSE_CLUSTER_INFO = {
+        "clusterName": "EnergyEvse",
+        "clusterId": 0x00000099,
+        "commands": {
+            0x00000001: {
+                "commandId": 0x00000001,
+                "commandName": "Disable",
+                "args": {
+                },
+            },
+            0x00000002: {
+                "commandId": 0x00000002,
+                "commandName": "EnableCharging",
+                "args": {
+                    "enableChargeTime": "int",
+                    "minimumChargeCurrent": "int",
+                    "maximumChargeCurrent": "int",
+                },
+            },
+            0x00000003: {
+                "commandId": 0x00000003,
+                "commandName": "EnableDischarging",
+                "args": {
+                    "enableDischargeTime": "int",
+                    "maximumDischargeCurrent": "int",
+                },
+            },
+            0x00000004: {
+                "commandId": 0x00000004,
+                "commandName": "StartDiagnostics",
+                "args": {
+                },
+            },
+            0x00000005: {
+                "commandId": 0x00000005,
+                "commandName": "SetTargets",
+                "args": {
+                    "dayOfWeekForSequence": "int",
+                    "chargingTargets": "ChargingTargetStruct",
+                },
+            },
+            0x00000006: {
+                "commandId": 0x00000006,
+                "commandName": "GetTargets",
+                "args": {
+                    "daysToReturn": "int",
+                },
+            },
+            0x00000007: {
+                "commandId": 0x00000007,
+                "commandName": "ClearTargets",
+                "args": {
+                },
+            },
+        },
+        "attributes": {
+            0x00000000: {
+                "attributeName": "State",
+                "attributeId": 0x00000000,
+                "type": "int",
+                "reportable": True,
+            },
+            0x00000001: {
+                "attributeName": "SupplyState",
+                "attributeId": 0x00000001,
+                "type": "int",
+                "reportable": True,
+            },
+            0x00000002: {
+                "attributeName": "FaultState",
+                "attributeId": 0x00000002,
+                "type": "int",
+                "reportable": True,
+            },
+            0x00000003: {
+                "attributeName": "EnableChargeTime",
+                "attributeId": 0x00000003,
+                "type": "int",
+                "reportable": True,
+            },
+            0x00000004: {
+                "attributeName": "EnableDischargeTime",
+                "attributeId": 0x00000004,
+                "type": "int",
+                "reportable": True,
+            },
+            0x00000005: {
+                "attributeName": "CircuitCapacity",
+                "attributeId": 0x00000005,
+                "type": "int",
+                "reportable": True,
+            },
+            0x00000006: {
+                "attributeName": "MinimumChargeCurrent",
+                "attributeId": 0x00000006,
+                "type": "int",
+                "reportable": True,
+            },
+            0x00000007: {
+                "attributeName": "MaximumChargeCurrent",
+                "attributeId": 0x00000007,
+                "type": "int",
+                "reportable": True,
+            },
+            0x00000008: {
+                "attributeName": "MaximumdDischargeCurrent",
+                "attributeId": 0x00000008,
+                "type": "int",
+                "reportable": True,
+            },
+            0x00000009: {
+                "attributeName": "UserMaximumChargeCurrent",
+                "attributeId": 0x00000009,
+                "type": "int",
+                "reportable": True,
+                "writable": True,
+            },
+            0x0000000A: {
+                "attributeName": "RandomisationDelayWindow",
+                "attributeId": 0x0000000A,
+                "type": "int",
+                "reportable": True,
+                "writable": True,
+            },
+            0x00000021: {
+                "attributeName": "NumberOfWeeklyTargets",
+                "attributeId": 0x00000021,
+                "type": "int",
+                "reportable": True,
+            },
+            0x00000022: {
+                "attributeName": "NumberOfDailyTargets",
+                "attributeId": 0x00000022,
+                "type": "int",
+                "reportable": True,
+            },
+            0x00000023: {
+                "attributeName": "NextChargeStartTime",
+                "attributeId": 0x00000023,
+                "type": "int",
+                "reportable": True,
+            },
+            0x00000024: {
+                "attributeName": "NextChargeTargetTime",
+                "attributeId": 0x00000024,
+                "type": "int",
+                "reportable": True,
+            },
+            0x00000025: {
+                "attributeName": "NextChargeRequiredEnergy",
+                "attributeId": 0x00000025,
+                "type": "int",
+                "reportable": True,
+            },
+            0x00000026: {
+                "attributeName": "NextChargeTargetSoc",
+                "attributeId": 0x00000026,
+                "type": "int",
+                "reportable": True,
+            },
+            0x00000027: {
+                "attributeName": "ApproxEvEfficiency",
+                "attributeId": 0x00000027,
+                "type": "int",
+                "reportable": True,
+                "writable": True,
+            },
+            0x00000030: {
+                "attributeName": "StateOfCharge",
+                "attributeId": 0x00000030,
+                "type": "int",
+                "reportable": True,
+            },
+            0x00000031: {
+                "attributeName": "BatteryCapacity",
+                "attributeId": 0x00000031,
+                "type": "int",
+                "reportable": True,
+            },
+            0x00000032: {
+                "attributeName": "VehicleId",
+                "attributeId": 0x00000032,
+                "type": "str",
+                "reportable": True,
+            },
+            0x00000040: {
+                "attributeName": "SessionId",
+                "attributeId": 0x00000040,
+                "type": "int",
+                "reportable": True,
+            },
+            0x00000041: {
+                "attributeName": "EventSequenceNumber",
+                "attributeId": 0x00000041,
+                "type": "int",
+                "reportable": True,
+            },
+            0x00000042: {
+                "attributeName": "SessionDuration",
+                "attributeId": 0x00000042,
+                "type": "int",
+                "reportable": True,
+            },
+            0x00000043: {
+                "attributeName": "SessionEnergyCharged",
+                "attributeId": 0x00000043,
+                "type": "int",
+                "reportable": True,
+            },
+            0x00000044: {
+                "attributeName": "SessionEnergyDischarged",
+                "attributeId": 0x00000044,
+                "type": "int",
+                "reportable": True,
+            },
+            0x0000FFF8: {
+                "attributeName": "GeneratedCommandList",
+                "attributeId": 0x0000FFF8,
+                "type": "int",
+                "reportable": True,
+            },
+            0x0000FFF9: {
+                "attributeName": "AcceptedCommandList",
+                "attributeId": 0x0000FFF9,
+                "type": "int",
+                "reportable": True,
+            },
+            0x0000FFFA: {
+                "attributeName": "EventList",
+                "attributeId": 0x0000FFFA,
+                "type": "int",
+                "reportable": True,
+            },
+            0x0000FFFB: {
+                "attributeName": "AttributeList",
+                "attributeId": 0x0000FFFB,
+                "type": "int",
+                "reportable": True,
+            },
+            0x0000FFFC: {
+                "attributeName": "FeatureMap",
+                "attributeId": 0x0000FFFC,
+                "type": "int",
+                "reportable": True,
+            },
+            0x0000FFFD: {
+                "attributeName": "ClusterRevision",
+                "attributeId": 0x0000FFFD,
+                "type": "int",
+                "reportable": True,
+            },
+        },
+    }
     _DOOR_LOCK_CLUSTER_INFO = {
         "clusterName": "DoorLock",
         "clusterId": 0x00000101,
@@ -11416,6 +11803,268 @@ class ChipClusters:
             },
         },
     }
+    _ELECTRICAL_POWER_MEASUREMENT_CLUSTER_INFO = {
+        "clusterName": "ElectricalPowerMeasurement",
+        "clusterId": 0x00006661,
+        "commands": {
+        },
+        "attributes": {
+            0x00000000: {
+                "attributeName": "PowerMode",
+                "attributeId": 0x00000000,
+                "type": "int",
+                "reportable": True,
+            },
+            0x00000001: {
+                "attributeName": "Accuracy",
+                "attributeId": 0x00000001,
+                "type": "",
+                "reportable": True,
+            },
+            0x00000002: {
+                "attributeName": "Ranges",
+                "attributeId": 0x00000002,
+                "type": "",
+                "reportable": True,
+            },
+            0x00000003: {
+                "attributeName": "Voltage",
+                "attributeId": 0x00000003,
+                "type": "int",
+                "reportable": True,
+            },
+            0x00000004: {
+                "attributeName": "Current",
+                "attributeId": 0x00000004,
+                "type": "int",
+                "reportable": True,
+            },
+            0x00000005: {
+                "attributeName": "ActivePower",
+                "attributeId": 0x00000005,
+                "type": "int",
+                "reportable": True,
+            },
+            0x00000006: {
+                "attributeName": "RmsCurrent",
+                "attributeId": 0x00000006,
+                "type": "int",
+                "reportable": True,
+            },
+            0x00000007: {
+                "attributeName": "RmsPower",
+                "attributeId": 0x00000007,
+                "type": "int",
+                "reportable": True,
+            },
+            0x00000008: {
+                "attributeName": "ApparentPower",
+                "attributeId": 0x00000008,
+                "type": "int",
+                "reportable": True,
+            },
+            0x00000009: {
+                "attributeName": "ReactivePower",
+                "attributeId": 0x00000009,
+                "type": "int",
+                "reportable": True,
+            },
+            0x0000000A: {
+                "attributeName": "Frequency",
+                "attributeId": 0x0000000A,
+                "type": "int",
+                "reportable": True,
+            },
+            0x0000000B: {
+                "attributeName": "HarmonicCurrents",
+                "attributeId": 0x0000000B,
+                "type": "",
+                "reportable": True,
+            },
+            0x0000000C: {
+                "attributeName": "HarmonicPhases",
+                "attributeId": 0x0000000C,
+                "type": "",
+                "reportable": True,
+            },
+            0x0000000D: {
+                "attributeName": "PowerFactor",
+                "attributeId": 0x0000000D,
+                "type": "int",
+                "reportable": True,
+            },
+            0x0000000E: {
+                "attributeName": "LineCurrent",
+                "attributeId": 0x0000000E,
+                "type": "int",
+                "reportable": True,
+            },
+            0x0000000F: {
+                "attributeName": "NeutralCurrent",
+                "attributeId": 0x0000000F,
+                "type": "int",
+                "reportable": True,
+            },
+            0x0000FFF8: {
+                "attributeName": "GeneratedCommandList",
+                "attributeId": 0x0000FFF8,
+                "type": "int",
+                "reportable": True,
+            },
+            0x0000FFF9: {
+                "attributeName": "AcceptedCommandList",
+                "attributeId": 0x0000FFF9,
+                "type": "int",
+                "reportable": True,
+            },
+            0x0000FFFA: {
+                "attributeName": "EventList",
+                "attributeId": 0x0000FFFA,
+                "type": "int",
+                "reportable": True,
+            },
+            0x0000FFFB: {
+                "attributeName": "AttributeList",
+                "attributeId": 0x0000FFFB,
+                "type": "int",
+                "reportable": True,
+            },
+            0x0000FFFC: {
+                "attributeName": "FeatureMap",
+                "attributeId": 0x0000FFFC,
+                "type": "int",
+                "reportable": True,
+            },
+            0x0000FFFD: {
+                "attributeName": "ClusterRevision",
+                "attributeId": 0x0000FFFD,
+                "type": "int",
+                "reportable": True,
+            },
+        },
+    }
+    _ELECTRICAL_ENERGY_MEASUREMENT_CLUSTER_INFO = {
+        "clusterName": "ElectricalEnergyMeasurement",
+        "clusterId": 0x00006662,
+        "commands": {
+        },
+        "attributes": {
+            0x00000000: {
+                "attributeName": "Measured",
+                "attributeId": 0x00000000,
+                "type": "bool",
+                "reportable": True,
+            },
+            0x00000001: {
+                "attributeName": "CumulativeEnergyImportedTime",
+                "attributeId": 0x00000001,
+                "type": "int",
+                "reportable": True,
+            },
+            0x00000002: {
+                "attributeName": "CumulativeEnergyImported",
+                "attributeId": 0x00000002,
+                "type": "int",
+                "reportable": True,
+            },
+            0x00000003: {
+                "attributeName": "CumulativeEnergyExportedTime",
+                "attributeId": 0x00000003,
+                "type": "int",
+                "reportable": True,
+            },
+            0x00000004: {
+                "attributeName": "CumulativeEnergyExported",
+                "attributeId": 0x00000004,
+                "type": "int",
+                "reportable": True,
+            },
+            0x00000005: {
+                "attributeName": "PeriodicEnergyImportedStartTime",
+                "attributeId": 0x00000005,
+                "type": "int",
+                "reportable": True,
+            },
+            0x00000006: {
+                "attributeName": "PeriodicEnergyImportedEndTime",
+                "attributeId": 0x00000006,
+                "type": "int",
+                "reportable": True,
+            },
+            0x00000007: {
+                "attributeName": "PeriodicEnergyImported",
+                "attributeId": 0x00000007,
+                "type": "int",
+                "reportable": True,
+            },
+            0x00000008: {
+                "attributeName": "PeriodicEnergyExportedStartTime",
+                "attributeId": 0x00000008,
+                "type": "int",
+                "reportable": True,
+            },
+            0x00000009: {
+                "attributeName": "PeriodicEnergyExportedEndTime",
+                "attributeId": 0x00000009,
+                "type": "int",
+                "reportable": True,
+            },
+            0x0000000A: {
+                "attributeName": "PeriodicEnergyExported",
+                "attributeId": 0x0000000A,
+                "type": "int",
+                "reportable": True,
+            },
+            0x0000000B: {
+                "attributeName": "EphemeralEnergyImported",
+                "attributeId": 0x0000000B,
+                "type": "int",
+                "reportable": True,
+            },
+            0x0000000C: {
+                "attributeName": "EphemeralEnergyExported",
+                "attributeId": 0x0000000C,
+                "type": "int",
+                "reportable": True,
+            },
+            0x0000FFF8: {
+                "attributeName": "GeneratedCommandList",
+                "attributeId": 0x0000FFF8,
+                "type": "int",
+                "reportable": True,
+            },
+            0x0000FFF9: {
+                "attributeName": "AcceptedCommandList",
+                "attributeId": 0x0000FFF9,
+                "type": "int",
+                "reportable": True,
+            },
+            0x0000FFFA: {
+                "attributeName": "EventList",
+                "attributeId": 0x0000FFFA,
+                "type": "int",
+                "reportable": True,
+            },
+            0x0000FFFB: {
+                "attributeName": "AttributeList",
+                "attributeId": 0x0000FFFB,
+                "type": "int",
+                "reportable": True,
+            },
+            0x0000FFFC: {
+                "attributeName": "FeatureMap",
+                "attributeId": 0x0000FFFC,
+                "type": "int",
+                "reportable": True,
+            },
+            0x0000FFFD: {
+                "attributeName": "ClusterRevision",
+                "attributeId": 0x0000FFFD,
+                "type": "int",
+                "reportable": True,
+            },
+        },
+    }
     _UNIT_TESTING_CLUSTER_INFO = {
         "clusterName": "UnitTesting",
         "clusterId": 0xFFF1FC05,
@@ -12393,6 +13042,8 @@ class ChipClusters:
         0x00000061: _RVC_OPERATIONAL_STATE_CLUSTER_INFO,
         0x00000071: _HEPA_FILTER_MONITORING_CLUSTER_INFO,
         0x00000072: _ACTIVATED_CARBON_FILTER_MONITORING_CLUSTER_INFO,
+        0x00000098: _DEVICE_ENERGY_MANAGEMENT_CLUSTER_INFO,
+        0x00000099: _ENERGY_EVSE_CLUSTER_INFO,
         0x00000101: _DOOR_LOCK_CLUSTER_INFO,
         0x00000102: _WINDOW_COVERING_CLUSTER_INFO,
         0x00000103: _BARRIER_CONTROL_CLUSTER_INFO,
@@ -12431,6 +13082,8 @@ class ChipClusters:
         0x0000050D: _APPLICATION_BASIC_CLUSTER_INFO,
         0x0000050E: _ACCOUNT_LOGIN_CLUSTER_INFO,
         0x00000B04: _ELECTRICAL_MEASUREMENT_CLUSTER_INFO,
+        0x00006661: _ELECTRICAL_POWER_MEASUREMENT_CLUSTER_INFO,
+        0x00006662: _ELECTRICAL_ENERGY_MEASUREMENT_CLUSTER_INFO,
         0xFFF1FC05: _UNIT_TESTING_CLUSTER_INFO,
         0xFFF1FC06: _FAULT_INJECTION_CLUSTER_INFO,
         0xFFF1FC20: _SAMPLE_MEI_CLUSTER_INFO,
@@ -12496,6 +13149,8 @@ class ChipClusters:
         "RvcOperationalState": _RVC_OPERATIONAL_STATE_CLUSTER_INFO,
         "HepaFilterMonitoring": _HEPA_FILTER_MONITORING_CLUSTER_INFO,
         "ActivatedCarbonFilterMonitoring": _ACTIVATED_CARBON_FILTER_MONITORING_CLUSTER_INFO,
+        "DeviceEnergyManagement": _DEVICE_ENERGY_MANAGEMENT_CLUSTER_INFO,
+        "EnergyEvse": _ENERGY_EVSE_CLUSTER_INFO,
         "DoorLock": _DOOR_LOCK_CLUSTER_INFO,
         "WindowCovering": _WINDOW_COVERING_CLUSTER_INFO,
         "BarrierControl": _BARRIER_CONTROL_CLUSTER_INFO,
@@ -12534,6 +13189,8 @@ class ChipClusters:
         "ApplicationBasic": _APPLICATION_BASIC_CLUSTER_INFO,
         "AccountLogin": _ACCOUNT_LOGIN_CLUSTER_INFO,
         "ElectricalMeasurement": _ELECTRICAL_MEASUREMENT_CLUSTER_INFO,
+        "ElectricalPowerMeasurement": _ELECTRICAL_POWER_MEASUREMENT_CLUSTER_INFO,
+        "ElectricalEnergyMeasurement": _ELECTRICAL_ENERGY_MEASUREMENT_CLUSTER_INFO,
         "UnitTesting": _UNIT_TESTING_CLUSTER_INFO,
         "FaultInjection": _FAULT_INJECTION_CLUSTER_INFO,
         "SampleMei": _SAMPLE_MEI_CLUSTER_INFO,
