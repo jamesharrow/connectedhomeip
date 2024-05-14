@@ -320,6 +320,16 @@ Status DeviceEnergyManagementDelegate::PauseRequest(const uint32_t duration, Adj
         return Status::Failure;
     }
 
+    // Update the forecaseUpdateReason based on the AdjustmentCause
+    if (cause == AdjustmentCauseEnum::kLocalOptimization)
+    {
+        mForecast.Value().forecastUpdateReason = ForecastUpdateReasonEnum::kLocalOptimization;
+    }
+    else if (cause == AdjustmentCauseEnum::kGridOptimization)
+    {
+        mForecast.Value().forecastUpdateReason = ForecastUpdateReasonEnum::kGridOptimization;
+    }
+
     DeviceLayer::SystemLayer().StartTimer(System::Clock::Seconds32(duration), PauseRequestTimerExpiry, this);
 
     // TODO
@@ -367,6 +377,35 @@ void DeviceEnergyManagementDelegate::HandlePauseRequestTimerExpiry()
 
 
 /**
+ * @brief Handles the cancelation of a pause operation
+ *
+ * This function needs to notify the appliance that it should resume its intended power setting (or go idle).
+ *
+ * It should:
+ *   1) notify the appliance's that it can resume its intended power setting (or go idle)
+ *   2) generate a PowerAdjustEnd event with cause code Cancelled
+ *   3) if necessary, update the forecast with new expected end time
+ */
+CHIP_ERROR DeviceEnergyManagementDelegate::CancelPauseRequestAndSendEvent(CauseEnum cause)
+{
+    ChipLogError(Zcl, "DeviceEnergyManagementDelegate::CancelPauseRequestAndSendEvent");
+
+    mPauseRequestInProgress = false;
+
+    SetESAState(ESAStateEnum::kOnline);
+
+    DeviceLayer::SystemLayer().CancelTimer(PauseRequestTimerExpiry, this);
+
+    CHIP_ERROR err = SendResumedEvent(cause);
+
+    // TODO
+    // 1) notify the appliance's that it can resume its intended power setting (or go idle)
+    // 3) if necessary, update the forecast with new expected end time
+
+    return err;
+}
+
+/**
  * @brief Send a Resumed event
  *
  */
@@ -401,10 +440,16 @@ CHIP_ERROR DeviceEnergyManagementDelegate::SendResumedEvent(CauseEnum cause)
  */
 Status DeviceEnergyManagementDelegate::ResumeRequest()
 {
-    Status status = Status::UnsupportedCommand; // Status::Success;
+    Status status = Status::Failure;
 
-    // TODO: implement the behaviour above
-    SetESAState(ESAStateEnum::kOnline);
+    if (mPauseRequestInProgress)
+    {
+        CHIP_ERROR err = CancelPauseRequestAndSendEvent(CauseEnum::kCancelled);
+        if (err == CHIP_NO_ERROR)
+        {
+            status = Status::Success;
+        }
+    }
 
     return status;
 }
@@ -524,6 +569,8 @@ PowerAdjustmentCapability::TypeInfo::Type DeviceEnergyManagementDelegate::GetPow
 
 DataModel::Nullable<Structs::ForecastStruct::Type> DeviceEnergyManagementDelegate::GetForecast()
 {
+    ChipLogDetail(Zcl, "DeviceEnergyManagementDelegate::GetForecast");
+
     return mForecast;
 }
 
@@ -641,12 +688,22 @@ CHIP_ERROR DeviceEnergyManagementDelegate::SetForecast(DataModel::Nullable<Struc
 
 CHIP_ERROR DeviceEnergyManagementDelegate::SetOptOutState(OptOutStateEnum newValue)
 {
-    ChipLogError(Zcl, "DeviceEnergyManagementDelegate::SetOptOutState newValue %d", (int)newValue);
+    ChipLogError(Zcl, "DeviceEnergyManagementDelegate::SetOptOutState currentValue mOptOutState%d newValue %d", (int) mOptOutState, (int)newValue);
     CHIP_ERROR err = CHIP_NO_ERROR;
 
     OptOutStateEnum oldValue = mOptOutState;
 
-    mOptOutState = newValue;
+    // The OptOutState is cumulative
+    if ((oldValue == OptOutStateEnum::kGridOptOut && newValue == OptOutStateEnum::kLocalOptOut) ||
+        (oldValue == OptOutStateEnum::kLocalOptOut && newValue == OptOutStateEnum::kGridOptOut))
+    {
+        mOptOutState = OptOutStateEnum::kOptOut;
+    }
+    else
+    {
+        mOptOutState = newValue;
+    }
+
     if (oldValue != newValue)
     {
         ChipLogDetail(AppServer, "mOptOutState updated to %d mPowerAdjustmentInProgress %d", static_cast<int>(mOptOutState), mPowerAdjustmentInProgress);

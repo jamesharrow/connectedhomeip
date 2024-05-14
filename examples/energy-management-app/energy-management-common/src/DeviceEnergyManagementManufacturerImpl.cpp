@@ -144,6 +144,7 @@ void SetTestEventTrigger_PowerAdjustRequest()
 bool HandleDeviceEnergyManagementTestEventTrigger(uint64_t eventTrigger)
 {
     DeviceEnergyManagementTrigger trigger = static_cast<DeviceEnergyManagementTrigger>(eventTrigger);
+    DeviceEnergyManagementDelegate * dg = DeviceEnergyManagementManufacturer::GetDelegate();
 
     switch (trigger)
     {
@@ -180,9 +181,14 @@ bool HandleDeviceEnergyManagementTestEventTrigger(uint64_t eventTrigger)
         // TODO call implementation
         break;
     case DeviceEnergyManagementTrigger::kPausableNextSlot:
+    {
         ChipLogProgress(Support, "[PausableNextSlot-Test-Event] => Move to next Pausable slot in forecast");
-        // TODO call implementation
+        Structs::ForecastStruct::Type forecastStruct = dg->GetForecast().Value();
+        forecastStruct.activeSlotNumber.SetNonNull<uint16_t>(1);
+        DataModel::Nullable<Structs::ForecastStruct::Type> forecast(forecastStruct);
+        dg->SetForecast(forecast);
         break;
+    }
     case DeviceEnergyManagementTrigger::kPausableClear:
         ChipLogProgress(Support, "[PausableClear-Test-Event] => Clear Pausable forecast");
         // TODO call implementation

@@ -15,6 +15,7 @@
 #    limitations under the License.
 
 
+import time
 import logging
 
 import chip.clusters as Clusters
@@ -73,6 +74,21 @@ class TC_DEM_2_4(MatterBaseTest, DEMBaseTestHelper):
             TestStep("12a", "TH reads ESAState attribute. Verify value is 0x01 (Online)"),
             TestStep("12b", "TH reads Forecast attribute. Value has to include StartTime and EndTime unchanged from step 10b"),
             TestStep("13", "TH sends TestEventTrigger command to General Diagnostics Cluster on Endpoint 0 with EnableKey field set to PIXIT.DEM.TEST_EVENT_TRIGGER_KEY and EventTrigger field set to PIXIT.DEM.TEST_EVENT_TRIGGER for Start Time Adjustment Test Event Clear."),
+            TestStep("13a", "TH sends TestEventTrigger command to General Diagnostics Cluster on Endpoint 0 with EnableKey field set to PIXIT.DEM.TEST_EVENT_TRIGGER_KEY and EventTrigger field set to PIXIT.DEM.TEST_EVENT_TRIGGER for Start Time Adjustment Test Event Clear."),
+            TestStep("13b", "TH sends TestEventTrigger command to General Diagnostics Cluster on Endpoint 0 with EnableKey field set to PIXIT.DEM.TEST_EVENT_TRIGGER_KEY and EventTrigger field set to PIXIT.DEM.TEST_EVENT_TRIGGER for Start Time Adjustment Test Event Clear."),
+            TestStep("14", "TH sends TestEventTrigger command to General Diagnostics Cluster on Endpoint 0 with EnableKey field set to PIXIT.DEM.TEST_EVENT_TRIGGER_KEY and EventTrigger field set to PIXIT.DEM.TEST_EVENT_TRIGGER for Start Time Adjustment Test Event Clear."),
+            TestStep("14a", "TH sends TestEventTrigger command to General Diagnostics Cluster on Endpoint 0 with EnableKey field set to PIXIT.DEM.TEST_EVENT_TRIGGER_KEY and EventTrigger field set to PIXIT.DEM.TEST_EVENT_TRIGGER for Start Time Adjustment Test Event Clear."),
+            TestStep("15", "TH sends TestEventTrigger command to General Diagnostics Cluster on Endpoint 0 with EnableKey field set to PIXIT.DEM.TEST_EVENT_TRIGGER_KEY and EventTrigger field set to PIXIT.DEM.TEST_EVENT_TRIGGER for Start Time Adjustment Test Event Clear."),
+            TestStep("15a", "TH sends TestEventTrigger command to General Diagnostics Cluster on Endpoint 0 with EnableKey field set to PIXIT.DEM.TEST_EVENT_TRIGGER_KEY and EventTrigger field set to PIXIT.DEM.TEST_EVENT_TRIGGER for Start Time Adjustment Test Event Clear."),
+            TestStep("16", "TH sends TestEventTrigger command to General Diagnostics Cluster on Endpoint 0 with EnableKey field set to PIXIT.DEM.TEST_EVENT_TRIGGER_KEY and EventTrigger field set to PIXIT.DEM.TEST_EVENT_TRIGGER for Start Time Adjustment Test Event Clear."),
+            TestStep("16a", "TH sends TestEventTrigger command to General Diagnostics Cluster on Endpoint 0 with EnableKey field set to PIXIT.DEM.TEST_EVENT_TRIGGER_KEY and EventTrigger field set to PIXIT.DEM.TEST_EVENT_TRIGGER for Start Time Adjustment Test Event Clear."),
+            TestStep("17", "TH sends TestEventTrigger command to General Diagnostics Cluster on Endpoint 0 with EnableKey field set to PIXIT.DEM.TEST_EVENT_TRIGGER_KEY and EventTrigger field set to PIXIT.DEM.TEST_EVENT_TRIGGER for Start Time Adjustment Test Event Clear."),
+            TestStep("17a", "TH sends TestEventTrigger command to General Diagnostics Cluster on Endpoint 0 with EnableKey field set to PIXIT.DEM.TEST_EVENT_TRIGGER_KEY and EventTrigger field set to PIXIT.DEM.TEST_EVENT_TRIGGER for Start Time Adjustment Test Event Clear."),
+            TestStep("17b", "TH sends TestEventTrigger command to General Diagnostics Cluster on Endpoint 0 with EnableKey field set to PIXIT.DEM.TEST_EVENT_TRIGGER_KEY and EventTrigger field set to PIXIT.DEM.TEST_EVENT_TRIGGER for Start Time Adjustment Test Event Clear."),
+            TestStep("18", "TH sends TestEventTrigger command to General Diagnostics Cluster on Endpoint 0 with EnableKey field set to PIXIT.DEM.TEST_EVENT_TRIGGER_KEY and EventTrigger field set to PIXIT.DEM.TEST_EVENT_TRIGGER for Start Time Adjustment Test Event Clear."),
+            TestStep("18a", "TH sends TestEventTrigger command to General Diagnostics Cluster on Endpoint 0 with EnableKey field set to PIXIT.DEM.TEST_EVENT_TRIGGER_KEY and EventTrigger field set to PIXIT.DEM.TEST_EVENT_TRIGGER for Start Time Adjustment Test Event Clear."),
+            TestStep("19", "TH sends TestEventTrigger command to General Diagnostics Cluster on Endpoint 0 with EnableKey field set to PIXIT.DEM.TEST_EVENT_TRIGGER_KEY and EventTrigger field set to PIXIT.DEM.TEST_EVENT_TRIGGER for Start Time Adjustment Test Event Clear."),
+            TestStep("20", "TH sends TestEventTrigger command to General Diagnostics Cluster on Endpoint 0 with EnableKey field set to PIXIT.DEM.TEST_EVENT_TRIGGER_KEY and EventTrigger field set to PIXIT.DEM.TEST_EVENT_TRIGGER for Start Time Adjustment Test Event Clear."),
         ]
 
         return steps
@@ -197,10 +213,10 @@ class TC_DEM_2_4(MatterBaseTest, DEMBaseTestHelper):
         asserts.assert_equal(event_data.cause, Clusters.DeviceEnergyManagement.Enums.CauseEnum.kUserOptOut)
 
         self.step("9a")
-        await self.check_dem_attribute("ESAState", Clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kPaused)
+        await self.check_dem_attribute("ESAState", Clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kOnline)
 
         self.step("9b")
-        await self.check_dem_attribute("OptOutState", Clusters.DeviceEnergyManagement.Enums.OptOutStateEnum.kGridOptOut)
+        await self.check_dem_attribute("OptOutState", Clusters.DeviceEnergyManagement.Enums.OptOutStateEnum.kOptOut)
 
         self.step("9c")
         forecast = await self.read_dem_attribute_expect_success(attribute="Forecast")
@@ -209,8 +225,108 @@ class TC_DEM_2_4(MatterBaseTest, DEMBaseTestHelper):
         asserts.assert_not_equal(forecast, NullValue)
         asserts.assert_equal(forecast.forecastUpdateReason, Clusters.DeviceEnergyManagement.Enums.ForecastUpdateReasonEnum.kInternalOptimization)
 
+        self.step("10")
+        await self.send_test_event_trigger_user_opt_out_clear_all()
+
+        self.step("10a")
+        await self.check_dem_attribute("ESAState", Clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kOnline)
+
+        self.step("10b")
+        await self.check_dem_attribute("OptOutState", Clusters.DeviceEnergyManagement.Enums.OptOutStateEnum.kNoOptOut)
+
+        self.step("11")
+        await self.send_pause_request_command(forecast.slots[0].minPauseDuration,
+                                              Clusters.DeviceEnergyManagement.Enums.AdjustmentCauseEnum.kLocalOptimization)
+        event_data = events_callback.wait_for_event_report(Clusters.DeviceEnergyManagement.Events.Paused)
+
+        self.step("11a")
+        await self.check_dem_attribute("ESAState", Clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kPaused)
+
+        self.step("11b")
+        forecast = await self.read_dem_attribute_expect_success(attribute="Forecast")
+        logger.info(f"Forecast: {forecast}")
+        asserts.assert_equal(forecast.forecastUpdateReason, Clusters.DeviceEnergyManagement.Enums.ForecastUpdateReasonEnum.kLocalOptimization)
+
+        self.step("12")
+        await self.send_resume_request_command()
+        event_data = events_callback.wait_for_event_report(Clusters.DeviceEnergyManagement.Events.Resumed)
+        asserts.assert_equal(event_data.cause, Clusters.DeviceEnergyManagement.Enums.CauseEnum.kCancelled)
+
+        self.step("12a")
+        await self.check_dem_attribute("ESAState", Clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kOnline)
+
+        self.step("12b")
+        forecast = await self.read_dem_attribute_expect_success(attribute="Forecast")
+        logger.info(f"Forecast: {forecast}")
+        asserts.assert_not_equal(forecast, NullValue)
+        asserts.assert_equal(forecast.isPauseable, True)
+        asserts.assert_greater(forecast.slots[0].minPauseDuration, 1)
+        asserts.assert_greater(forecast.slots[0].maxPauseDuration, 1)
+        asserts.assert_equal(forecast.slots[0].slotIsPauseable, True)
+        asserts.assert_equal(forecast.slots[1].slotIsPauseable, False)
+        asserts.assert_equal(forecast.activeSlotNumber, 0)
+        asserts.assert_equal(forecast.forecastUpdateReason, Clusters.DeviceEnergyManagement.Enums.ForecastUpdateReasonEnum.kLocalOptimization)
+
+        self.step("13")
+        await self.send_pause_request_command(forecast.slots[0].minPauseDuration,
+                                              Clusters.DeviceEnergyManagement.Enums.AdjustmentCauseEnum.kLocalOptimization)
+        event_data = events_callback.wait_for_event_report(Clusters.DeviceEnergyManagement.Events.Paused)
 
 
-        
+        self.step("13a")
+        await self.check_dem_attribute("ESAState", Clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kPaused)
+
+        self.step("13b")
+        forecast = await self.read_dem_attribute_expect_success(attribute="Forecast")
+        asserts.assert_equal(forecast.forecastUpdateReason, Clusters.DeviceEnergyManagement.Enums.ForecastUpdateReasonEnum.kLocalOptimization)
+
+        self.step("14")
+        await self.send_resume_request_command()
+        event_data = events_callback.wait_for_event_report(Clusters.DeviceEnergyManagement.Events.Resumed)
+        asserts.assert_equal(event_data.cause, Clusters.DeviceEnergyManagement.Enums.CauseEnum.kCancelled)
+
+        self.step("14a")
+        await self.check_dem_attribute("ESAState", Clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kOnline)
+
+        self.step("15")
+        await self.send_pause_request_command(forecast.slots[0].minPauseDuration,
+                                              Clusters.DeviceEnergyManagement.Enums.AdjustmentCauseEnum.kLocalOptimization)
+        event_data = events_callback.wait_for_event_report(Clusters.DeviceEnergyManagement.Events.Paused)
+
+        self.step("15a")
+        await self.check_dem_attribute("ESAState", Clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kPaused)
+
+        self.step("16")
+        logging.info(f"Sleeping for forecast.slots[0].minPauseDuration {forecast.slots[0].minPauseDuration}s")
+        time.sleep(forecast.slots[0].minPauseDuration)
+
+        self.step("16a")
+        await self.check_dem_attribute("ESAState", Clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kOnline)
+
+        self.step("17")
+        await self.send_test_event_trigger_pauseable_next_slot()
+
+        self.step("17a")
+        await self.check_dem_attribute("ESAState", Clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kOnline)
+
+        self.step("17b")
+        forecast = await self.read_dem_attribute_expect_success(attribute="Forecast")
+        print(forecast)
+        asserts.assert_equal(forecast.activeSlotNumber, 1)
+
+        self.step("18")
+        await self.send_pause_request_command(forecast.slots[0].minPauseDuration,
+                                              Clusters.DeviceEnergyManagement.Enums.AdjustmentCauseEnum.kLocalOptimization,
+                                              expected_status=Status.ConstraintError)
+
+        self.step("18a")
+        await self.check_dem_attribute("ESAState", Clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kOnline)
+
+        self.step("19")
+        await self.send_resume_request_command(expected_status=Status.Failure)
+
+        self.step("20")
+        await self.send_test_event_trigger_user_opt_out_clear_all()
+
 if __name__ == "__main__":
     default_matter_test_main()

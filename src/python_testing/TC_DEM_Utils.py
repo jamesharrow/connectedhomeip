@@ -114,6 +114,16 @@ class DEMBaseTestHelper:
         except InteractionModelError as e:
             asserts.assert_equal(e.status, expected_status, "Unexpected error returned")
 
+    async def send_resume_request_command(self, endpoint: int = None, timedRequestTimeoutMs: int = 3000,
+                                          expected_status: Status = Status.Success):
+        try:
+            await self.send_single_cmd(cmd=Clusters.DeviceEnergyManagement.Commands.ResumeRequest(),
+                                       endpoint=endpoint,
+                                       timedRequestTimeoutMs=timedRequestTimeoutMs)
+
+        except InteractionModelError as e:
+            asserts.assert_equal(e.status, expected_status, "Unexpected error returned")
+
     async def send_test_event_trigger_power_adjustment(self):
         await self.send_test_event_triggers(eventTrigger=0x0098000000000000)
 

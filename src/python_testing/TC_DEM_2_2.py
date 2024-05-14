@@ -221,7 +221,7 @@ class TC_DEM_2_2(MatterBaseTest, DEMBaseTestHelper):
         await self.check_dem_attribute("ESAState", Clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kOnline)
 
         self.step("15b")
-        await self.check_dem_attribute("OptOutState", Clusters.DeviceEnergyManagement.Enums.OptOutStateEnum.kLocalOptOut)
+        await self.check_dem_attribute("OptOutState", Clusters.DeviceEnergyManagement.Enums.OptOutStateEnum.kOptOut)
 
         self.step("16")
         await self.send_test_event_trigger_user_opt_out_clear_all()
