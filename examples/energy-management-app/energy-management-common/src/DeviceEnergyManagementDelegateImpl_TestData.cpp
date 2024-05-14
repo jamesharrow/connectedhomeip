@@ -175,6 +175,143 @@ void ForecastTestSetup_TP3b(DataModel::Nullable<Structs::ForecastStruct::Type> &
     forecast.endTime           = static_cast<uint32_t>(chipEpoch * 3); // planned end time, in UTC, for the entire Forecast.
     forecast.latestEndTime =
         Optional<uint32_t>(static_cast<uint32_t>(chipEpoch * 3)); // latest end time, in UTC, for the entire Forecast
+
+    static Structs::SlotStruct::Type slots[3];
+
+    // Slot 2 has e.g.
+    // set by battery charge capacity
+    slots[1].nominalEnergy.SetValue(20000 * 1000);
+
+    // nominalPower set by a reasonable charge rate for efficiency
+    slots[1].nominalPower.SetValue(20000 * 1000);
+
+    // maxPower set by EV and EVSE etc capability
+    slots[1].maxPower.SetValue(70000 * 1000);
+
+    // minPower set by EVSE and EV capability
+    slots[1].minPower.SetValue(2300 * 1000);
+
+    slots[1].minDuration     = static_cast<uint32_t>(3600 * slots[1].nominalEnergy.Value() / slots[1].maxPower.Value());
+    slots[1].maxDuration     = static_cast<uint32_t>(3600 * slots[1].nominalEnergy.Value() / slots[1].minPower.Value());
+    slots[1].defaultDuration = static_cast<uint32_t>(3600 * slots[1].nominalEnergy.Value() / slots[1].nominalPower.Value());
+
+    //    P = E * T
+    //72000 * 3600 
+    // elapsedSlotTime and remainingSlotTime start as null and show live values as the slot is reached
+
+    slots[1].slotIsPauseable.SetValue(true);
+    slots[1].minPauseDuration.SetValue(0);
+    slots[1].maxPauseDuration.SetValue(slots[1].defaultDuration - slots[1].minPauseDuration.Value());
+
+    // no clue on costs(omit),
+
+    slots[1].minPowerAdjustment.SetValue(slots[1].minPower.Value());
+    slots[1].maxPowerAdjustment.SetValue(slots[1].maxPower.Value());
+    slots[1].minDurationAdjustment.SetValue(slots[1].minDuration);
+    slots[1].maxDurationAdjustment.SetValue(slots[1].maxDuration);
+
+    ////////////////////////////////////////////////////////////////////////////////
+    slots[0].minDuration = 0;
+    slots[0].maxDuration = forecast.startTime - slots[1].minDuration;
+
+    // time to when the tariff is good,
+    slots[0].defaultDuration = 0;
+    slots[0].elapsedSlotTime = 0;
+    slots[0].remainingSlotTime = slots[1].defaultDuration;
+    slots[0].slotIsPauseable.SetValue(false);
+
+    // minPauseDuration=maxPauseDuration=null,
+    slots[0].nominalPower.SetValue(0);
+    slots[0].minPower = slots[1].minPower;
+    slots[0].maxPower = slots[1].maxPower;
+
+    static DataModel::List<const Structs::SlotStruct::Type> slotsList(slots, 3);
+    forecast.slots = DataModel::List<const Structs::SlotStruct::Type>(slots, 3);;
+}
+
+// Prepare for Test Procedure
+void ForecastTestSetup_TC_2_4_step_3b(DataModel::Nullable<Structs::ForecastStruct::Type> & nullableForecast)
+{
+    if (nullableForecast.IsNull())
+    {
+        ChipLogProgress(Zcl, "DEM: %s Null but nullableForecast.HasValue", __FUNCTION__);
+        return;
+    }
+
+    Structs::ForecastStruct::Type & forecast = nullableForecast.Value();
+    ChipLogProgress(Support, "[StartTimeAdjustment-handle] L-%d xxForecast.isPauseable = %s", __LINE__,
+                    forecast.isPauseable ? "T" : "F");
+
+    uint32_t chipEpoch = 0;
+
+     [[maybe_unused]] CHIP_ERROR ce = UtilsGetEpochTS(chipEpoch);
+    ChipLogProgress(Support, "ce=%s", (ce != CHIP_NO_ERROR) ? "Err" : "Good");
+
+    forecast.startTime = static_cast<uint32_t>(chipEpoch); // planned start time, in UTC, for the entire Forecast.
+
+    // earliest start time, in UTC, that the entire Forecast can be shifted to. null value indicates that it can be started
+    // immediately.
+    forecast.earliestStartTime = Optional<DataModel::Nullable<uint32_t>>{ DataModel::Nullable<uint32_t>{ chipEpoch } };
+    forecast.endTime           = static_cast<uint32_t>(chipEpoch * 3); // planned end time, in UTC, for the entire Forecast.
+    forecast.latestEndTime =
+        Optional<uint32_t>(static_cast<uint32_t>(chipEpoch * 3)); // latest end time, in UTC, for the entire Forecast
+
+    forecast.isPauseable = true;
+    static Structs::SlotStruct::Type slots[2];
+
+    slots[0].minDuration = 10;
+    slots[0].maxDuration = 20;
+
+    // time to when the tariff is good,
+    slots[0].defaultDuration =15;
+    slots[0].elapsedSlotTime = 0;
+    slots[0].remainingSlotTime = 0;
+    slots[0].slotIsPauseable.SetValue(true);
+    slots[0].minPauseDuration.SetValue(2);
+    slots[0].maxPauseDuration.SetValue(10);
+
+    // minPauseDuration=maxPauseDuration=null,
+    slots[0].nominalPower.SetValue(0);
+    slots[0].minPower = slots[1].minPower;
+    slots[0].maxPower = slots[1].maxPower;
+
+    // Slot 2 has e.g.
+    // set by battery charge capacity
+    slots[1].nominalEnergy.SetValue(20000 * 1000);
+
+    // nominalPower set by a reasonable charge rate for efficiency
+    slots[1].nominalPower.SetValue(20000 * 1000);
+
+    // maxPower set by EV and EVSE etc capability
+    slots[1].maxPower.SetValue(70000 * 1000);
+
+    // minPower set by EVSE and EV capability
+    slots[1].minPower.SetValue(2300 * 1000);
+
+    slots[1].minDuration     = 20;
+    slots[1].maxDuration     = 40;
+    slots[1].defaultDuration = 30;
+
+    //    P = E * T
+    //72000 * 3600 
+    // elapsedSlotTime and remainingSlotTime start as null and show live values as the slot is reached
+
+    slots[1].slotIsPauseable.SetValue(false);
+    slots[1].minPauseDuration.SetValue(2);
+    slots[1].maxPauseDuration.SetValue(10);
+
+    // no clue on costs(omit),
+
+    slots[1].minPowerAdjustment.SetValue(slots[1].minPower.Value());
+    slots[1].maxPowerAdjustment.SetValue(slots[1].maxPower.Value());
+    slots[1].minDurationAdjustment.SetValue(slots[1].minDuration);
+    slots[1].maxDurationAdjustment.SetValue(slots[1].maxDuration);
+
+    forecast.activeSlotNumber.SetNonNull<uint16_t>(0);
+    
+    ////////////////////////////////////////////////////////////////////////////////
+    static DataModel::List<const Structs::SlotStruct::Type> slotsList(slots, 2);
+    forecast.slots = DataModel::List<const Structs::SlotStruct::Type>(slots, 2);
 }
 
 
@@ -195,8 +332,8 @@ DeviceEnergyManagementDelegate::DeviceEnergyManagementDelegate()
     FeatureMap.Set(DeviceEnergyManagement::Feature::kForecastAdjustment);
 
     FillForecast(mForecast);
-    ForecastTestSetup_TP3b(mForecast);
-
+    // ForecastTestSetup_TP3b(mForecast);
+    ForecastTestSetup_TC_2_4_step_3b(mForecast);
     ChipLogProgress(Zcl, "DEM: %s Enabled Feature ForecastAdjustment", __FUNCTION__);
 
     return;

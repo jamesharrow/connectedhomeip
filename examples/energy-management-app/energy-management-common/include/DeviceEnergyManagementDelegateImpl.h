@@ -76,6 +76,27 @@ public:
     virtual CHIP_ERROR SetOptOutState(OptOutStateEnum) override;
 
 private:
+    // Methods to handle when a PowerAdjustment completes
+    static void PowerAdjustTimerExpiry(System::Layer * systemLayer, void * delegate);
+    void HandlePowerAdjustTimerExpiry();
+
+    // Method to cancel a PowerAdjustment
+    CHIP_ERROR CancelPowerAdjustRequestAndSendEvent(CauseEnum cause);
+
+    // Method to send a PowerAdjustEnd event
+    CHIP_ERROR SendPowerAdjustEndEvent(CauseEnum cause);
+
+    // Methods to handle when a PauseRequest completes
+    static void PauseRequestTimerExpiry(System::Layer * systemLayer, void * delegate);
+    void HandlePauseRequestTimerExpiry();
+
+    // Method to cancel a PauseRequest
+    CHIP_ERROR CancelPauseRequestAndSendEvent(CauseEnum cause);
+
+    // Method to send a Paused event
+    CHIP_ERROR SendResumedEvent(CauseEnum cause);
+
+private:
     ESATypeEnum mEsaType;
     bool mEsaCanGenerate;
     ESAStateEnum mEsaState;
@@ -85,6 +106,18 @@ private:
     DataModel::Nullable<Structs::ForecastStruct::Type> mForecast;
     // Default to NoOptOut
     OptOutStateEnum mOptOutState = OptOutStateEnum::kNoOptOut;
+
+    // Keep track whether a PowerAdjustment is in progress
+    bool mPowerAdjustmentInProgress;
+
+    // Keep track of when that PowerAdjustment started
+    uint32_t mPowerAdjustmentStartTime;
+
+    // Keep track whether a PauseRequest is in progress
+    bool mPauseRequestInProgress;
+
+    // Keep track of when that PauseRequest started
+    uint32_t mPauseRequestStartTime;
 };
 
 } // namespace DeviceEnergyManagement

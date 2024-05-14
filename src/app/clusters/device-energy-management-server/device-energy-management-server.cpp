@@ -558,7 +558,8 @@ void Instance::HandlePauseRequest(HandlerContext & ctx, const Commands::PauseReq
         return;
     }
 
-    if ((duration < forecast.Value().slots[activeSlotNumber].minPauseDuration.Value()) &&
+    ChipLogError(Zcl, "duration %u min %u max %u", duration, forecast.Value().slots[activeSlotNumber].minPauseDuration.Value(), forecast.Value().slots[activeSlotNumber].maxPauseDuration.Value());
+    if ((duration < forecast.Value().slots[activeSlotNumber].minPauseDuration.Value()) ||
         (duration > forecast.Value().slots[activeSlotNumber].maxPauseDuration.Value()))
     {
         ChipLogError(Zcl, "DEM: out of range pause duration %ld", static_cast<long unsigned int>(duration));

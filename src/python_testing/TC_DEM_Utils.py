@@ -29,6 +29,8 @@ class DEMBaseTestHelper:
     async def read_dem_attribute_expect_success(self, endpoint: int = None, attribute: str = ""):
         cluster = Clusters.Objects.DeviceEnergyManagement
         full_attr = getattr(cluster.Attributes, attribute)
+        logging.info(cluster.Attributes)
+        logging.info(f"endpoint {endpoint} full_attr {full_attr}")
         return await self.read_single_attribute_check_success(endpoint=endpoint, cluster=cluster, attribute=full_attr)
 
     async def check_dem_attribute(self, attribute, expected_value, endpoint: int = None):
@@ -45,6 +47,16 @@ class DEMBaseTestHelper:
                 power=power,
                 duration=duration,
                 cause=cause),
+                endpoint=endpoint,
+                timedRequestTimeoutMs=timedRequestTimeoutMs)
+
+        except InteractionModelError as e:
+            asserts.assert_equal(e.status, expected_status, "Unexpected error returned")
+
+    async def send_cancel_power_adjustment_command(self, endpoint: int = None, timedRequestTimeoutMs: int = 3000,
+                                                   expected_status: Status = Status.Success):
+        try:
+            await self.send_single_cmd(cmd=Clusters.DeviceEnergyManagement.Commands.CancelPowerAdjustRequest(),
                 endpoint=endpoint,
                 timedRequestTimeoutMs=timedRequestTimeoutMs)
 
@@ -84,6 +96,20 @@ class DEMBaseTestHelper:
             await self.send_single_cmd(cmd=Clusters.DeviceEnergyManagement.Commands.CancelRequest(),
                                        endpoint=endpoint,
                                        timedRequestTimeoutMs=timedRequestTimeoutMs)
+
+        except InteractionModelError as e:
+            asserts.assert_equal(e.status, expected_status, "Unexpected error returned")
+
+    async def send_pause_request_command(self, duration: int, cause:
+                                         Clusters.Objects.DeviceEnergyManagement.Enums.AdjustmentCauseEnum,
+                                         endpoint: int = None, timedRequestTimeoutMs: int = 3000,
+                                         expected_status: Status = Status.Success):
+        try:
+            await self.send_single_cmd(cmd=Clusters.DeviceEnergyManagement.Commands.PauseRequest(
+                duration=duration,
+                cause=cause),
+                endpoint=endpoint,
+                timedRequestTimeoutMs=timedRequestTimeoutMs)
 
         except InteractionModelError as e:
             asserts.assert_equal(e.status, expected_status, "Unexpected error returned")

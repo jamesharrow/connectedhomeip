@@ -80,7 +80,25 @@ CHIP_ERROR DeviceEnergyManagementManufacturer::Shutdown()
 void SetTestEventTrigger_PowerAdjustment()
 {
     ChipLogProgress(Support, "[PowerAdjustment-handle] L-%d", __LINE__);
-    // TODO: implement
+
+    static Structs::PowerAdjustStruct::Type powerAdjustments[1];
+
+    powerAdjustments[0].minPower =  5000 * 1000; // 5kW
+    powerAdjustments[0].maxPower = 30000 * 1000; // 30kW
+    powerAdjustments[0].minDuration =  30;   // 30s
+    powerAdjustments[0].maxDuration =  60;   // 60s
+
+    DataModel::List<const Structs::PowerAdjustStruct::Type> powerAdjustmentList(powerAdjustments, 1);
+
+    sPowerAdjustmentCapability = MakeNullable(powerAdjustmentList);
+
+    DeviceEnergyManagementDelegate * dg = DeviceEnergyManagementManufacturer::GetDelegate();
+
+    CHIP_ERROR err = dg->SetPowerAdjustmentCapability(sPowerAdjustmentCapability);
+    if (err != CHIP_NO_ERROR)
+    {
+        ChipLogError(Support, "SetTestEventTrigger_PowerAdjustment failed %s", chip::ErrorStr(err));
+    }
 }
 
 void SetTestEventTrigger_StartTimeAdjustment()
