@@ -39,6 +39,7 @@ class DeviceEnergyManagementManufacturer;
 class DeviceEnergyManagementDelegate : public DeviceEnergyManagement::Delegate
 {
 public:
+    DeviceEnergyManagementDelegate();
     DeviceEnergyManagementDelegate(DeviceEnergyManagementManufacturer & deviceEnergyManagementManufacturer);
     virtual Status PowerAdjustRequest(const int64_t power, const uint32_t duration, AdjustmentCauseEnum cause) override;
     virtual Status CancelPowerAdjustRequest() override;
@@ -98,7 +99,7 @@ private:
     CHIP_ERROR SendResumedEvent(CauseEnum cause);
 
 private:
-    DeviceEnergyManagementManufacturer & mDeviceEnergyManagementManufacturer;
+    DeviceEnergyManagementManufacturer *mpDeviceEnergyManagementManufacturer;
 
     ESATypeEnum mEsaType;
     bool mEsaCanGenerate;

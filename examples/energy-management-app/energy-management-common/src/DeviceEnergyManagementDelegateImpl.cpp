@@ -31,13 +31,21 @@ using chip::Optional;
 using CostsList = DataModel::List<const Structs::CostStruct::Type>;
 
 DeviceEnergyManagementDelegate::DeviceEnergyManagementDelegate(DeviceEnergyManagementManufacturer & deviceEnergyManagementManufacturer):
-    mDeviceEnergyManagementManufacturer(deviceEnergyManagementManufacturer),
+    mpDeviceEnergyManagementManufacturer(&deviceEnergyManagementManufacturer),
     mPauseRequestInProgress(false)
 {
     BitMask<DeviceEnergyManagement::Feature> FeatureMap;
     FeatureMap.Set(DeviceEnergyManagement::Feature::kForecastAdjustment);
 
-    mDeviceEnergyManagementManufacturer.Configure(*this);
+    mpDeviceEnergyManagementManufacturer->Configure(*this);
+}
+
+DeviceEnergyManagementDelegate::DeviceEnergyManagementDelegate():
+    mpDeviceEnergyManagementManufacturer(nullptr),
+    mPauseRequestInProgress(false)
+{
+    BitMask<DeviceEnergyManagement::Feature> FeatureMap;
+    FeatureMap.Set(DeviceEnergyManagement::Feature::kForecastAdjustment);
 }
 
 /**
