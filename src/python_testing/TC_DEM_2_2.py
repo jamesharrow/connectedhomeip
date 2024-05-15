@@ -78,6 +78,8 @@ class TC_DEM_2_2(MatterBaseTest, DEMBaseTestHelper):
     @async_test_body
     async def test_TC_DEM_2_2(self):
 
+        # These values have to correlate with the values configured in
+        # DeviceEnergyManagementManufacturerImpl::SetTestEventTrigger_PowerAdjustment()
         min_power = 5 * 1000 * 1000
         max_power = 30 * 1000 * 1000
 
@@ -117,7 +119,6 @@ class TC_DEM_2_2(MatterBaseTest, DEMBaseTestHelper):
             found_max_power = max(found_max_power, entry.maxPower)
             found_min_duration = min(found_min_duration, entry.minDuration)
             found_max_duration = max(found_max_duration, entry.maxDuration)
-            print(f"entry : {entry}")
 
         logging.info(f"found_min_power {found_min_power} found_max_power {found_max_power} found_min_duration {found_min_duration} found_max_duration {found_max_duration}")
 
@@ -147,7 +148,6 @@ class TC_DEM_2_2(MatterBaseTest, DEMBaseTestHelper):
         self.step("6")
         await self.send_cancel_power_adjustment_command(expected_status=Status.Failure)
 
-        # TODO Check return value
         self.step("7")
         await self.send_power_adjustment_command(power = max_power + 1,
                                                  duration = min_duration,
@@ -212,9 +212,9 @@ class TC_DEM_2_2(MatterBaseTest, DEMBaseTestHelper):
         asserts.assert_equal(event_data.cause, Clusters.DeviceEnergyManagement.Enums.CauseEnum.kUserOptOut)
 
         elapsed = datetime.datetime.now() - start
-        logging.info(f"elapsed {elapsed} event_data.duration {event_data.duration}")
         asserts.assert_less_equal(abs(elapsed.seconds - event_data.duration), 1)
 
+        # TODO: Do a better check on valid energyUse value
         asserts.assert_greater_equal(event_data.energyUse, 1)
 
         self.step("15a")

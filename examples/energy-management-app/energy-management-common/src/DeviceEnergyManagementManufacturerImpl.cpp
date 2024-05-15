@@ -16,15 +16,13 @@
  *    limitations under the License.
  */
 
-#include "DeviceEnergyManagementManufacturerImpl.h"
-#include "utils.h"
-#include <DeviceEnergyManagementDelegateImpl.h>
-#include <app/AttributeAccessInterface.h>
-#include <app/ConcreteAttributePath.h>
-#include <app/InteractionModelEngine.h>
-#include <app/clusters/device-energy-management-server/device-energy-management-server.h>
+#include <utils.h>
+
 #include <app/clusters/device-energy-management-server/DeviceEnergyManagementTestEventTriggerHandler.h>
-#include <app/util/attribute-storage.h>
+
+#include <DeviceEnergyManagementManufacturerImpl.h>
+#include <DeviceEnergyManagementDelegateImpl.h>
+
 
 using namespace chip;
 using namespace chip::app;
@@ -39,7 +37,6 @@ DeviceEnergyManagementManufacturerImpl & DeviceEnergyManagementManufacturerImpl:
     return sInstance;
 }
 
-
 DeviceEnergyManagementManufacturerImpl::DeviceEnergyManagementManufacturerImpl()
 {
 }
@@ -50,7 +47,6 @@ DeviceEnergyManagementManufacturerImpl::~DeviceEnergyManagementManufacturerImpl(
 
 Status DeviceEnergyManagementManufacturerImpl::Configure(DeviceEnergyManagementDelegate &demDelegate)
 {
-    ChipLogError(Support, "DeviceEnergyManagementManufacturerImpl::Configure");
     mpDemDelgate = &demDelegate;
 
     Status status = ConfigureForecast();
@@ -62,7 +58,12 @@ Status DeviceEnergyManagementManufacturerImpl::ConfigureForecast()
 {
     uint32_t chipEpoch = 0;
 
-     [[maybe_unused]] CHIP_ERROR ce = UtilsGetEpochTS(chipEpoch);
+    CHIP_ERROR err = UtilsGetEpochTS(chipEpoch);
+    if (err != CHIP_NO_ERROR)
+    {
+        ChipLogError(Support, "DeviceEnergyManagementManufacturerImpl::ConfigureForecast could not get time");
+        return Status::Failure;
+    }
 
     mForecastStruct.startTime = static_cast<uint32_t>(chipEpoch); // planned start time, in UTC, for the entire Forecast.
 
@@ -252,10 +253,18 @@ void DeviceEnergyManagementManufacturerImpl::SetTestEventTrigger_StartTimeAdjust
 
 void DeviceEnergyManagementManufacturerImpl::SetTestEventTrigger_StartTimeAdjustmentClear()
 {
-    if (CHIP_NO_ERROR != mpDemDelgate->SetForecast(mForecastStruct))
-    {
-        ChipLogProgress(Support, "[StartTimeAdjustmentClear-handle] L-%d Failed to restore forecast!", __LINE__);
-    }
+    // Get the current forecast ad update the earliestStartTime and latestEndTime
+    mForecastStruct = mpDemDelgate->GetForecast().Value();
+
+    mForecastStruct.startTime = static_cast<uint32_t>(0);
+    mForecastStruct.endTime = static_cast<uint32_t>(0);
+
+    mForecastStruct.earliestStartTime = Optional<DataModel::Nullable<uint32_t>>();
+    mForecastStruct.latestEndTime = Optional<uint32_t>();
+
+    DataModel::Nullable<Structs::ForecastStruct::Type> forecast(mForecastStruct);
+
+    mpDemDelgate->SetForecast(forecast);
 }
 
 void DeviceEnergyManagementManufacturerImpl::SetTestEventTrigger_UserOptOutOptimization(OptOutStateEnum optOutState)

@@ -18,12 +18,8 @@
 
 #pragma once
 
-#include "app/clusters/device-energy-management-server/device-energy-management-server.h"
-
-#include <app/util/config.h>
-#include <cstring>
-
 using chip::Protocols::InteractionModel::Status;
+
 namespace chip {
 namespace app {
 namespace Clusters {
@@ -32,7 +28,7 @@ namespace DeviceEnergyManagement {
 class DeviceEnergyManagementDelegate;
 
 /**
- * The application delegate.
+ * Class to abstract manufacturer specific functionality
  */
 class DeviceEnergyManagementManufacturer
 {
@@ -44,6 +40,7 @@ public:
     virtual ~DeviceEnergyManagementManufacturer()
     {
     }
+
     virtual Status Configure(DeviceEnergyManagementDelegate &demDelegate) = 0;
 };
 

@@ -117,7 +117,6 @@ class TC_DEM_2_3(MatterBaseTest, DEMBaseTestHelper):
 
         self.step("3b")
         forecast = await self.read_dem_attribute_expect_success(attribute="Forecast")
-        logger.info(f"Forecast: {forecast}")
 
         asserts.assert_not_equal(forecast, NullValue)
         if forecast is not NullValue:
@@ -165,7 +164,6 @@ class TC_DEM_2_3(MatterBaseTest, DEMBaseTestHelper):
 
         self.step("5b")
         forecast2 = await self.read_dem_attribute_expect_success(attribute="Forecast")
-        logger.info(f"Forecast: {forecast2}")
         asserts.assert_equal(forecast, forecast2,
                              f"Expected same forcast {forecast} to be == {forecast2}")
 
@@ -187,7 +185,6 @@ class TC_DEM_2_3(MatterBaseTest, DEMBaseTestHelper):
 
         self.step("7b")
         forecast3 = await self.read_dem_attribute_expect_success(attribute="Forecast")
-        logger.info(f"Forecast: {forecast3}")
         asserts.assert_equal(forecast3.earliestStartTime, forecast3.startTime,
                              f"Expected earliestStartTime {forecast3.earliestStartTime} to be == startTime {forecast3.startTime}")
         asserts.assert_greater_equal(forecast3.latestEndTime, forecast3.endTime,
@@ -206,7 +203,6 @@ class TC_DEM_2_3(MatterBaseTest, DEMBaseTestHelper):
 
         self.step("8c")
         forecast4 = await self.read_dem_attribute_expect_success(attribute="Forecast")
-        logger.info(f"Forecast: {forecast4}")
         asserts.assert_less_equal(forecast4.earliestStartTime, forecast4.startTime,
                                   f"Expected earliestStartTime {forecast4.earliestStartTime} to be <= startTime {forecast4.startTime}")
         asserts.assert_greater_equal(forecast4.latestEndTime, forecast4.endTime,
@@ -223,7 +219,6 @@ class TC_DEM_2_3(MatterBaseTest, DEMBaseTestHelper):
 
         self.step("9b")
         forecast5 = await self.read_dem_attribute_expect_success(attribute="Forecast")
-        logger.info(f"Forecast: {forecast5}")
         asserts.assert_less_equal(forecast5.earliestStartTime, forecast5.startTime,
                                   f"Expected earliestStartTime {forecast5.earliestStartTime} to be <= startTime {forecast5.startTime}")
         asserts.assert_equal(forecast5.latestEndTime, forecast5.endTime,
@@ -239,7 +234,6 @@ class TC_DEM_2_3(MatterBaseTest, DEMBaseTestHelper):
 
         self.step("10b")
         forecast6 = await self.read_dem_attribute_expect_success(attribute="Forecast")
-        logger.info(f"Forecast: {forecast6}")
         asserts.assert_less_equal(forecast6.earliestStartTime, forecast6.startTime,
                                   f"Expected earliestStartTime {forecast6.earliestStartTime} to be <= startTime {forecast6.startTime}")
         asserts.assert_greater_equal(forecast6.latestEndTime, forecast6.endTime,
@@ -256,7 +250,6 @@ class TC_DEM_2_3(MatterBaseTest, DEMBaseTestHelper):
 
         self.step("11b")
         forecast7 = await self.read_dem_attribute_expect_success(attribute="Forecast")
-        logger.info(f"Forecast: {forecast7}")
         asserts.assert_equal(forecast6.startTime, forecast7.startTime,
                              f"Expected old startTime {forecast6.startTime} to be == startTime {forecast7.startTime}")
         asserts.assert_equal(forecast6.endTime, forecast7.endTime,
@@ -271,7 +264,6 @@ class TC_DEM_2_3(MatterBaseTest, DEMBaseTestHelper):
 
         self.step("12b")
         forecast8 = await self.read_dem_attribute_expect_success(attribute="Forecast")
-        logger.info(f"Forecast: {forecast8}")
         asserts.assert_equal(forecast7.startTime, forecast8.startTime,
                              f"Expected old startTime {forecast7.startTime} to be == startTime {forecast8.startTime}")
         asserts.assert_equal(forecast7.endTime, forecast8.endTime,
