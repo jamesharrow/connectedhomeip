@@ -16,34 +16,39 @@
  *    limitations under the License.
  */
 
-#include <DeviceEnergyManagementManager.h>
-#include <DeviceEnergyManagementManufacturerImpl.h>
+#pragma once
 
-using namespace chip::app;
-using namespace chip::app::Clusters;
-using namespace chip::app::Clusters::DeviceEnergyManagement;
+#include "app/clusters/device-energy-management-server/device-energy-management-server.h"
 
+#include <app/util/config.h>
+#include <cstring>
+
+using chip::Protocols::InteractionModel::Status;
 namespace chip {
 namespace app {
 namespace Clusters {
+namespace DeviceEnergyManagement {
 
-DeviceEnergyManagementManager::DeviceEnergyManagementManager(EndpointId aEndpointId, DeviceEnergyManagementDelegate & aDelegate,
-                                                             Feature aFeature) :
-    DeviceEnergyManagement::Instance(aEndpointId, aDelegate, aFeature),
-    mDelegate(&aDelegate)
+class DeviceEnergyManagementDelegate;
+
+/**
+ * The application delegate.
+ */
+class DeviceEnergyManagementManufacturer
 {
-}
+public:
+    DeviceEnergyManagementManufacturer()
+    {
+    }
 
-CHIP_ERROR DeviceEnergyManagementManager::Init()
-{
-    return Instance::Init();
-}
+    virtual ~DeviceEnergyManagementManufacturer()
+    {
+    }
+    virtual Status Configure(DeviceEnergyManagementDelegate &demDelegate) = 0;
+};
 
-void DeviceEnergyManagementManager::Shutdown()
-{
-    Instance::Shutdown();
-}
-
+} // namespace DeviceEnergyManagement
 } // namespace Clusters
 } // namespace app
 } // namespace chip
+

@@ -27,7 +27,7 @@ namespace chip {
 namespace app {
 namespace Clusters {
 
-class DeviceEnergyManagementManufacturer;
+
 using namespace chip::app::Clusters::DeviceEnergyManagement;
 
 class DeviceEnergyManagementManager : public Instance
@@ -47,7 +47,6 @@ public:
 
 private:
     DeviceEnergyManagementDelegate * mDelegate;
-    DeviceEnergyManagementManufacturer * mDEMManufacturer;
 };
 
 } // namespace Clusters

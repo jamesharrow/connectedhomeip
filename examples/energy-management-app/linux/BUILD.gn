@@ -36,19 +36,25 @@ config("includes") {
 
 executable("chip-energy-management-app") {
   sources = [
-    "${chip_root}/examples/energy-management-app/energy-management-common/src/DeviceEnergyManagementDelegateImpl.cpp",
-    "${chip_root}/examples/energy-management-app/energy-management-common/src/DeviceEnergyManagementDelegateImpl_TestData.cpp",
-    "${chip_root}/examples/energy-management-app/energy-management-common/src/DeviceEnergyManagementManager.cpp",
     "${chip_root}/examples/energy-management-app/energy-management-common/src/DeviceEnergyManagementManufacturerImpl.cpp",
-    "${chip_root}/examples/energy-management-app/energy-management-common/src/EVSEManufacturerImpl.cpp",
+
+    "${chip_root}/examples/energy-management-app/energy-management-common/src/DeviceEnergyManagementDelegateImpl.cpp",
+    "${chip_root}/examples/energy-management-app/energy-management-common/src/DeviceEnergyManagementManager.cpp",
+
     "${chip_root}/examples/energy-management-app/energy-management-common/src/ElectricalPowerMeasurementDelegate.cpp",
+
     "${chip_root}/examples/energy-management-app/energy-management-common/src/EnergyEvseDelegateImpl.cpp",
-    "${chip_root}/examples/energy-management-app/energy-management-common/src/EnergyEvseMain.cpp",
     "${chip_root}/examples/energy-management-app/energy-management-common/src/EnergyEvseManager.cpp",
+
     "${chip_root}/examples/energy-management-app/energy-management-common/src/PowerTopologyDelegate.cpp",
+
     "${chip_root}/examples/energy-management-app/energy-management-common/src/device-energy-management-mode.cpp",
     "${chip_root}/examples/energy-management-app/energy-management-common/src/energy-evse-mode.cpp",
     "${chip_root}/examples/energy-management-app/energy-management-common/src/utils.cpp",
+
+
+    "${chip_root}/examples/energy-management-app/energy-management-common/src/EVSEManufacturerImpl.cpp",
+    "${chip_root}/examples/energy-management-app/energy-management-common/src/EnergyEvseMain.cpp",
     "include/CHIPProjectAppConfig.h",
     "main.cpp",
   ]

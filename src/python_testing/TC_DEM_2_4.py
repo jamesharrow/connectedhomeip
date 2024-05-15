@@ -199,7 +199,7 @@ class TC_DEM_2_4(MatterBaseTest, DEMBaseTestHelper):
         await self.check_dem_attribute("ESAState", Clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kOnline)
 
         self.step("8")
-        await self.send_pause_request_command(forecast.slots[0].minPauseDuration + 1,
+        await self.send_pause_request_command(forecast.slots[0].minPauseDuration,
                                               Clusters.DeviceEnergyManagement.Enums.AdjustmentCauseEnum.kLocalOptimization)
 
         event_data = events_callback.wait_for_event_report(Clusters.DeviceEnergyManagement.Events.Paused)

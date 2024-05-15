@@ -1,6 +1,6 @@
 /*
  *
- *    Copyright (c) 2024 Project CHIP Authors
+ *    Copyright (c) 2023 Project CHIP Authors
  *    All rights reserved.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,45 +18,54 @@
 
 #pragma once
 
-#include <DeviceEnergyManagementDelegateImpl.h>
-
-class DeviceEnergyManagementManager;
+#include <app-common/zap-generated/cluster-objects.h>
+#include "DeviceEnergyManagementManufacturer.h"
 
 namespace chip {
 namespace app {
 namespace Clusters {
-using namespace chip::app::Clusters;
-using namespace chip::app::Clusters::DeviceEnergyManagement;
+namespace DeviceEnergyManagement {
 
-class DeviceEnergyManagementManufacturer
+/**
+ * Product specific class interface. Manaages all product specific behaviour.
+ */
+class DeviceEnergyManagementManufacturerImpl : public DeviceEnergyManagementManufacturer
 {
-private:
-    DeviceEnergyManagementManager * mInstance;
-    static DeviceEnergyManagementDelegate * sDelegate;
-
 public:
-    DeviceEnergyManagementManufacturer() = delete;
-    DeviceEnergyManagementManufacturer(DeviceEnergyManagementManager * aInstance, DeviceEnergyManagementDelegate * delegate) :
-        mInstance(aInstance)
-    {
-        DeviceEnergyManagementManufacturer::sDelegate = delegate;
-    }
 
-    DeviceEnergyManagementManager * GetInstance() { return mInstance; }
+    static DeviceEnergyManagementManufacturerImpl & GetInstance();
 
-    /**
-     * @brief   Called at start up to apply hardware settings
-     */
-    CHIP_ERROR Init();
+    Status Configure(DeviceEnergyManagementDelegate &demDelegate) override;
 
-    /**
-     * @brief   Called at shutdown
-     */
-    CHIP_ERROR Shutdown();
+    bool HandleDeviceEnergyManagementTestEventTrigger(uint64_t eventTrigger);
 
-    static DeviceEnergyManagementDelegate * GetDelegate() { return sDelegate; }
+private:
+    DeviceEnergyManagementManufacturerImpl();
+    virtual ~DeviceEnergyManagementManufacturerImpl();
+
+    Status ConfigureForecast();
+
+    void SetTestEventTrigger_PowerAdjustment();
+    void SetTestEventTrigger_PowerAdjustClear();
+
+    void SetTestEventTrigger_StartTimeAdjustment();
+    void SetTestEventTrigger_StartTimeAdjustmentClear();
+
+    void SetTestEventTrigger_UserOptOutOptimization(OptOutStateEnum optOutState);
+
+    void SetTestEventTrigger_PausableNextSlot();
+
+private:
+    DeviceEnergyManagementDelegate *mpDemDelgate;
+
+    Structs::SlotStruct::Type mSlots[2];
+    Structs::ForecastStruct::Type mForecastStruct;
+
+    Structs::PowerAdjustStruct::Type mPowerAdjustments[1];
+
 };
 
+} // namespace DeviceEnergyManagement
 } // namespace Clusters
 } // namespace app
 } // namespace chip

@@ -16,9 +16,9 @@
  *    limitations under the License.
  */
 
+#include "DeviceEnergyManagementManufacturerImpl.h"
 #include "utils.h"
 #include <DeviceEnergyManagementDelegateImpl.h>
-#include <DeviceEnergyManagementManufacturerImpl.h>
 #include <app/AttributeAccessInterface.h>
 #include <app/ConcreteAttributePath.h>
 #include <app/InteractionModelEngine.h>
@@ -26,125 +26,117 @@
 #include <app/clusters/device-energy-management-server/DeviceEnergyManagementTestEventTriggerHandler.h>
 #include <app/util/attribute-storage.h>
 
-using chip::Protocols::InteractionModel::Status;
-
 using namespace chip;
 using namespace chip::app;
-using namespace chip::app::DataModel;
 using namespace chip::app::Clusters;
 using namespace chip::app::Clusters::DeviceEnergyManagement;
 using namespace chip::app::Clusters::DeviceEnergyManagement::Attributes;
 
-// TODO: refactor, once the best approach is clear
-extern void ForecastTestSetup_TP3b(DataModel::Nullable<Structs::ForecastStruct::Type> & nullableForecast);
-
-static DataModel::Nullable<Structs::ForecastStruct::Type> sForecast;
-static OptOutStateEnum sOptOutState = OptOutStateEnum::kNoOptOut;
-
-struct DeviceEnergyManagementTestEventSaveData
+DeviceEnergyManagementManufacturerImpl & DeviceEnergyManagementManufacturerImpl::GetInstance()
 {
-    DataModel::Nullable<Structs::ForecastStruct::Type> forecast;
-};
+    static DeviceEnergyManagementManufacturerImpl sInstance;
 
-static PowerAdjustmentCapability::TypeInfo::Type sPowerAdjustmentCapability;
-
-struct DeviceEnergyManagementTestEventPowerAdjustRequest
-{
-    int64_t power;
-    uint32_t duration;
-    AdjustmentCauseEnum cause;
-};
-
-static DeviceEnergyManagementTestEventSaveData sDeviceEnergyManagementTestEventSaveData;
-
-DeviceEnergyManagementDelegate * DeviceEnergyManagementManufacturer::sDelegate = nullptr;
-
-CHIP_ERROR DeviceEnergyManagementManufacturer::Init()
-{
-    /* Manufacturers should modify this to do any custom initialisation */
-
-    /* Once the system is initialised then check to see if the state was restored
-     * (e.g. after a power outage), and if the Enable timer check needs to be started
-     */
-
-    return CHIP_NO_ERROR;
+    return sInstance;
 }
 
-/*
- */
-CHIP_ERROR DeviceEnergyManagementManufacturer::Shutdown()
+
+DeviceEnergyManagementManufacturerImpl::DeviceEnergyManagementManufacturerImpl()
 {
-    return CHIP_NO_ERROR;
 }
 
-void SetTestEventTrigger_PowerAdjustment()
+DeviceEnergyManagementManufacturerImpl::~DeviceEnergyManagementManufacturerImpl()
 {
-    ChipLogProgress(Support, "[PowerAdjustment-handle] L-%d", __LINE__);
-
-    static Structs::PowerAdjustStruct::Type powerAdjustments[1];
-
-    powerAdjustments[0].minPower =  5000 * 1000; // 5kW
-    powerAdjustments[0].maxPower = 30000 * 1000; // 30kW
-    powerAdjustments[0].minDuration =  30;   // 30s
-    powerAdjustments[0].maxDuration =  60;   // 60s
-
-    DataModel::List<const Structs::PowerAdjustStruct::Type> powerAdjustmentList(powerAdjustments, 1);
-
-    sPowerAdjustmentCapability = MakeNullable(powerAdjustmentList);
-
-    DeviceEnergyManagementDelegate * dg = DeviceEnergyManagementManufacturer::GetDelegate();
-
-    CHIP_ERROR err = dg->SetPowerAdjustmentCapability(sPowerAdjustmentCapability);
-    if (err != CHIP_NO_ERROR)
-    {
-        ChipLogError(Support, "SetTestEventTrigger_PowerAdjustment failed %s", chip::ErrorStr(err));
-    }
 }
 
-void SetTestEventTrigger_StartTimeAdjustment()
+Status DeviceEnergyManagementManufacturerImpl::Configure(DeviceEnergyManagementDelegate &demDelegate)
 {
-    ChipLogProgress(Support, "[StartTimeAdjustment-handle] L-%d", __LINE__);
+    ChipLogError(Support, "DeviceEnergyManagementManufacturerImpl::Configure");
+    mpDemDelgate = &demDelegate;
 
-    DeviceEnergyManagementDelegate * dg = DeviceEnergyManagementManufacturer::GetDelegate();
+    Status status = ConfigureForecast();
 
-    sForecast = dg->GetForecast();
-    ForecastTestSetup_TP3b(sForecast);
+    return status;
 }
 
-void SetTestEventTrigger_StartTimeAdjustmentClear()
+Status DeviceEnergyManagementManufacturerImpl::ConfigureForecast()
 {
-    ChipLogProgress(Support, "[StartTimeAdjustmentClear-handle] L-%d", __LINE__);
+    uint32_t chipEpoch = 0;
 
-    DeviceEnergyManagementDelegate * dg = DeviceEnergyManagementManufacturer::GetDelegate();
+     [[maybe_unused]] CHIP_ERROR ce = UtilsGetEpochTS(chipEpoch);
 
-    if (CHIP_NO_ERROR != dg->SetForecast(sForecast))
-    {
-        ChipLogProgress(Support, "[StartTimeAdjustmentClear-handle] L-%d Failed to restore forecast!", __LINE__);
-    }
+    mForecastStruct.startTime = static_cast<uint32_t>(chipEpoch); // planned start time, in UTC, for the entire Forecast.
+
+    // earliest start time, in UTC, that the entire Forecast can be shifted to. null value indicates that it can be started
+    // immediately.
+    mForecastStruct.earliestStartTime = Optional<DataModel::Nullable<uint32_t>>{ DataModel::Nullable<uint32_t>{ chipEpoch } };
+    mForecastStruct.endTime           = static_cast<uint32_t>(chipEpoch * 3); // planned end time, in UTC, for the entire Forecast.
+    mForecastStruct.latestEndTime =
+        Optional<uint32_t>(static_cast<uint32_t>(chipEpoch * 3)); // latest end time, in UTC, for the entire Forecast
+
+    mForecastStruct.isPauseable = true;
+
+    mSlots[0].minDuration = 10;
+    mSlots[0].maxDuration = 20;
+
+    // time to when the tariff is good,
+    mSlots[0].defaultDuration =15;
+    mSlots[0].elapsedSlotTime = 0;
+    mSlots[0].remainingSlotTime = 0;
+    mSlots[0].slotIsPauseable.SetValue(true);
+    mSlots[0].minPauseDuration.SetValue(2);
+    mSlots[0].maxPauseDuration.SetValue(10);
+
+    // minPauseDuration=maxPauseDuration=null,
+    mSlots[0].nominalPower.SetValue(0);
+    mSlots[0].minPower = mSlots[1].minPower;
+    mSlots[0].maxPower = mSlots[1].maxPower;
+
+    // Slot 2 has e.g.
+    // set by battery charge capacity
+    mSlots[1].nominalEnergy.SetValue(20000 * 1000);
+
+    // nominalPower set by a reasonable charge rate for efficiency
+    mSlots[1].nominalPower.SetValue(20000 * 1000);
+
+    // maxPower set by EV and EVSE etc capability
+    mSlots[1].maxPower.SetValue(70000 * 1000);
+
+    // minPower set by EVSE and EV capability
+    mSlots[1].minPower.SetValue(2300 * 1000);
+
+    mSlots[1].minDuration     = 20;
+    mSlots[1].maxDuration     = 40;
+    mSlots[1].defaultDuration = 30;
+
+    //    P = E * T
+    //72000 * 3600
+    // elapsedSlotTime and remainingSlotTime start as null and show live values as the slot is reached
+
+    mSlots[1].slotIsPauseable.SetValue(false);
+    mSlots[1].minPauseDuration.SetValue(2);
+    mSlots[1].maxPauseDuration.SetValue(10);
+
+    // no clue on costs(omit),
+
+    mSlots[1].minPowerAdjustment.SetValue(mSlots[1].minPower.Value());
+    mSlots[1].maxPowerAdjustment.SetValue(mSlots[1].maxPower.Value());
+    mSlots[1].minDurationAdjustment.SetValue(mSlots[1].minDuration);
+    mSlots[1].maxDurationAdjustment.SetValue(mSlots[1].maxDuration);
+
+    mForecastStruct.activeSlotNumber.SetNonNull<uint16_t>(0);
+
+    mForecastStruct.slots = DataModel::List<const Structs::SlotStruct::Type>(mSlots, 2);
+
+    DataModel::Nullable<Structs::ForecastStruct::Type> forecast(mForecastStruct);
+
+    mpDemDelgate->SetForecast(forecast);
+
+    return Status::Success;
 }
 
-void SetTestEventTrigger_UserOptOutOptimization(OptOutStateEnum optOutState)
-{
-    ChipLogProgress(Support, "[UserOptOutOptimization-handle] L-%d", __LINE__);
-
-    DeviceEnergyManagementDelegate * dg = DeviceEnergyManagementManufacturer::GetDelegate();
-    sOptOutState                        = dg->GetOptOutState();
-    dg->SetOptOutState(optOutState);
-}
-
-void SetTestEventTrigger_PowerAdjustRequest()
-{
-    ChipLogProgress(Support, "[PowerAdjustRequest-handle] L-%d", __LINE__);
-
-    DeviceEnergyManagementDelegate * dg = DeviceEnergyManagementManufacturer::GetDelegate();
-    sPowerAdjustmentCapability          = dg->GetPowerAdjustmentCapability();
-    // TODO: implement
-}
-
-bool HandleDeviceEnergyManagementTestEventTrigger(uint64_t eventTrigger)
+bool DeviceEnergyManagementManufacturerImpl::HandleDeviceEnergyManagementTestEventTrigger(uint64_t eventTrigger)
 {
     DeviceEnergyManagementTrigger trigger = static_cast<DeviceEnergyManagementTrigger>(eventTrigger);
-    DeviceEnergyManagementDelegate * dg = DeviceEnergyManagementManufacturer::GetDelegate();
 
     switch (trigger)
     {
@@ -154,7 +146,7 @@ bool HandleDeviceEnergyManagementTestEventTrigger(uint64_t eventTrigger)
         break;
     case DeviceEnergyManagementTrigger::kPowerAdjustmentClear:
         ChipLogProgress(Support, "[PowerAdjustmentClear-Test-Event] => Clear PowerAdjustment struct");
-        SetTestEventTrigger_PowerAdjustRequest();
+        SetTestEventTrigger_PowerAdjustClear();
         break;
     case DeviceEnergyManagementTrigger::kUserOptOutLocalOptimization:
         ChipLogProgress(Support, "[UserOptOutLocalOptimization-Test-Event] => Set User opt-out Local Optimization");
@@ -178,20 +170,15 @@ bool HandleDeviceEnergyManagementTestEventTrigger(uint64_t eventTrigger)
         break;
     case DeviceEnergyManagementTrigger::kPausable:
         ChipLogProgress(Support, "[Pausable-Test-Event] => Create Pausable forecast");
-        // TODO call implementation
+        // Already configured in ConfigureForecast()
         break;
     case DeviceEnergyManagementTrigger::kPausableNextSlot:
-    {
         ChipLogProgress(Support, "[PausableNextSlot-Test-Event] => Move to next Pausable slot in forecast");
-        Structs::ForecastStruct::Type forecastStruct = dg->GetForecast().Value();
-        forecastStruct.activeSlotNumber.SetNonNull<uint16_t>(1);
-        DataModel::Nullable<Structs::ForecastStruct::Type> forecast(forecastStruct);
-        dg->SetForecast(forecast);
+        SetTestEventTrigger_PausableNextSlot();
         break;
-    }
     case DeviceEnergyManagementTrigger::kPausableClear:
         ChipLogProgress(Support, "[PausableClear-Test-Event] => Clear Pausable forecast");
-        // TODO call implementation
+        // TODO call implementation - NOTHING TO DO?
         break;
 
     default:
@@ -199,4 +186,95 @@ bool HandleDeviceEnergyManagementTestEventTrigger(uint64_t eventTrigger)
     }
 
     return true;
+}
+
+void DeviceEnergyManagementManufacturerImpl::SetTestEventTrigger_PowerAdjustment()
+{
+    mPowerAdjustments[0].minPower =  5000 * 1000; // 5kW
+    mPowerAdjustments[0].maxPower = 30000 * 1000; // 30kW
+    mPowerAdjustments[0].minDuration = 30;        // 30s
+    mPowerAdjustments[0].maxDuration = 60;        // 60s
+
+    DataModel::List<const Structs::PowerAdjustStruct::Type> powerAdjustmentList(mPowerAdjustments, 1);
+
+    CHIP_ERROR err = mpDemDelgate->SetPowerAdjustmentCapability(MakeNullable(powerAdjustmentList));
+    if (err != CHIP_NO_ERROR)
+    {
+        ChipLogError(Support, "SetTestEventTrigger_PowerAdjustment failed %s", chip::ErrorStr(err));
+    }
+}
+
+void DeviceEnergyManagementManufacturerImpl::SetTestEventTrigger_PowerAdjustClear()
+{
+    mPowerAdjustments[0].minPower = 0;
+    mPowerAdjustments[0].maxPower = 0;
+    mPowerAdjustments[0].minDuration = 0;
+    mPowerAdjustments[0].maxDuration = 0;
+
+    DataModel::List<const Structs::PowerAdjustStruct::Type> powerAdjustmentList(mPowerAdjustments, 1);
+
+    CHIP_ERROR err = mpDemDelgate->SetPowerAdjustmentCapability(MakeNullable(powerAdjustmentList));
+    if (err != CHIP_NO_ERROR)
+    {
+        ChipLogError(Support, "SetTestEventTrigger_PowerAdjustment failed %s", chip::ErrorStr(err));
+    }
+}
+
+void DeviceEnergyManagementManufacturerImpl::SetTestEventTrigger_StartTimeAdjustment()
+{
+    // Get the current forecast ad update the earliestStartTime and latestEndTime
+    mForecastStruct = mpDemDelgate->GetForecast().Value();
+
+    uint32_t chipEpoch = 0;
+
+    CHIP_ERROR err = UtilsGetEpochTS(chipEpoch);
+    if (err != CHIP_NO_ERROR)
+    {
+        ChipLogError(Support, "DeviceEnergyManagementManufacturerImpl::ConfigureForecast_EarliestStartLatestEndTimes could not get time");
+    }
+
+    // planned start time, in UTC, for the entire Forecast.
+    mForecastStruct.startTime = static_cast<uint32_t>(chipEpoch);
+
+    // Set the earliest start time, in UTC, to that before the startTime
+    mForecastStruct.earliestStartTime = Optional<DataModel::Nullable<uint32_t>>{ DataModel::Nullable<uint32_t>{ chipEpoch - 60 } };
+
+    // Planned end time, in UTC, for the entire Forecast.
+    mForecastStruct.endTime = static_cast<uint32_t>(chipEpoch * 3);
+
+    // Latest end time, in UTC, for the entire Forecast which is > mForecastStruct.endTime
+    mForecastStruct.latestEndTime = Optional<uint32_t>(static_cast<uint32_t>(chipEpoch * 3 + 60));
+
+    DataModel::Nullable<Structs::ForecastStruct::Type> forecast(mForecastStruct);
+
+    mpDemDelgate->SetForecast(forecast);
+}
+
+void DeviceEnergyManagementManufacturerImpl::SetTestEventTrigger_StartTimeAdjustmentClear()
+{
+    if (CHIP_NO_ERROR != mpDemDelgate->SetForecast(mForecastStruct))
+    {
+        ChipLogProgress(Support, "[StartTimeAdjustmentClear-handle] L-%d Failed to restore forecast!", __LINE__);
+    }
+}
+
+void DeviceEnergyManagementManufacturerImpl::SetTestEventTrigger_UserOptOutOptimization(OptOutStateEnum optOutState)
+{
+    mpDemDelgate->SetOptOutState(optOutState);
+}
+
+void DeviceEnergyManagementManufacturerImpl::SetTestEventTrigger_PausableNextSlot()
+{
+    // Get the current forecast ad update the active slot number
+    mForecastStruct = mpDemDelgate->GetForecast().Value();
+    mForecastStruct.activeSlotNumber.SetNonNull(1);
+
+    DataModel::Nullable<Structs::ForecastStruct::Type> forecast(mForecastStruct);
+
+    mpDemDelgate->SetForecast(forecast);
+}
+
+bool HandleDeviceEnergyManagementTestEventTrigger(uint64_t eventTrigger)
+{
+    return DeviceEnergyManagementManufacturerImpl::GetInstance().HandleDeviceEnergyManagementTestEventTrigger(eventTrigger);
 }

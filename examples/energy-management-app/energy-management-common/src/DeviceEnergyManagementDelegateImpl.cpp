@@ -17,6 +17,7 @@
  */
 
 #include "DeviceEnergyManagementDelegateImpl.h"
+#include "DeviceEnergyManagementManufacturer.h"
 #include "utils.h"
 #include <app/EventLogging.h>
 
@@ -29,9 +30,15 @@ using namespace chip::app::Clusters::DeviceEnergyManagement::Attributes;
 using chip::Optional;
 using CostsList = DataModel::List<const Structs::CostStruct::Type>;
 
-#ifndef DELEGATE_TEST_DATA
-DeviceEnergyManagementDelegate::DeviceEnergyManagementDelegate() {}
-#endif
+DeviceEnergyManagementDelegate::DeviceEnergyManagementDelegate(DeviceEnergyManagementManufacturer & deviceEnergyManagementManufacturer):
+    mDeviceEnergyManagementManufacturer(deviceEnergyManagementManufacturer),
+    mPauseRequestInProgress(false)
+{
+    BitMask<DeviceEnergyManagement::Feature> FeatureMap;
+    FeatureMap.Set(DeviceEnergyManagement::Feature::kForecastAdjustment);
+
+    mDeviceEnergyManagementManufacturer.Configure(*this);
+}
 
 /**
  * @brief Delegate handler for PowerAdjustRequest
@@ -753,5 +760,5 @@ CHIP_ERROR DeviceEnergyManagementDelegate::SetOptOutState(OptOutStateEnum newVal
         }
     }
 
-        return err;
+    return err;
 }
