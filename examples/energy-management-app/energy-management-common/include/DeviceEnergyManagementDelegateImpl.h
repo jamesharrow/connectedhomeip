@@ -39,8 +39,8 @@ class DeviceEnergyManagementManufacturer;
 class DeviceEnergyManagementDelegate : public DeviceEnergyManagement::Delegate
 {
 public:
-    DeviceEnergyManagementDelegate();
-    DeviceEnergyManagementDelegate(DeviceEnergyManagementManufacturer & deviceEnergyManagementManufacturer);
+    DeviceEnergyManagementDelegate(DeviceEnergyManagementManufacturer *pDeviceEnergyManagementManufacturer = nullptr);
+
     virtual Status PowerAdjustRequest(const int64_t power, const uint32_t duration, AdjustmentCauseEnum cause) override;
     virtual Status CancelPowerAdjustRequest() override;
     virtual Status StartTimeAdjustRequest(const uint32_t requestedStartTime, AdjustmentCauseEnum cause) override;
@@ -106,10 +106,10 @@ private:
     ESAStateEnum mEsaState;
     int64_t mAbsMinPower;
     int64_t mAbsMaxPower;
+    OptOutStateEnum mOptOutState;
+
     Attributes::PowerAdjustmentCapability::TypeInfo::Type mPowerAdjustmentCapability;
     DataModel::Nullable<Structs::ForecastStruct::Type> mForecast;
-    // Default to NoOptOut
-    OptOutStateEnum mOptOutState = OptOutStateEnum::kNoOptOut;
 
     // Keep track whether a PowerAdjustment is in progress
     bool mPowerAdjustmentInProgress;

@@ -37,6 +37,7 @@ DeviceEnergyManagementDelegate::DeviceEnergyManagementDelegate(DeviceEnergyManag
     mEsaState(ESAStateEnum::kUnknownEnumValue),
     mAbsMinPower(0),
     mAbsMaxPower(0),
+    mOptOutState(OptOutStateEnum::kNoOptOut),
     mPowerAdjustmentInProgress(false),
     mPowerAdjustmentStartTime(0),
     mPauseRequestInProgress(false),
