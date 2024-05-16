@@ -80,7 +80,7 @@ CHIP_ERROR DeviceEnergyManagementInit()
         return CHIP_ERROR_INCORRECT_STATE;
     }
 
-    gDEMDelegate = std::make_unique<DeviceEnergyManagementDelegate>(DeviceEnergyManagementManufacturerImpl::GetInstance());
+    gDEMDelegate = std::make_unique<DeviceEnergyManagementDelegate>(&DeviceEnergyManagementManufacturerImpl::GetInstance());
     if (!gDEMDelegate)
     {
         ChipLogError(AppServer, "Failed to allocate memory for DeviceEnergyManagementDelegate");

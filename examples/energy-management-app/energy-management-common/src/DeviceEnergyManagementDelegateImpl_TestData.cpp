@@ -1,3 +1,6 @@
+#include "DeviceEnergyManagementManufacturerImpl.cpp"
+
+#if 0
 /*
  *
  *    Copyright (c) 2023 Project CHIP Authors
@@ -343,3 +346,4 @@ DeviceEnergyManagementDelegate::DeviceEnergyManagementDelegate()
 }
 }
 }
+#endif

@@ -30,22 +30,25 @@ using namespace chip::app::Clusters::DeviceEnergyManagement::Attributes;
 using chip::Optional;
 using CostsList = DataModel::List<const Structs::CostStruct::Type>;
 
-DeviceEnergyManagementDelegate::DeviceEnergyManagementDelegate(DeviceEnergyManagementManufacturer & deviceEnergyManagementManufacturer):
-    mpDeviceEnergyManagementManufacturer(&deviceEnergyManagementManufacturer),
-    mPauseRequestInProgress(false)
+DeviceEnergyManagementDelegate::DeviceEnergyManagementDelegate(DeviceEnergyManagementManufacturer *pDeviceEnergyManagementManufacturer):
+    mpDeviceEnergyManagementManufacturer(pDeviceEnergyManagementManufacturer),
+    mEsaType(ESATypeEnum::kUnknownEnumValue),
+    mEsaCanGenerate(false),
+    mEsaState(ESAStateEnum::kUnknownEnumValue),
+    mAbsMinPower(0),
+    mAbsMaxPower(0),
+    mPowerAdjustmentInProgress(false),
+    mPowerAdjustmentStartTime(0),
+    mPauseRequestInProgress(false),
+    mPauseRequestStartTime(0)
 {
     BitMask<DeviceEnergyManagement::Feature> FeatureMap;
     FeatureMap.Set(DeviceEnergyManagement::Feature::kForecastAdjustment);
 
-    mpDeviceEnergyManagementManufacturer->Configure(*this);
-}
-
-DeviceEnergyManagementDelegate::DeviceEnergyManagementDelegate():
-    mpDeviceEnergyManagementManufacturer(nullptr),
-    mPauseRequestInProgress(false)
-{
-    BitMask<DeviceEnergyManagement::Feature> FeatureMap;
-    FeatureMap.Set(DeviceEnergyManagement::Feature::kForecastAdjustment);
+    if (mpDeviceEnergyManagementManufacturer != nullptr)
+    {
+        mpDeviceEnergyManagementManufacturer->Configure(*this);
+    }
 }
 
 /**
