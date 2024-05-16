@@ -227,8 +227,14 @@ CHIP_ERROR DeviceEnergyManagementDelegate::SendPowerAdjustEndEvent(CauseEnum cau
         return err;
     }
 
-    // TODO - how to calculate the energy used???
-    event.energyUse = 10;
+    if (mpDeviceEnergyManagementManufacturer != nullptr)
+    {
+        event.energyUse = mpDeviceEnergyManagementManufacturer->GetEnergyUse();
+    }
+    else
+    {
+        event.energyUse = 0;
+    }
 
     err = LogEvent(event, mEndpointId, eventNumber);
     if (CHIP_NO_ERROR != err)

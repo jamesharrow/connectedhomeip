@@ -42,6 +42,8 @@ public:
     }
 
     virtual Status Configure(DeviceEnergyManagementDelegate &demDelegate) = 0;
+
+    virtual int64_t GetEnergyUse() = 0;
 };
 
 } // namespace DeviceEnergyManagement

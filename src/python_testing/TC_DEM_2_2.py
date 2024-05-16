@@ -13,6 +13,8 @@
 #    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
+# pylint: disable=invalid-name
+"""Define Matter test case TC_DEM_2_2."""
 
 
 import sys
@@ -30,19 +32,21 @@ logger = logging.getLogger(__name__)
 
 
 class TC_DEM_2_2(MatterBaseTest, DEMBaseTestHelper):
+    """Implementation of test case TC_DEM_2_2."""
 
     def desc_TC_DEM_2_2(self) -> str:
-        """Returns a description of this test"""
+        """Return a description of this test."""
         return "4.1.3. [TC-DEM-2.2] Power Adjustment feature functionality with DUT as Server"
 
     def pics_TC_DEM_2_2(self):
-        """This test case verifies the primary functionality of the Device Energy Management cluster server with Power Adjustment feature."""
+        """Return the PICS definitions associated with this test."""
         pics = [
             "DEM.S.F00",  # Depends on Feature 00 (PowerAdjustment)
         ]
         return pics
 
     def steps_TC_DEM_2_2(self) -> list[TestStep]:
+        """Execute the test steps."""
         steps = [
             TestStep("1", "Commissioning, already done", is_commissioning=True),
             TestStep("2", "TH reads TestEventTriggersEnabled attribute from General Diagnostics Cluster. Verify that TestEventTriggersEnabled attribute has a value of 1 (True)"),
@@ -77,7 +81,8 @@ class TC_DEM_2_2(MatterBaseTest, DEMBaseTestHelper):
 
     @async_test_body
     async def test_TC_DEM_2_2(self):
-
+        # pylint: disable=too-many-locals, too-many-statements
+        """Run the test steps."""
         # These values have to correlate with the values configured in
         # DeviceEnergyManagementManufacturerImpl::SetTestEventTrigger_PowerAdjustment()
         min_power = 5 * 1000 * 1000
@@ -120,7 +125,8 @@ class TC_DEM_2_2(MatterBaseTest, DEMBaseTestHelper):
             found_min_duration = min(found_min_duration, entry.minDuration)
             found_max_duration = max(found_max_duration, entry.maxDuration)
 
-        logging.info(f"found_min_power {found_min_power} found_max_power {found_max_power} found_min_duration {found_min_duration} found_max_duration {found_max_duration}")
+        result = f"found_min_power {found_min_power} found_max_power {found_max_power} found_min_duration {found_min_duration} found_max_duration {found_max_duration}"
+        logging.info(result)
 
         asserts.assert_equal(found_min_power, min_power)
         asserts.assert_equal(found_max_power, max_power)
@@ -131,9 +137,9 @@ class TC_DEM_2_2(MatterBaseTest, DEMBaseTestHelper):
         await self.check_dem_attribute("OptOutState", Clusters.DeviceEnergyManagement.Enums.OptOutStateEnum.kNoOptOut)
 
         self.step("4")
-        await self.send_power_adjustment_command(power = max_power,
-                                                 duration = max_duration,
-                                                 cause = Clusters.DeviceEnergyManagement.Enums.AdjustmentCauseEnum.kLocalOptimization)
+        await self.send_power_adjustment_command(power=max_power,
+                                                 duration=max_duration,
+                                                 cause=Clusters.DeviceEnergyManagement.Enums.AdjustmentCauseEnum.kLocalOptimization)
 
         event_data = events_callback.wait_for_event_report(Clusters.DeviceEnergyManagement.Events.PowerAdjustStart)
 
@@ -149,42 +155,42 @@ class TC_DEM_2_2(MatterBaseTest, DEMBaseTestHelper):
         await self.send_cancel_power_adjustment_command(expected_status=Status.Failure)
 
         self.step("7")
-        await self.send_power_adjustment_command(power = max_power + 1,
-                                                 duration = min_duration,
-                                                 cause = Clusters.DeviceEnergyManagement.Enums.AdjustmentCauseEnum.kLocalOptimization,
+        await self.send_power_adjustment_command(power=max_power + 1,
+                                                 duration=min_duration,
+                                                 cause=Clusters.DeviceEnergyManagement.Enums.AdjustmentCauseEnum.kLocalOptimization,
                                                  expected_status=Status.ConstraintError)
 
         self.step("8")
-        await self.send_power_adjustment_command(power = min_power,
-                                                 duration = max_duration + 1,
-                                                 cause = Clusters.DeviceEnergyManagement.Enums.AdjustmentCauseEnum.kLocalOptimization,
+        await self.send_power_adjustment_command(power=min_power,
+                                                 duration=max_duration + 1,
+                                                 cause=Clusters.DeviceEnergyManagement.Enums.AdjustmentCauseEnum.kLocalOptimization,
                                                  expected_status=Status.ConstraintError)
 
         self.step("9")
-        await self.send_power_adjustment_command(power = min_power - 1,
-                                                 duration = max_duration,
-                                                 cause = Clusters.DeviceEnergyManagement.Enums.AdjustmentCauseEnum.kLocalOptimization,
+        await self.send_power_adjustment_command(power=min_power - 1,
+                                                 duration=max_duration,
+                                                 cause=Clusters.DeviceEnergyManagement.Enums.AdjustmentCauseEnum.kLocalOptimization,
                                                  expected_status=Status.ConstraintError)
 
         self.step("10")
-        await self.send_power_adjustment_command(power = max_power,
-                                                 duration = min_duration - 1,
-                                                 cause = Clusters.DeviceEnergyManagement.Enums.AdjustmentCauseEnum.kLocalOptimization,
+        await self.send_power_adjustment_command(power=max_power,
+                                                 duration=min_duration - 1,
+                                                 cause=Clusters.DeviceEnergyManagement.Enums.AdjustmentCauseEnum.kLocalOptimization,
                                                  expected_status=Status.ConstraintError)
 
         start = datetime.datetime.now()
 
         self.step("11")
-        await self.send_power_adjustment_command(power = max_power,
-                                                 duration = min_duration,
-                                                 cause = Clusters.DeviceEnergyManagement.Enums.AdjustmentCauseEnum.kLocalOptimization)
+        await self.send_power_adjustment_command(power=max_power,
+                                                 duration=min_duration,
+                                                 cause=Clusters.DeviceEnergyManagement.Enums.AdjustmentCauseEnum.kLocalOptimization)
 
         event_data = events_callback.wait_for_event_report(Clusters.DeviceEnergyManagement.Events.PowerAdjustStart)
 
         self.step("12")
-        await self.send_power_adjustment_command(power = min_power,
-                                                 duration = max_duration,
-                                                 cause = Clusters.DeviceEnergyManagement.Enums.AdjustmentCauseEnum.kLocalOptimization)
+        await self.send_power_adjustment_command(power=min_power,
+                                                 duration=max_duration,
+                                                 cause=Clusters.DeviceEnergyManagement.Enums.AdjustmentCauseEnum.kLocalOptimization)
 
         events_callback.wait_for_no_event_report(2)
 
@@ -193,7 +199,6 @@ class TC_DEM_2_2(MatterBaseTest, DEMBaseTestHelper):
 
         events_callback.wait_for_no_event_report(2)
 
-
         self.step("13a")
         await self.check_dem_attribute("ESAState", Clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kPowerAdjustActive)
 
@@ -201,9 +206,9 @@ class TC_DEM_2_2(MatterBaseTest, DEMBaseTestHelper):
         await self.check_dem_attribute("OptOutState", Clusters.DeviceEnergyManagement.Enums.OptOutStateEnum.kGridOptOut)
 
         self.step("14")
-        await self.send_power_adjustment_command(power = max_power,
-                                                 duration = max_duration,
-                                                 cause = Clusters.DeviceEnergyManagement.Enums.AdjustmentCauseEnum.kGridOptimization,
+        await self.send_power_adjustment_command(power=max_power,
+                                                 duration=max_duration,
+                                                 cause=Clusters.DeviceEnergyManagement.Enums.AdjustmentCauseEnum.kGridOptimization,
                                                  expected_status=Status.Failure)
 
         self.step("15")
@@ -214,8 +219,9 @@ class TC_DEM_2_2(MatterBaseTest, DEMBaseTestHelper):
         elapsed = datetime.datetime.now() - start
         asserts.assert_less_equal(abs(elapsed.seconds - event_data.duration), 1)
 
-        # TODO: Do a better check on valid energyUse value
-        asserts.assert_greater_equal(event_data.energyUse, 1)
+        # TODO: Do a better check on valid energyUse value.
+        # Value returned here is defined in DeviceEnergyManagementManufacturerImpl::GetEnergyUse()
+        asserts.assert_greater_equal(event_data.energyUse, 300)
 
         self.step("15a")
         await self.check_dem_attribute("ESAState", Clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kOnline)
@@ -234,6 +240,7 @@ class TC_DEM_2_2(MatterBaseTest, DEMBaseTestHelper):
 
         self.step("17")
         await self.send_test_event_trigger_power_adjustment_clear()
+
 
 if __name__ == "__main__":
     default_matter_test_main()

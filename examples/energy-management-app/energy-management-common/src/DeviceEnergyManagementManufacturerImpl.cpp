@@ -54,6 +54,11 @@ Status DeviceEnergyManagementManufacturerImpl::Configure(DeviceEnergyManagementD
     return status;
 }
 
+int64_t DeviceEnergyManagementManufacturerImpl::GetEnergyUse()
+{
+    return 300;
+}
+
 Status DeviceEnergyManagementManufacturerImpl::ConfigureForecast()
 {
     uint32_t chipEpoch = 0;

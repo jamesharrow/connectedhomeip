@@ -37,6 +37,8 @@ public:
 
     Status Configure(DeviceEnergyManagementDelegate &demDelegate) override;
 
+    int64_t GetEnergyUse() override;
+
     bool HandleDeviceEnergyManagementTestEventTrigger(uint64_t eventTrigger);
 
 private:
