@@ -18,6 +18,7 @@
 
 #include <DeviceEnergyManagementDelegateImpl.h>
 #include <EVSEManufacturerImpl.h>
+#include <DeviceEnergyManagementManufacturerDelegate.h>
 #include <EnergyEvseManager.h>
 
 #include <app/clusters/device-energy-management-server/DeviceEnergyManagementTestEventTriggerHandler.h>
@@ -26,6 +27,7 @@
 #include <app/clusters/energy-evse-server/EnergyEvseTestEventTriggerHandler.h>
 #include <app/clusters/power-source-server/power-source-server.h>
 #include <app/server/Server.h>
+#include <utils.h>
 
 #include <app-common/zap-generated/attributes/Accessors.h>
 #include <protocols/interaction_model/StatusCode.h>
@@ -63,6 +65,8 @@ CHIP_ERROR EVSEManufacturer::Init()
 
     DeviceEnergyManagementDelegate * dem = GetEvseManufacturer()->GetDEMDelegate();
     VerifyOrReturnLogError(dem != nullptr, CHIP_ERROR_UNINITIALIZED);
+
+    ReturnErrorOnFailure(ConfigureForecast());
 
     /* For Device Energy Management we need the ESA to be Online and ready to accept commands */
     dem->SetESAState(ESAStateEnum::kOnline);
@@ -510,227 +514,139 @@ void EVSEManufacturer::ApplicationCallbackHandler(const EVSECbInfo * cb, intptr_
     }
 }
 
-struct EVSETestEventSaveData
+int64_t EVSEManufacturer::GetEnergyUse()
 {
-    int64_t mOldMaxHardwareCurrentLimit;
-    int64_t mOldCircuitCapacity;
-    int64_t mOldUserMaximumChargeCurrent;
-    int64_t mOldCableAssemblyLimit;
-    StateEnum mOldHwStateBasic;           /* For storing hwState before Basic Func event */
-    StateEnum mOldHwStatePluggedIn;       /* For storing hwState before PluggedIn event */
-    StateEnum mOldHwStatePluggedInDemand; /* For storing hwState before PluggedInDemand event */
-};
-
-static EVSETestEventSaveData sEVSETestEventSaveData;
-
-EnergyEvseDelegate * GetEvseDelegate()
-{
-    EVSEManufacturer * mn = GetEvseManufacturer();
-    VerifyOrDieWithMsg(mn != nullptr, AppServer, "EVSEManufacturer is null");
-    EnergyEvseDelegate * dg = mn->GetEvseDelegate();
-    VerifyOrDieWithMsg(dg != nullptr, AppServer, "EVSE Delegate is null");
-
-    return dg;
+    return 300;
 }
 
-void SetTestEventTrigger_BasicFunctionality()
+bool EVSEManufacturer::IsPowerAdjustSupported()
 {
-    EnergyEvseDelegate * dg = GetEvseDelegate();
-
-    sEVSETestEventSaveData.mOldMaxHardwareCurrentLimit  = dg->HwGetMaxHardwareCurrentLimit();
-    sEVSETestEventSaveData.mOldCircuitCapacity          = dg->GetCircuitCapacity();
-    sEVSETestEventSaveData.mOldUserMaximumChargeCurrent = dg->GetUserMaximumChargeCurrent();
-    sEVSETestEventSaveData.mOldHwStateBasic             = dg->HwGetState();
-
-    dg->HwSetMaxHardwareCurrentLimit(32000);
-    dg->HwSetCircuitCapacity(32000);
-    dg->SetUserMaximumChargeCurrent(32000);
-    dg->HwSetState(StateEnum::kNotPluggedIn);
-}
-void SetTestEventTrigger_BasicFunctionalityClear()
-{
-    EnergyEvseDelegate * dg = GetEvseDelegate();
-
-    dg->HwSetMaxHardwareCurrentLimit(sEVSETestEventSaveData.mOldMaxHardwareCurrentLimit);
-    dg->HwSetCircuitCapacity(sEVSETestEventSaveData.mOldCircuitCapacity);
-    dg->SetUserMaximumChargeCurrent(sEVSETestEventSaveData.mOldUserMaximumChargeCurrent);
-    dg->HwSetState(sEVSETestEventSaveData.mOldHwStateBasic);
-}
-void SetTestEventTrigger_EVPluggedIn()
-{
-    EnergyEvseDelegate * dg = GetEvseDelegate();
-
-    sEVSETestEventSaveData.mOldCableAssemblyLimit = dg->HwGetCableAssemblyLimit();
-    sEVSETestEventSaveData.mOldHwStatePluggedIn   = dg->HwGetState();
-
-    dg->HwSetCableAssemblyLimit(63000);
-    dg->HwSetState(StateEnum::kPluggedInNoDemand);
-}
-void SetTestEventTrigger_EVPluggedInClear()
-{
-    EnergyEvseDelegate * dg = GetEvseDelegate();
-    dg->HwSetCableAssemblyLimit(sEVSETestEventSaveData.mOldCableAssemblyLimit);
-    dg->HwSetState(sEVSETestEventSaveData.mOldHwStatePluggedIn);
-}
-
-void SetTestEventTrigger_EVChargeDemand()
-{
-    EnergyEvseDelegate * dg = GetEvseDelegate();
-
-    sEVSETestEventSaveData.mOldHwStatePluggedInDemand = dg->HwGetState();
-    dg->HwSetState(StateEnum::kPluggedInDemand);
-}
-void SetTestEventTrigger_EVChargeDemandClear()
-{
-    EnergyEvseDelegate * dg = GetEvseDelegate();
-
-    dg->HwSetState(sEVSETestEventSaveData.mOldHwStatePluggedInDemand);
-}
-void SetTestEventTrigger_EVSEGroundFault()
-{
-    EnergyEvseDelegate * dg = GetEvseDelegate();
-
-    dg->HwSetFault(FaultStateEnum::kGroundFault);
-}
-
-void SetTestEventTrigger_EVSEOverTemperatureFault()
-{
-    EnergyEvseDelegate * dg = GetEvseDelegate();
-
-    dg->HwSetFault(FaultStateEnum::kOverTemperature);
-}
-
-void SetTestEventTrigger_EVSEFaultClear()
-{
-    EnergyEvseDelegate * dg = GetEvseDelegate();
-
-    dg->HwSetFault(FaultStateEnum::kNoError);
-}
-
-void SetTestEventTrigger_EVSEDiagnosticsComplete()
-{
-    EnergyEvseDelegate * dg = GetEvseDelegate();
-
-    dg->HwDiagnosticsComplete();
-}
-
-void SetTestEventTrigger_FakeReadingsLoadStart()
-{
-    EVSEManufacturer * mn = GetEvseManufacturer();
-    VerifyOrDieWithMsg(mn != nullptr, AppServer, "EVSEManufacturer is null");
-
-    int64_t aPower_mW              = 1'000'000; // Fake load 1000 W
-    uint32_t aPowerRandomness_mW   = 20'000;    // randomness 20W
-    int64_t aVoltage_mV            = 230'000;   // Fake Voltage 230V
-    uint32_t aVoltageRandomness_mV = 1'000;     // randomness 1V
-    int64_t aCurrent_mA            = 4'348;     // Fake Current (at 1kW@230V = 4.3478 Amps)
-    uint32_t aCurrentRandomness_mA = 500;       // randomness 500mA
-    uint8_t aInterval_s            = 2;         // 2s updates
-    bool bReset                    = true;
-    mn->StartFakeReadings(EndpointId(1), aPower_mW, aPowerRandomness_mW, aVoltage_mV, aVoltageRandomness_mV, aCurrent_mA,
-                          aCurrentRandomness_mA, aInterval_s, bReset);
-}
-
-void SetTestEventTrigger_FakeReadingsGeneratorStart()
-{
-    EVSEManufacturer * mn = GetEvseManufacturer();
-    VerifyOrDieWithMsg(mn != nullptr, AppServer, "EVSEManufacturer is null");
-
-    int64_t aPower_mW              = -3'000'000; // Fake Generator -3000 W
-    uint32_t aPowerRandomness_mW   = 20'000;     // randomness 20W
-    int64_t aVoltage_mV            = 230'000;    // Fake Voltage 230V
-    uint32_t aVoltageRandomness_mV = 1'000;      // randomness 1V
-    int64_t aCurrent_mA            = -13'043;    // Fake Current (at -3kW@230V = -13.0434 Amps)
-    uint32_t aCurrentRandomness_mA = 500;        // randomness 500mA
-    uint8_t aInterval_s            = 5;          // 5s updates
-    bool bReset                    = true;
-    mn->StartFakeReadings(EndpointId(1), aPower_mW, aPowerRandomness_mW, aVoltage_mV, aVoltageRandomness_mV, aCurrent_mA,
-                          aCurrentRandomness_mA, aInterval_s, bReset);
-}
-
-void SetTestEventTrigger_FakeReadingsStop()
-{
-    EVSEManufacturer * mn = GetEvseManufacturer();
-    VerifyOrDieWithMsg(mn != nullptr, AppServer, "EVSEManufacturer is null");
-    mn->StopFakeReadings();
-}
-
-bool HandleEnergyEvseTestEventTrigger(uint64_t eventTrigger)
-{
-    EnergyEvseTrigger trigger = static_cast<EnergyEvseTrigger>(eventTrigger);
-
-    switch (trigger)
-    {
-    case EnergyEvseTrigger::kBasicFunctionality:
-        ChipLogProgress(Support, "[EnergyEVSE-Test-Event] => Basic Functionality install");
-        SetTestEventTrigger_BasicFunctionality();
-        break;
-    case EnergyEvseTrigger::kBasicFunctionalityClear:
-        ChipLogProgress(Support, "[EnergyEVSE-Test-Event] => Basic Functionality clear");
-        SetTestEventTrigger_BasicFunctionalityClear();
-        break;
-    case EnergyEvseTrigger::kEVPluggedIn:
-        ChipLogProgress(Support, "[EnergyEVSE-Test-Event] => EV plugged in");
-        SetTestEventTrigger_EVPluggedIn();
-        break;
-    case EnergyEvseTrigger::kEVPluggedInClear:
-        ChipLogProgress(Support, "[EnergyEVSE-Test-Event] => EV unplugged");
-        SetTestEventTrigger_EVPluggedInClear();
-        break;
-    case EnergyEvseTrigger::kEVChargeDemand:
-        ChipLogProgress(Support, "[EnergyEVSE-Test-Event] => EV Charge Demand");
-        SetTestEventTrigger_EVChargeDemand();
-        break;
-    case EnergyEvseTrigger::kEVChargeDemandClear:
-        ChipLogProgress(Support, "[EnergyEVSE-Test-Event] => EV Charge NoDemand");
-        SetTestEventTrigger_EVChargeDemandClear();
-        break;
-    case EnergyEvseTrigger::kEVSEGroundFault:
-        ChipLogProgress(Support, "[EnergyEVSE-Test-Event] => EVSE has a GroundFault fault");
-        SetTestEventTrigger_EVSEGroundFault();
-        break;
-    case EnergyEvseTrigger::kEVSEOverTemperatureFault:
-        ChipLogProgress(Support, "[EnergyEVSE-Test-Event] => EVSE has a OverTemperature fault");
-        SetTestEventTrigger_EVSEOverTemperatureFault();
-        break;
-    case EnergyEvseTrigger::kEVSEFaultClear:
-        ChipLogProgress(Support, "[EnergyEVSE-Test-Event] => EVSE faults have cleared");
-        SetTestEventTrigger_EVSEFaultClear();
-        break;
-    case EnergyEvseTrigger::kEVSEDiagnosticsComplete:
-        ChipLogProgress(Support, "[EnergyEVSE-Test-Event] => EVSE Diagnostics Completed");
-        SetTestEventTrigger_EVSEDiagnosticsComplete();
-        break;
-
-    default:
-        return false;
-    }
-
     return true;
 }
 
-bool HandleEnergyReportingTestEventTrigger(uint64_t eventTrigger)
+bool EVSEManufacturer::IsPauseSupported()
 {
-    EnergyReportingTrigger trigger = static_cast<EnergyReportingTrigger>(eventTrigger);
+    return true;
+}
 
-    switch (trigger)
+CHIP_ERROR EVSEManufacturer::HandleDeviceEnergyManagementPowerAdjustRequest(const int64_t power, const uint32_t duration, AdjustmentCauseEnum cause)
+{
+    return CHIP_NO_ERROR;
+}
+
+CHIP_ERROR EVSEManufacturer::HandleDeviceEnergyManagementPowerAdjustCompletion()
+{
+    return CHIP_NO_ERROR;
+}
+
+CHIP_ERROR EVSEManufacturer::HandleDeviceEnergyManagementCancelPowerAdjustRequest(CauseEnum cause)
+{
+    return CHIP_NO_ERROR;
+}
+
+CHIP_ERROR EVSEManufacturer::HandleDeviceEnergyManagementStartTimeAdjustRequest(const uint32_t requestedStartTime, AdjustmentCauseEnum cause)
+{
+    return CHIP_NO_ERROR;
+}
+
+CHIP_ERROR EVSEManufacturer::HandleDeviceEnergyManagementPauseRequest(const uint32_t duration, AdjustmentCauseEnum cause)
+{
+    return CHIP_NO_ERROR;
+}
+
+CHIP_ERROR EVSEManufacturer::HandleDeviceEnergyManagementCancelPauseRequest(CauseEnum cause)
+{
+    return CHIP_NO_ERROR;
+}
+
+CHIP_ERROR EVSEManufacturer::HandleDeviceEnergyManagementPauseCompletion()
+{
+    return CHIP_NO_ERROR;
+}
+
+CHIP_ERROR EVSEManufacturer::HandleDeviceEnergyManagementCancelRequest()
+{
+    return CHIP_NO_ERROR;
+}
+
+
+CHIP_ERROR EVSEManufacturer::ConfigureForecast()
+{
+    uint32_t chipEpoch = 0;
+
+    CHIP_ERROR err = UtilsGetEpochTS(chipEpoch);
+    if (err != CHIP_NO_ERROR)
     {
-    case EnergyReportingTrigger::kFakeReadingsStop:
-        ChipLogProgress(Support, "[EnergyReporting-Test-Event] => Stop Fake load");
-        SetTestEventTrigger_FakeReadingsStop();
-        break;
-    case EnergyReportingTrigger::kFakeReadingsLoadStart_1kW_2s:
-        ChipLogProgress(Support, "[EnergyReporting-Test-Event] => Start Fake load 1kW @2s Import");
-        SetTestEventTrigger_FakeReadingsLoadStart();
-        break;
-    case EnergyReportingTrigger::kFakeReadingsGenStart_3kW_5s:
-        ChipLogProgress(Support, "[EnergyReporting-Test-Event] => Start Fake generator 3kW @5s Export");
-        SetTestEventTrigger_FakeReadingsGeneratorStart();
-        break;
-
-    default:
-        return false;
+        ChipLogError(Support, "EVSEManufacturer::ConfigureForecast could not get time");
+        return err;
     }
 
-    return true;
+    mForecastStruct.startTime = static_cast<uint32_t>(chipEpoch); // planned start time, in UTC, for the entire Forecast.
+
+    // earliest start time, in UTC, that the entire Forecast can be shifted to. null value indicates that it can be started
+    // immediately.
+    mForecastStruct.earliestStartTime = Optional<DataModel::Nullable<uint32_t>>{ DataModel::Nullable<uint32_t>{ chipEpoch } };
+    mForecastStruct.endTime           = static_cast<uint32_t>(chipEpoch * 3); // planned end time, in UTC, for the entire Forecast.
+    mForecastStruct.latestEndTime =
+        Optional<uint32_t>(static_cast<uint32_t>(chipEpoch * 3)); // latest end time, in UTC, for the entire Forecast
+
+    mForecastStruct.isPauseable = true;
+
+    mSlots[0].minDuration = 10;
+    mSlots[0].maxDuration = 20;
+
+    // time to when the tariff is good,
+    mSlots[0].defaultDuration =15;
+    mSlots[0].elapsedSlotTime = 0;
+    mSlots[0].remainingSlotTime = 0;
+    mSlots[0].slotIsPauseable.SetValue(true);
+    mSlots[0].minPauseDuration.SetValue(2);
+    mSlots[0].maxPauseDuration.SetValue(10);
+
+    // minPauseDuration=maxPauseDuration=null,
+    mSlots[0].nominalPower.SetValue(0);
+    mSlots[0].minPower = mSlots[1].minPower;
+    mSlots[0].maxPower = mSlots[1].maxPower;
+
+    // Slot 2 has e.g.
+    // set by battery charge capacity
+    mSlots[1].nominalEnergy.SetValue(20000 * 1000);
+
+    // nominalPower set by a reasonable charge rate for efficiency
+    mSlots[1].nominalPower.SetValue(20000 * 1000);
+
+    // maxPower set by EV and EVSE etc capability
+    mSlots[1].maxPower.SetValue(70000 * 1000);
+
+    // minPower set by EVSE and EV capability
+    mSlots[1].minPower.SetValue(2300 * 1000);
+
+    mSlots[1].minDuration     = 20;
+    mSlots[1].maxDuration     = 40;
+    mSlots[1].defaultDuration = 30;
+
+    //    P = E * T
+    //72000 * 3600
+    // elapsedSlotTime and remainingSlotTime start as null and show live values as the slot is reached
+
+    mSlots[1].slotIsPauseable.SetValue(false);
+    mSlots[1].minPauseDuration.SetValue(2);
+    mSlots[1].maxPauseDuration.SetValue(10);
+
+    // no clue on costs(omit),
+
+    mSlots[1].minPowerAdjustment.SetValue(mSlots[1].minPower.Value());
+    mSlots[1].maxPowerAdjustment.SetValue(mSlots[1].maxPower.Value());
+    mSlots[1].minDurationAdjustment.SetValue(mSlots[1].minDuration);
+    mSlots[1].maxDurationAdjustment.SetValue(mSlots[1].maxDuration);
+
+    mForecastStruct.activeSlotNumber.SetNonNull<uint16_t>(0);
+
+    mForecastStruct.slots = DataModel::List<const DeviceEnergyManagement::Structs::SlotStruct::Type>(mSlots, 2);
+
+    static DataModel::Nullable<DeviceEnergyManagement::Structs::ForecastStruct::Type> forecast(mForecastStruct);
+
+    GetDEMDelegate()->SetForecast(forecast);
+
+    return CHIP_NO_ERROR;
 }

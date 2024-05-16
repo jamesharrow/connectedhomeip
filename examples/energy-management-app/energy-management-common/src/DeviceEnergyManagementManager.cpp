@@ -17,7 +17,6 @@
  */
 
 #include <DeviceEnergyManagementManager.h>
-#include <DeviceEnergyManagementManufacturerImpl.h>
 
 using namespace chip::app;
 using namespace chip::app::Clusters;

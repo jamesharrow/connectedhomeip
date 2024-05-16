@@ -23,7 +23,6 @@
 #include <PowerTopologyDelegate.h>
 #include <device-energy-management-modes.h>
 #include <energy-evse-modes.h>
-#include <DeviceEnergyManagementManufacturerImpl.h>
 
 #include <app-common/zap-generated/ids/Attributes.h>
 #include <app-common/zap-generated/ids/Clusters.h>
@@ -80,7 +79,7 @@ CHIP_ERROR DeviceEnergyManagementInit()
         return CHIP_ERROR_INCORRECT_STATE;
     }
 
-    gDEMDelegate = std::make_unique<DeviceEnergyManagementDelegate>(&DeviceEnergyManagementManufacturerImpl::GetInstance());
+    gDEMDelegate = std::make_unique<DeviceEnergyManagementDelegate>();
     if (!gDEMDelegate)
     {
         ChipLogError(AppServer, "Failed to allocate memory for DeviceEnergyManagementDelegate");
@@ -383,6 +382,8 @@ CHIP_ERROR EVSEManufacturerInit()
         ChipLogError(AppServer, "Failed to allocate memory for EvseManufacturer");
         return CHIP_ERROR_NO_MEMORY;
     }
+
+    gDEMDelegate.get()->SetDemManufacturerDelegate(*gEvseManufacturer.get());
 
     /* Call Manufacturer specific init */
     err = gEvseManufacturer->Init();
