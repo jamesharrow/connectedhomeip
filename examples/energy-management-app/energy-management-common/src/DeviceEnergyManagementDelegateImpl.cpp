@@ -17,7 +17,7 @@
  */
 
 #include "DeviceEnergyManagementDelegateImpl.h"
-#include "DeviceEnergyManagementManufacturerDelegate.h"
+#include "DEMManufacturerDelegate.h"
 #include "utils.h"
 #include <app/EventLogging.h>
 
@@ -31,7 +31,7 @@ using chip::Optional;
 using CostsList = DataModel::List<const Structs::CostStruct::Type>;
 
 DeviceEnergyManagementDelegate::DeviceEnergyManagementDelegate():
-    mpDeviceEnergyManagementManufacturerDelegate(nullptr),
+    mpDEMManufacturerDelegate(nullptr),
     mEsaType(ESATypeEnum::kUnknownEnumValue),
     mEsaCanGenerate(false),
     mEsaState(ESAStateEnum::kUnknownEnumValue),
@@ -43,13 +43,20 @@ DeviceEnergyManagementDelegate::DeviceEnergyManagementDelegate():
     mPauseRequestInProgress(false),
     mPauseRequestStartTime(0)
 {
+    // TODO how to set the feature map? delegate mpDEMManufacturerDelegate which is not set here but call it on dem
     BitMask<DeviceEnergyManagement::Feature> FeatureMap;
-    FeatureMap.Set(DeviceEnergyManagement::Feature::kForecastAdjustment);
+    FeatureMap.Set(DeviceEnergyManagement::Feature::kPowerAdjustment);
+    FeatureMap.Set(DeviceEnergyManagement::Feature::kPowerForecastReporting);
+    FeatureMap.Set(DeviceEnergyManagement::Feature::kStateForecastReporting);
+    FeatureMap.Set(DeviceEnergyManagement::Feature::kStartTimeAdjustment);
+    FeatureMap.Set(DeviceEnergyManagement::Feature::kPausable);
+    FeatureMap.Set(DeviceEnergyManagement::Feature::kPowerAdjustment);
+    FeatureMap.Set(DeviceEnergyManagement::Feature::kConstraintBasedAdjustment);
 }
 
-void DeviceEnergyManagementDelegate::SetDemManufacturerDelegate(DeviceEnergyManagementManufacturerDelegate & deviceEnergyManagementManufacturerDelegate)
+void DeviceEnergyManagementDelegate::SetDemManufacturerDelegate(DEMManufacturerDelegate & deviceEnergyManagementManufacturerDelegate)
 {
-    mpDeviceEnergyManagementManufacturerDelegate = &deviceEnergyManagementManufacturerDelegate;
+    mpDEMManufacturerDelegate = &deviceEnergyManagementManufacturerDelegate;
 }
 
 /**
@@ -74,7 +81,8 @@ Status DeviceEnergyManagementDelegate::PowerAdjustRequest(const int64_t power, c
     ChipLogDetail(AppServer, "DeviceEnergyManagementDelegate::PowerAdjustRequest mPowerAdjustmentInProgress %d", mPowerAdjustmentInProgress);
 
     //  Notify the appliance if the appliance hardware cannot be adjusted, then return Failure
-    if (mpDeviceEnergyManagementManufacturerDelegate != nullptr && !mpDeviceEnergyManagementManufacturerDelegate->IsPowerAdjustSupported())
+    if (mpDEMManufacturerDelegate == nullptr ||
+        !mpDEMManufacturerDelegate->GetDemFeatureMap().Has(DeviceEnergyManagement::Feature::kPowerAdjustment))
     {
         ChipLogError(AppServer, "PowerAdjust not supported");
         return Status::Failure;
@@ -116,9 +124,9 @@ Status DeviceEnergyManagementDelegate::PowerAdjustRequest(const int64_t power, c
     DeviceLayer::SystemLayer().StartTimer(System::Clock::Seconds32(duration), PowerAdjustTimerExpiry, this);
 
     //  Update the forecast with the new expected end time
-    if (mpDeviceEnergyManagementManufacturerDelegate != nullptr)
+    if (mpDEMManufacturerDelegate != nullptr)
     {
-        err = mpDeviceEnergyManagementManufacturerDelegate->HandleDeviceEnergyManagementPowerAdjustRequest(power, duration, cause);
+        err = mpDEMManufacturerDelegate->HandleDeviceEnergyManagementPowerAdjustRequest(power, duration, cause);
         if (err != CHIP_NO_ERROR)
         {
             return Status::Failure;
@@ -161,9 +169,9 @@ void DeviceEnergyManagementDelegate::HandlePowerAdjustTimerExpiry()
     SendPowerAdjustEndEvent(CauseEnum::kNormalCompletion);
 
     // Update the forecast with new expected end time
-    if (mpDeviceEnergyManagementManufacturerDelegate != nullptr)
+    if (mpDEMManufacturerDelegate != nullptr)
     {
-        mpDeviceEnergyManagementManufacturerDelegate->HandleDeviceEnergyManagementPowerAdjustCompletion();
+        mpDEMManufacturerDelegate->HandleDeviceEnergyManagementPowerAdjustCompletion();
     }
 }
 
@@ -215,9 +223,9 @@ CHIP_ERROR DeviceEnergyManagementDelegate::CancelPowerAdjustRequestAndSendEvent(
     CHIP_ERROR err = SendPowerAdjustEndEvent(cause);
 
     // Notify the appliance's that it can resume its intended power setting (or go idle)
-    if (mpDeviceEnergyManagementManufacturerDelegate != nullptr)
+    if (mpDEMManufacturerDelegate != nullptr)
     {
-        err = mpDeviceEnergyManagementManufacturerDelegate->HandleDeviceEnergyManagementCancelPowerAdjustRequest(cause);
+        err = mpDEMManufacturerDelegate->HandleDeviceEnergyManagementCancelPowerAdjustRequest(cause);
     }
 
     // TODO
@@ -248,9 +256,9 @@ CHIP_ERROR DeviceEnergyManagementDelegate::SendPowerAdjustEndEvent(CauseEnum cau
         return err;
     }
 
-    if (mpDeviceEnergyManagementManufacturerDelegate != nullptr)
+    if (mpDEMManufacturerDelegate != nullptr)
     {
-        event.energyUse = mpDeviceEnergyManagementManufacturerDelegate->GetEnergyUse();
+        event.energyUse = mpDEMManufacturerDelegate->GetEnergyUse();
     }
     else
     {
@@ -307,9 +315,9 @@ Status DeviceEnergyManagementDelegate::StartTimeAdjustRequest(const uint32_t req
 
     SetForecast(mForecast); // This will increment forecast ID
 
-    if (mpDeviceEnergyManagementManufacturerDelegate != nullptr)
+    if (mpDEMManufacturerDelegate != nullptr)
     {
-        mpDeviceEnergyManagementManufacturerDelegate->HandleDeviceEnergyManagementStartTimeAdjustRequest(requestedStartTime, cause);
+        mpDEMManufacturerDelegate->HandleDeviceEnergyManagementStartTimeAdjustRequest(requestedStartTime, cause);
     }
 
     return Status::Success;
@@ -336,7 +344,8 @@ Status DeviceEnergyManagementDelegate::PauseRequest(const uint32_t duration, Adj
 {
     ChipLogDetail(AppServer, "DeviceEnergyManagementDelegate::PauseRequest mPauseRequestInProgress %d", mPauseRequestInProgress);
 
-    if (mpDeviceEnergyManagementManufacturerDelegate != nullptr && !mpDeviceEnergyManagementManufacturerDelegate->IsPauseSupported())
+    if (mpDEMManufacturerDelegate == nullptr ||
+        !mpDEMManufacturerDelegate->GetDemFeatureMap().Has(DeviceEnergyManagement::Feature::kPausable))
     {
         ChipLogError(AppServer, "Pause not supported");
         return Status::Failure;
@@ -388,9 +397,9 @@ Status DeviceEnergyManagementDelegate::PauseRequest(const uint32_t duration, Adj
     DeviceLayer::SystemLayer().StartTimer(System::Clock::Seconds32(duration), PauseRequestTimerExpiry, this);
 
     // Pause the appliance
-    if (mpDeviceEnergyManagementManufacturerDelegate != nullptr)
+    if (mpDEMManufacturerDelegate != nullptr)
     {
-        mpDeviceEnergyManagementManufacturerDelegate->HandleDeviceEnergyManagementPauseRequest(duration, cause);
+        mpDEMManufacturerDelegate->HandleDeviceEnergyManagementPauseRequest(duration, cause);
     }
 
     // TODO
@@ -433,9 +442,9 @@ void DeviceEnergyManagementDelegate::HandlePauseRequestTimerExpiry()
 
     // TODO
     //  Update the forecast with new expected end time
-    if (mpDeviceEnergyManagementManufacturerDelegate != nullptr)
+    if (mpDEMManufacturerDelegate != nullptr)
     {
-        mpDeviceEnergyManagementManufacturerDelegate->HandleDeviceEnergyManagementPauseCompletion();
+        mpDEMManufacturerDelegate->HandleDeviceEnergyManagementPauseCompletion();
     }
 }
 
@@ -463,9 +472,9 @@ CHIP_ERROR DeviceEnergyManagementDelegate::CancelPauseRequestAndSendEvent(CauseE
     CHIP_ERROR err = SendResumedEvent(cause);
 
     // Notify the appliance's that it can resume its intended power setting (or go idle)
-    if (mpDeviceEnergyManagementManufacturerDelegate != nullptr)
+    if (mpDEMManufacturerDelegate != nullptr)
     {
-        mpDeviceEnergyManagementManufacturerDelegate->HandleDeviceEnergyManagementCancelPauseRequest(cause);
+        mpDEMManufacturerDelegate->HandleDeviceEnergyManagementCancelPauseRequest(cause);
     }
 
     // TODO
@@ -600,9 +609,9 @@ Status DeviceEnergyManagementDelegate::CancelRequest()
      *  Cancel the effects of any previous adjustment request commands, and re-evaluate its forecast
      *  for intended operation ignoring those previous requests.
      */
-    if (mpDeviceEnergyManagementManufacturerDelegate != nullptr)
+    if (mpDEMManufacturerDelegate != nullptr)
     {
-        mpDeviceEnergyManagementManufacturerDelegate->HandleDeviceEnergyManagementCancelRequest();
+        mpDEMManufacturerDelegate->HandleDeviceEnergyManagementCancelRequest();
     }
 
     return status;

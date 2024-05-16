@@ -30,26 +30,18 @@ class DeviceEnergyManagementDelegate;
 /**
  * Class to abstract manufacturer specific functionality
  */
-class DeviceEnergyManagementManufacturerDelegate
+class DEMManufacturerDelegate
 {
 public:
-    DeviceEnergyManagementManufacturerDelegate()
+    DEMManufacturerDelegate()
     {
     }
 
-    virtual ~DeviceEnergyManagementManufacturerDelegate()
+    virtual ~DEMManufacturerDelegate()
     {
     }
 
-    virtual bool IsPowerAdjustSupported()
-    {
-        return false;
-    }
-
-    virtual bool IsPauseSupported()
-    {
-        return false;
-    }
+    virtual BitMask<DeviceEnergyManagement::Feature> & GetDemFeatureMap() = 0;
 
     virtual int64_t GetEnergyUse() = 0;
 
@@ -92,7 +84,6 @@ public:
     {
         return CHIP_NO_ERROR;
     }
-
 };
 
 } // namespace DeviceEnergyManagement

@@ -19,7 +19,7 @@
 #pragma once
 
 #include <DeviceEnergyManagementManager.h>
-#include <DeviceEnergyManagementManufacturerDelegate.h>
+#include <DEMManufacturerDelegate.h>
 #include <ElectricalPowerMeasurementDelegate.h>
 #include <EnergyEvseManager.h>
 #include <PowerTopologyDelegate.h>
@@ -34,7 +34,7 @@ namespace EnergyEvse {
  * The EVSEManufacturer example class
  */
 
-class EVSEManufacturer: public DeviceEnergyManagementManufacturerDelegate
+class EVSEManufacturer: public DEMManufacturerDelegate
 {
 public:
     EVSEManufacturer(EnergyEvseManager * aEvseInstance,
@@ -185,9 +185,8 @@ public:
 
     //    Status Configure();
 
+    BitMask<DeviceEnergyManagement::Feature> & GetDemFeatureMap() override;
     int64_t GetEnergyUse() override;
-    bool IsPowerAdjustSupported() override;
-    bool IsPauseSupported() override;
     CHIP_ERROR HandleDeviceEnergyManagementPowerAdjustRequest(const int64_t power, const uint32_t duration, AdjustmentCauseEnum cause) override;
     CHIP_ERROR HandleDeviceEnergyManagementPowerAdjustCompletion() override;
     CHIP_ERROR HandleDeviceEnergyManagementCancelPowerAdjustRequest(CauseEnum cause) override;
@@ -196,8 +195,6 @@ public:
     CHIP_ERROR HandleDeviceEnergyManagementPauseCompletion() override;
     CHIP_ERROR HandleDeviceEnergyManagementCancelPauseRequest(CauseEnum cause) override;
     CHIP_ERROR HandleDeviceEnergyManagementCancelRequest() override;
-
-
 
     CHIP_ERROR ConfigureForecast();
 private:
@@ -209,6 +206,8 @@ private:
     int64_t mLastChargingEnergyMeter    = 0;
     int64_t mLastDischargingEnergyMeter = 0;
 
+    BitMask<DeviceEnergyManagement::Feature> mDemFeatureMap;
+    
     DeviceEnergyManagement::Structs::SlotStruct::Type mSlots[2];
     DeviceEnergyManagement::Structs::ForecastStruct::Type mForecastStruct;
     DeviceEnergyManagement::Structs::PowerAdjustStruct::Type mPowerAdjustments[1];

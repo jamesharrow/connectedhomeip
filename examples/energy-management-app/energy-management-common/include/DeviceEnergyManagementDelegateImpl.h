@@ -31,7 +31,7 @@ namespace app {
 namespace Clusters {
 namespace DeviceEnergyManagement {
 
-class DeviceEnergyManagementManufacturerDelegate;
+class DEMManufacturerDelegate;
 
 /**
  * The application delegate.
@@ -41,7 +41,7 @@ class DeviceEnergyManagementDelegate : public DeviceEnergyManagement::Delegate
 public:
     DeviceEnergyManagementDelegate();
 
-    void SetDemManufacturerDelegate(DeviceEnergyManagementManufacturerDelegate & deviceEnergyManagementManufacturerDelegate);
+    void SetDemManufacturerDelegate(DEMManufacturerDelegate & deviceEnergyManagementManufacturerDelegate);
 
     virtual Status PowerAdjustRequest(const int64_t power, const uint32_t duration, AdjustmentCauseEnum cause) override;
     virtual Status CancelPowerAdjustRequest() override;
@@ -101,7 +101,7 @@ private:
     CHIP_ERROR SendResumedEvent(CauseEnum cause);
 
 private:
-    DeviceEnergyManagementManufacturerDelegate *mpDeviceEnergyManagementManufacturerDelegate;
+    DEMManufacturerDelegate *mpDEMManufacturerDelegate;
 
     ESATypeEnum mEsaType;
     bool mEsaCanGenerate;

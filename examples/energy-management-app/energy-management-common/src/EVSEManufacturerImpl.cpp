@@ -18,7 +18,7 @@
 
 #include <DeviceEnergyManagementDelegateImpl.h>
 #include <EVSEManufacturerImpl.h>
-#include <DeviceEnergyManagementManufacturerDelegate.h>
+#include <DEMManufacturerDelegate.h>
 #include <EnergyEvseManager.h>
 
 #include <app/clusters/device-energy-management-server/DeviceEnergyManagementTestEventTriggerHandler.h>
@@ -47,6 +47,14 @@ using Protocols::InteractionModel::Status;
 
 CHIP_ERROR EVSEManufacturer::Init()
 {
+    mDemFeatureMap.Set(DeviceEnergyManagement::Feature::kPowerAdjustment);
+    mDemFeatureMap.Set(DeviceEnergyManagement::Feature::kPowerForecastReporting);
+    mDemFeatureMap.Set(DeviceEnergyManagement::Feature::kStateForecastReporting);
+    mDemFeatureMap.Set(DeviceEnergyManagement::Feature::kStartTimeAdjustment);
+    mDemFeatureMap.Set(DeviceEnergyManagement::Feature::kPausable);
+    mDemFeatureMap.Set(DeviceEnergyManagement::Feature::kPowerAdjustment);
+    mDemFeatureMap.Set(DeviceEnergyManagement::Feature::kConstraintBasedAdjustment);
+
     /* Manufacturers should modify this to do any custom initialisation */
 
     /* Register callbacks */
@@ -519,16 +527,6 @@ int64_t EVSEManufacturer::GetEnergyUse()
     return 300;
 }
 
-bool EVSEManufacturer::IsPowerAdjustSupported()
-{
-    return true;
-}
-
-bool EVSEManufacturer::IsPauseSupported()
-{
-    return true;
-}
-
 CHIP_ERROR EVSEManufacturer::HandleDeviceEnergyManagementPowerAdjustRequest(const int64_t power, const uint32_t duration, AdjustmentCauseEnum cause)
 {
     return CHIP_NO_ERROR;
@@ -569,6 +567,10 @@ CHIP_ERROR EVSEManufacturer::HandleDeviceEnergyManagementCancelRequest()
     return CHIP_NO_ERROR;
 }
 
+BitMask<DeviceEnergyManagement::Feature> & EVSEManufacturer::GetDemFeatureMap()
+{
+    return mDemFeatureMap;
+}
 
 CHIP_ERROR EVSEManufacturer::ConfigureForecast()
 {
