@@ -185,7 +185,6 @@ public:
 
     //    Status Configure();
 
-    BitMask<DeviceEnergyManagement::Feature> & GetDemFeatureMap() override;
     int64_t GetEnergyUse() override;
     CHIP_ERROR HandleDeviceEnergyManagementPowerAdjustRequest(const int64_t power, const uint32_t duration, AdjustmentCauseEnum cause) override;
     CHIP_ERROR HandleDeviceEnergyManagementPowerAdjustCompletion() override;
@@ -195,6 +194,9 @@ public:
     CHIP_ERROR HandleDeviceEnergyManagementPauseCompletion() override;
     CHIP_ERROR HandleDeviceEnergyManagementCancelPauseRequest(CauseEnum cause) override;
     CHIP_ERROR HandleDeviceEnergyManagementCancelRequest() override;
+    CHIP_ERROR HandleModifyRequest(const uint32_t forecastId,
+                                   const DataModel::DecodableList<DeviceEnergyManagement::Structs::SlotAdjustmentStruct::DecodableType> & slotAdjustments,
+                                   AdjustmentCauseEnum cause) override;
 
     CHIP_ERROR ConfigureForecast();
 private:
@@ -206,8 +208,6 @@ private:
     int64_t mLastChargingEnergyMeter    = 0;
     int64_t mLastDischargingEnergyMeter = 0;
 
-    BitMask<DeviceEnergyManagement::Feature> mDemFeatureMap;
-    
     DeviceEnergyManagement::Structs::SlotStruct::Type mSlots[2];
     DeviceEnergyManagement::Structs::ForecastStruct::Type mForecastStruct;
     DeviceEnergyManagement::Structs::PowerAdjustStruct::Type mPowerAdjustments[1];

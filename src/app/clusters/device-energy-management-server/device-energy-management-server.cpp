@@ -607,6 +607,7 @@ void Instance::HandleResumeRequest(HandlerContext & ctx, const Commands::ResumeR
 
 void Instance::HandleModifyForecastRequest(HandlerContext & ctx, const Commands::ModifyForecastRequest::DecodableType & commandData)
 {
+    ChipLogError(Zcl, "PETER WAS HERE");
     Status status;
     DataModel::Nullable<Structs::ForecastStruct::Type> forecast;
 
@@ -630,6 +631,39 @@ void Instance::HandleModifyForecastRequest(HandlerContext & ctx, const Commands:
         return;
     }
 
+    auto iterator = slotAdjustments.begin();
+    while (iterator.Next())
+    {
+        const Structs::SlotAdjustmentStruct::Type & slotAdjustment = iterator.GetValue();
+
+        if (slotAdjustment.slotIndex > forecast.Value().slots.size())
+        {
+            ChipLogError(Zcl, "DEM: Bad slot index %d", slotAdjustment.slotIndex);
+            ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::ConstraintError);
+            return;
+        }
+
+        const Structs::SlotStruct::Type & slot = forecast.Value().slots[slotAdjustment.slotIndex];
+
+        if ((!slot.minPowerAdjustment.HasValue() || slotAdjustment.nominalPower < slot.minPowerAdjustment.Value()) ||
+            (!slot.maxPowerAdjustment.HasValue() || slotAdjustment.nominalPower > slot.maxPowerAdjustment.Value()))
+        {
+            ChipLogError(Zcl, "DEM: Bad nominalPower");
+            ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::ConstraintError);
+            return;
+        }
+
+        if ((!slot.minDurationAdjustment.HasValue() || slotAdjustment.duration < slot.minDurationAdjustment.Value()) ||
+            (!slot.maxDurationAdjustment.HasValue() || slotAdjustment.duration > slot.maxDurationAdjustment.Value()))
+        {
+            ChipLogError(Zcl, "DEM: Bad nominalDuration");
+            ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::ConstraintError);
+            return;
+        }
+    }
+
+    //      slotAdjustments = [Clusters.DeviceEnergyManagement.Structs.SlotAdjustmentStruct(slotIndex=0, nominalPower=forecast.slots[0].minPowerAdjustment, duration=forecast.slots[0].maxDurationAdjustment)]
+
     status = mDelegate.ModifyForecastRequest(forecastId, slotAdjustments, adjustmentCause);
     ctx.mCommandHandler.AddStatus(ctx.mRequestPath, status);
     if (status != Status::Success)
@@ -637,6 +671,7 @@ void Instance::HandleModifyForecastRequest(HandlerContext & ctx, const Commands:
         ChipLogError(Zcl, "DEM: ModifyForecastRequest FAILURE");
         return;
     }
+    ChipLogError(Zcl, "PETER WAS HERE GOOD");
 }
 
 void Instance::HandleRequestConstraintBasedForecast(HandlerContext & ctx,

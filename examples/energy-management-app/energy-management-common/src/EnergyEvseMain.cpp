@@ -86,13 +86,18 @@ CHIP_ERROR DeviceEnergyManagementInit()
         return CHIP_ERROR_NO_MEMORY;
     }
 
+    BitMask<DeviceEnergyManagement::Feature> featureMap;
+    featureMap.Set(DeviceEnergyManagement::Feature::kPowerAdjustment);
+    featureMap.Set(DeviceEnergyManagement::Feature::kPowerForecastReporting);
+    featureMap.Set(DeviceEnergyManagement::Feature::kStateForecastReporting);
+    featureMap.Set(DeviceEnergyManagement::Feature::kStartTimeAdjustment);
+    featureMap.Set(DeviceEnergyManagement::Feature::kPausable);
+    featureMap.Set(DeviceEnergyManagement::Feature::kForecastAdjustment);
+    featureMap.Set(DeviceEnergyManagement::Feature::kConstraintBasedAdjustment);
+
     /* Manufacturer may optionally not support all features, commands & attributes */
     gDEMInstance = std::make_unique<DeviceEnergyManagementManager>(
-        EndpointId(ENERGY_EVSE_ENDPOINT), *gDEMDelegate,
-        BitMask<DeviceEnergyManagement::Feature, uint32_t>(
-            DeviceEnergyManagement::Feature::kPowerAdjustment, DeviceEnergyManagement::Feature::kPowerForecastReporting,
-            DeviceEnergyManagement::Feature::kStateForecastReporting, DeviceEnergyManagement::Feature::kStartTimeAdjustment,
-            DeviceEnergyManagement::Feature::kPausable));
+        EndpointId(ENERGY_EVSE_ENDPOINT), *gDEMDelegate, featureMap);
 
     if (!gDEMInstance)
     {
@@ -100,6 +105,8 @@ CHIP_ERROR DeviceEnergyManagementInit()
         gDEMDelegate.reset();
         return CHIP_ERROR_NO_MEMORY;
     }
+
+    gDEMDelegate->SetDeviceEnergyManagementInstance(*gDEMInstance);
 
     CHIP_ERROR err = gDEMInstance->Init(); /* Register Attribute & Command handlers */
     if (err != CHIP_NO_ERROR)

@@ -41,8 +41,6 @@ public:
     {
     }
 
-    virtual BitMask<DeviceEnergyManagement::Feature> & GetDemFeatureMap() = 0;
-
     virtual int64_t GetEnergyUse() = 0;
 
     virtual CHIP_ERROR HandleDeviceEnergyManagementPowerAdjustRequest(const int64_t power, const uint32_t duration, AdjustmentCauseEnum cause)
@@ -81,6 +79,13 @@ public:
     }
 
     virtual CHIP_ERROR HandleDeviceEnergyManagementCancelRequest()
+    {
+        return CHIP_NO_ERROR;
+    }
+
+    virtual CHIP_ERROR HandleModifyRequest(const uint32_t forecastId,
+                                           const DataModel::DecodableList<Structs::SlotAdjustmentStruct::DecodableType> & slotAdjustments,
+                                           AdjustmentCauseEnum cause)
     {
         return CHIP_NO_ERROR;
     }

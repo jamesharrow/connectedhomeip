@@ -43,15 +43,23 @@ DeviceEnergyManagementDelegate::DeviceEnergyManagementDelegate():
     mPauseRequestInProgress(false),
     mPauseRequestStartTime(0)
 {
-    // TODO how to set the feature map? delegate mpDEMManufacturerDelegate which is not set here but call it on dem
-    BitMask<DeviceEnergyManagement::Feature> FeatureMap;
-    FeatureMap.Set(DeviceEnergyManagement::Feature::kPowerAdjustment);
-    FeatureMap.Set(DeviceEnergyManagement::Feature::kPowerForecastReporting);
-    FeatureMap.Set(DeviceEnergyManagement::Feature::kStateForecastReporting);
-    FeatureMap.Set(DeviceEnergyManagement::Feature::kStartTimeAdjustment);
-    FeatureMap.Set(DeviceEnergyManagement::Feature::kPausable);
-    FeatureMap.Set(DeviceEnergyManagement::Feature::kPowerAdjustment);
-    FeatureMap.Set(DeviceEnergyManagement::Feature::kConstraintBasedAdjustment);
+}
+
+void DeviceEnergyManagementDelegate::SetDeviceEnergyManagementInstance(DeviceEnergyManagement::Instance & instance)
+{
+    mpDEMInstance = &instance;
+}
+
+uint32_t DeviceEnergyManagementDelegate::HasFeature(Feature feature) const
+{
+    bool hasFeature = false;
+
+    if (mpDEMInstance != nullptr)
+    {
+        hasFeature = mpDEMInstance->HasFeature(feature);
+    }
+
+    return hasFeature;
 }
 
 void DeviceEnergyManagementDelegate::SetDemManufacturerDelegate(DEMManufacturerDelegate & deviceEnergyManagementManufacturerDelegate)
@@ -81,8 +89,7 @@ Status DeviceEnergyManagementDelegate::PowerAdjustRequest(const int64_t power, c
     ChipLogDetail(AppServer, "DeviceEnergyManagementDelegate::PowerAdjustRequest mPowerAdjustmentInProgress %d", mPowerAdjustmentInProgress);
 
     //  Notify the appliance if the appliance hardware cannot be adjusted, then return Failure
-    if (mpDEMManufacturerDelegate == nullptr ||
-        !mpDEMManufacturerDelegate->GetDemFeatureMap().Has(DeviceEnergyManagement::Feature::kPowerAdjustment))
+    if (!HasFeature(DeviceEnergyManagement::Feature::kPowerAdjustment))
     {
         ChipLogError(AppServer, "PowerAdjust not supported");
         return Status::Failure;
@@ -344,8 +351,7 @@ Status DeviceEnergyManagementDelegate::PauseRequest(const uint32_t duration, Adj
 {
     ChipLogDetail(AppServer, "DeviceEnergyManagementDelegate::PauseRequest mPauseRequestInProgress %d", mPauseRequestInProgress);
 
-    if (mpDEMManufacturerDelegate == nullptr ||
-        !mpDEMManufacturerDelegate->GetDemFeatureMap().Has(DeviceEnergyManagement::Feature::kPausable))
+    if (!HasFeature(DeviceEnergyManagement::Feature::kPausable))
     {
         ChipLogError(AppServer, "Pause not supported");
         return Status::Failure;
@@ -550,9 +556,39 @@ Status DeviceEnergyManagementDelegate::ModifyForecastRequest(
     const uint32_t forecastId, const DataModel::DecodableList<Structs::SlotAdjustmentStruct::DecodableType> & slotAdjustments,
     AdjustmentCauseEnum cause)
 {
-    Status status = Status::UnsupportedCommand; // Status::Success;
+    Status status = Status::Failure;
 
-    // TODO: implement the behaviour above
+    // Determine if the new forecast adjustments are acceptable to the appliance
+    if (mpDEMManufacturerDelegate != nullptr)
+    {
+        if (!HasFeature(DeviceEnergyManagement::Feature::kForecastAdjustment))
+        {
+            ChipLogError(AppServer, "ModifyForecast not supported");
+        }
+        else if (mForecast.Value().forecastId != forecastId)
+        {
+            status = Status::ConstraintError;
+        }
+        else if (mpDEMManufacturerDelegate->HandleModifyRequest(forecastId, slotAdjustments, cause) == CHIP_NO_ERROR)
+        {
+            switch (cause)
+            {
+            case AdjustmentCauseEnum::kLocalOptimization:
+                mForecast.Value().forecastUpdateReason = ForecastUpdateReasonEnum::kLocalOptimization;
+                break;
+            case AdjustmentCauseEnum::kGridOptimization:
+                mForecast.Value().forecastUpdateReason = ForecastUpdateReasonEnum::kGridOptimization;
+                break;
+            default:
+                // Already checked in chip::app::Clusters::DeviceEnergyManagement::Instance::HandleModifyForecastRequest
+                break;
+            }
+
+            mForecast.Value().forecastId++;
+            status = Status::Success;
+        }
+    }
+
     return status;
 }
 
@@ -812,8 +848,7 @@ CHIP_ERROR DeviceEnergyManagementDelegate::SetOptOutState(OptOutStateEnum newVal
             // We don't need to redo a forecast since its internal already
             break;
         case ForecastUpdateReasonEnum::kLocalOptimization:
-            if ((mOptOutState == OptOutStateEnum::kOptOut)
-                || (mOptOutState == OptOutStateEnum::kLocalOptOut))
+            if ((mOptOutState == OptOutStateEnum::kOptOut) || (mOptOutState == OptOutStateEnum::kLocalOptOut))
             {
                 mForecast.Value().forecastUpdateReason = ForecastUpdateReasonEnum::kInternalOptimization;
                 // Generate a new forecast with Internal Optimization
@@ -821,16 +856,15 @@ CHIP_ERROR DeviceEnergyManagementDelegate::SetOptOutState(OptOutStateEnum newVal
             }
             break;
         case ForecastUpdateReasonEnum::kGridOptimization:
-            if ((mOptOutState == OptOutStateEnum::kOptOut)
-                || (mOptOutState == OptOutStateEnum::kGridOptOut))
+            if ((mOptOutState == OptOutStateEnum::kOptOut) || (mOptOutState == OptOutStateEnum::kGridOptOut))
             {
                 // Generate a new forecast with Internal Optimization
                 // TODO
             }
             break;
-            default:
-                ChipLogDetail(AppServer, "Bad ForecastUpdateReasonEnum value of %d", static_cast<int>(mForecast.Value().forecastUpdateReason));
-                return CHIP_ERROR_BAD_REQUEST;
+        default:
+            ChipLogDetail(AppServer, "Bad ForecastUpdateReasonEnum value of %d", static_cast<int>(mForecast.Value().forecastUpdateReason));
+            return CHIP_ERROR_BAD_REQUEST;
             break;
         }
     }

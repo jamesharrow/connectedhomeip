@@ -62,6 +62,20 @@ enum class DeviceEnergyManagementTrigger : uint64_t
     kPausableNextSlot = 0x0098'0000'0000'0008,
     // Clear the Pausable simulated forecast
     kPausableClear = 0x0098'0000'0000'0009,
+    // Simulate a forecast power usage with at least 2 and at most 4 slots
+    kForecastAdjustment = 0x0098'0000'0000'000A,
+    // Simulate moving time to the next forecast slot
+    kForecastAdjustmentNextSlot = 0x0098'0000'0000'000B,
+    // Clear the forecast adjustment
+    kForecastAdjustmentClear = 0x0098'0000'0000'000C,
+    // Simulate a forecast power usage with at least 2 and at most 4 slots
+    kConstraintBasedAdjustment = 0x0098'0000'0000'000D,
+    //  Clear the constraint based adjustment
+    kConstraintBasedAdjustmentClear = 0x0098'0000'0000'000E,
+    // Simulate a forecast with at least 1 slot
+    kForecast = 0x0098'0000'0000'000F,
+    // Clear the forecast
+    kForecastClear = 0x0098'0000'0000'0010,
 };
 
 class DeviceEnergyManagementTestEventTriggerHandler : public TestEventTriggerHandler

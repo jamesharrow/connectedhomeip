@@ -47,14 +47,6 @@ using Protocols::InteractionModel::Status;
 
 CHIP_ERROR EVSEManufacturer::Init()
 {
-    mDemFeatureMap.Set(DeviceEnergyManagement::Feature::kPowerAdjustment);
-    mDemFeatureMap.Set(DeviceEnergyManagement::Feature::kPowerForecastReporting);
-    mDemFeatureMap.Set(DeviceEnergyManagement::Feature::kStateForecastReporting);
-    mDemFeatureMap.Set(DeviceEnergyManagement::Feature::kStartTimeAdjustment);
-    mDemFeatureMap.Set(DeviceEnergyManagement::Feature::kPausable);
-    mDemFeatureMap.Set(DeviceEnergyManagement::Feature::kPowerAdjustment);
-    mDemFeatureMap.Set(DeviceEnergyManagement::Feature::kConstraintBasedAdjustment);
-
     /* Manufacturers should modify this to do any custom initialisation */
 
     /* Register callbacks */
@@ -567,9 +559,11 @@ CHIP_ERROR EVSEManufacturer::HandleDeviceEnergyManagementCancelRequest()
     return CHIP_NO_ERROR;
 }
 
-BitMask<DeviceEnergyManagement::Feature> & EVSEManufacturer::GetDemFeatureMap()
+CHIP_ERROR EVSEManufacturer::HandleModifyRequest(const uint32_t forecastId,
+                                                 const DataModel::DecodableList<DeviceEnergyManagement::Structs::SlotAdjustmentStruct::DecodableType> & slotAdjustments,
+                                                 AdjustmentCauseEnum cause)
 {
-    return mDemFeatureMap;
+    return CHIP_NO_ERROR;
 }
 
 CHIP_ERROR EVSEManufacturer::ConfigureForecast()

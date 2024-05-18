@@ -217,6 +217,27 @@ void SetTestEventTrigger_PausableNextSlot()
     GetDEMDelegate()->SetForecast(forecast);
 }
 
+void SetTestEventTrigger_ForecastAdjustment()
+{
+    // ModifyForecastRequest with:
+    //     ForecastId=Forecast.ForecastId+1,
+    //     SlotAdjustments[0].{SlotIndex=0, NominalPower=Forecast.Slots[0].MinPowerAdjustment, Duration=Forecast.Slots[0].MaxDurationAdjustment},
+    //     Cause=GridOptimization.
+
+
+    sForecastStruct = GetDEMDelegate()->GetForecast().Value();
+    sSlots[0].minPowerAdjustment.SetValue(20);
+    sSlots[0].maxPowerAdjustment.SetValue(2000);
+    sSlots[0].minDurationAdjustment.SetValue(120);
+    sSlots[0].maxDurationAdjustment.SetValue(240);
+
+    sForecastStruct.slots = DataModel::List<const DeviceEnergyManagement::Structs::SlotStruct::Type>(sSlots, 2);
+
+    DataModel::Nullable<DeviceEnergyManagement::Structs::ForecastStruct::Type> forecast(sForecastStruct);
+
+    GetDEMDelegate()->SetForecast(forecast);
+}
+
 bool HandleDeviceEnergyManagementTestEventTrigger(uint64_t eventTrigger)
 {
     DeviceEnergyManagementTrigger trigger = static_cast<DeviceEnergyManagementTrigger>(eventTrigger);
@@ -262,6 +283,10 @@ bool HandleDeviceEnergyManagementTestEventTrigger(uint64_t eventTrigger)
     case DeviceEnergyManagementTrigger::kPausableClear:
         ChipLogProgress(Support, "[PausableClear-Test-Event] => Clear Pausable forecast");
         // TODO call implementation - NOTHING TO DO?
+        break;
+    case DeviceEnergyManagementTrigger::kForecastAdjustment:
+        ChipLogProgress(Support, "[PausableClear-Test-Event] => Forecast Adjustment");
+        SetTestEventTrigger_ForecastAdjustment();
         break;
 
     default:

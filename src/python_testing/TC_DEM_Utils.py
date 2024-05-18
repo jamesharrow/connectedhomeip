@@ -124,6 +124,21 @@ class DEMBaseTestHelper:
         except InteractionModelError as e:
             asserts.assert_equal(e.status, expected_status, "Unexpected error returned")
 
+    async def send_modify_forecast_request_command(self, forecastId: int,
+                                                   slotAdjustments: list[Clusters.DeviceEnergyManagement.Structs.SlotAdjustmentStruct],
+                                                   cause: Clusters.DeviceEnergyManagement.Enums.AdjustmentCauseEnum,
+                                                   endpoint: int = None, timedRequestTimeoutMs: int = 3000,
+                                                   expected_status: Status = Status.Success):
+        try:
+            await self.send_single_cmd(cmd=Clusters.DeviceEnergyManagement.Commands.ModifyForecastRequest(forecastId=forecastId,
+                                                                                                          slotAdjustments=slotAdjustments,
+                                                                                                          cause=cause),
+                                       endpoint=endpoint,
+                                       timedRequestTimeoutMs=timedRequestTimeoutMs)
+
+        except InteractionModelError as e:
+            asserts.assert_equal(e.status, expected_status, "Unexpected error returned")
+
     async def send_test_event_trigger_power_adjustment(self):
         await self.send_test_event_triggers(eventTrigger=0x0098000000000000)
 
@@ -153,3 +168,27 @@ class DEMBaseTestHelper:
 
     async def send_test_event_trigger_pauseable_clear(self):
         await self.send_test_event_triggers(eventTrigger=0x0098000000000009)
+
+    async def send_test_event_trigger_forecast_adjustment(self):
+        await self.send_test_event_triggers(eventTrigger=0x009800000000000A)
+
+    async def send_test_event_trigger_forecast_adjustment_next_slot(self):
+        await self.send_test_event_triggers(eventTrigger=0x009800000000000B)
+
+    async def send_test_event_trigger_forecast_adjustment_clear(self):
+        await self.send_test_event_triggers(eventTrigger=0x009800000000000C)
+
+    async def send_test_event_trigger_constraint_based_adjustment(self):
+        await self.send_test_event_triggers(eventTrigger=0x009800000000000D)
+
+    async def send_test_event_trigger_constraint_based_adjustment_clear(self):
+        await self.send_test_event_triggers(eventTrigger=0x009800000000000E)
+
+    async def send_test_event_trigger_forecast(self):
+        await self.send_test_event_triggers(eventTrigger=0x009800000000000F)
+
+    async def send_test_event_trigger_forecast_clear(self):
+        await self.send_test_event_triggers(eventTrigger=0x0098000000000010)
+
+
+

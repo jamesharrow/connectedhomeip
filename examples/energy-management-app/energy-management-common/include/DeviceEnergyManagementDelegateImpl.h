@@ -41,6 +41,9 @@ class DeviceEnergyManagementDelegate : public DeviceEnergyManagement::Delegate
 public:
     DeviceEnergyManagementDelegate();
 
+    void SetDeviceEnergyManagementInstance(DeviceEnergyManagement::Instance & instance);
+    uint32_t HasFeature(Feature feature) const;
+
     void SetDemManufacturerDelegate(DEMManufacturerDelegate & deviceEnergyManagementManufacturerDelegate);
 
     virtual Status PowerAdjustRequest(const int64_t power, const uint32_t duration, AdjustmentCauseEnum cause) override;
@@ -101,6 +104,8 @@ private:
     CHIP_ERROR SendResumedEvent(CauseEnum cause);
 
 private:
+    DeviceEnergyManagement::Instance *mpDEMInstance;
+    
     DEMManufacturerDelegate *mpDEMManufacturerDelegate;
 
     ESATypeEnum mEsaType;
