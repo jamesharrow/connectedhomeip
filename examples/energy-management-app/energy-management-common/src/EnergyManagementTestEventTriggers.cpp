@@ -219,12 +219,7 @@ void SetTestEventTrigger_PausableNextSlot()
 
 void SetTestEventTrigger_ForecastAdjustment()
 {
-    // ModifyForecastRequest with:
-    //     ForecastId=Forecast.ForecastId+1,
-    //     SlotAdjustments[0].{SlotIndex=0, NominalPower=Forecast.Slots[0].MinPowerAdjustment, Duration=Forecast.Slots[0].MaxDurationAdjustment},
-    //     Cause=GridOptimization.
-
-
+    // The following values need to match the equivalent values in src/python_testing/TC_DEM_2_5.py
     sForecastStruct = GetDEMDelegate()->GetForecast().Value();
     sSlots[0].minPowerAdjustment.SetValue(20);
     sSlots[0].maxPowerAdjustment.SetValue(2000);
@@ -233,6 +228,30 @@ void SetTestEventTrigger_ForecastAdjustment()
 
     sForecastStruct.slots = DataModel::List<const DeviceEnergyManagement::Structs::SlotStruct::Type>(sSlots, 2);
 
+    DataModel::Nullable<DeviceEnergyManagement::Structs::ForecastStruct::Type> forecast(sForecastStruct);
+
+    GetDEMDelegate()->SetForecast(forecast);
+}
+
+void SetTestEventTrigger_ForecastAdjustmentNextSlot()
+{
+    sForecastStruct = GetDEMDelegate()->GetForecast().Value();
+    sForecastStruct.activeSlotNumber.SetNonNull(sForecastStruct.activeSlotNumber.Value() + 1);
+    DataModel::Nullable<DeviceEnergyManagement::Structs::ForecastStruct::Type> forecast(sForecastStruct);
+
+    GetDEMDelegate()->SetForecast(forecast);
+}
+
+void SetTestEventTrigger_ForecastAdjustmentClear()
+{
+    // ModifyForecastRequest with:
+    //     ForecastId=Forecast.ForecastId+1,
+    //     SlotAdjustments[0].{SlotIndex=0, NominalPower=Forecast.Slots[0].MinPowerAdjustment, Duration=Forecast.Slots[0].MaxDurationAdjustment},
+    //     Cause=GridOptimization.
+
+    return;
+    sForecastStruct = GetDEMDelegate()->GetForecast().Value();
+    sForecastStruct.activeSlotNumber.SetNonNull(sForecastStruct.activeSlotNumber.Value() + 1);
     DataModel::Nullable<DeviceEnergyManagement::Structs::ForecastStruct::Type> forecast(sForecastStruct);
 
     GetDEMDelegate()->SetForecast(forecast);
@@ -285,8 +304,16 @@ bool HandleDeviceEnergyManagementTestEventTrigger(uint64_t eventTrigger)
         // TODO call implementation - NOTHING TO DO?
         break;
     case DeviceEnergyManagementTrigger::kForecastAdjustment:
-        ChipLogProgress(Support, "[PausableClear-Test-Event] => Forecast Adjustment");
+        ChipLogProgress(Support, "[ForecastAdjustment-Test-Event] => Forecast Adjustment");
         SetTestEventTrigger_ForecastAdjustment();
+        break;
+    case DeviceEnergyManagementTrigger::kForecastAdjustmentNextSlot:
+        ChipLogProgress(Support, "[ForecastAdjustmentNextSlot-Test-Event] => Forecast Adjustment");
+        SetTestEventTrigger_ForecastAdjustmentNextSlot();
+        break;
+    case DeviceEnergyManagementTrigger::kForecastAdjustmentClear:
+        ChipLogProgress(Support, "[ForecastAdjustmentClear-Test-Event] => Forecast Adjustment");
+        SetTestEventTrigger_ForecastAdjustmentClear();
         break;
 
     default:
