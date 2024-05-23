@@ -30,6 +30,8 @@ namespace app {
 namespace Clusters {
 namespace EnergyEvse {
 
+#define MAX_SLOTS 10
+    
 /**
  * The EVSEManufacturer example class
  */
@@ -208,9 +210,10 @@ private:
     int64_t mLastChargingEnergyMeter    = 0;
     int64_t mLastDischargingEnergyMeter = 0;
 
-    DeviceEnergyManagement::Structs::SlotStruct::Type mSlots[2];
+    DeviceEnergyManagement::Structs::SlotStruct::Type mSlots[MAX_SLOTS];
     DeviceEnergyManagement::Structs::ForecastStruct::Type mForecastStruct;
     DeviceEnergyManagement::Structs::PowerAdjustStruct::Type mPowerAdjustments[1];
+    DataModel::Nullable<DeviceEnergyManagement::Structs::ForecastStruct::Type> mForecast;
 };
 
 /** @brief Helper function to return the singleton EVSEManufacturer instance

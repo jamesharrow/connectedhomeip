@@ -232,11 +232,10 @@ CHIP_ERROR DeviceEnergyManagementDelegate::CancelPowerAdjustRequestAndSendEvent(
     // Notify the appliance's that it can resume its intended power setting (or go idle)
     if (mpDEMManufacturerDelegate != nullptr)
     {
+        // It is expected the mpDEMManufacturerDelegate will update the forecast with new expected end time
+        // as a consequence of the cancel request.
         err = mpDEMManufacturerDelegate->HandleDeviceEnergyManagementCancelPowerAdjustRequest(cause);
     }
-
-    // TODO
-    // 3) if necessary, update the forecast with new expected end time - WHO OWNS THE FORECAST
 
     return err;
 }
@@ -300,6 +299,8 @@ Status DeviceEnergyManagementDelegate::StartTimeAdjustRequest(const uint32_t req
         return Status::Failure;
     }
 
+    mForecast.Value().forecastId++;
+
     uint32_t duration = mForecast.Value().endTime - mForecast.Value().startTime; // the current entire forecast duration
 
     /* Modify start time and end time */
@@ -319,8 +320,6 @@ Status DeviceEnergyManagementDelegate::StartTimeAdjustRequest(const uint32_t req
         return Status::Failure;
         break;
     }
-
-    SetForecast(mForecast); // This will increment forecast ID
 
     if (mpDEMManufacturerDelegate != nullptr)
     {
@@ -405,11 +404,9 @@ Status DeviceEnergyManagementDelegate::PauseRequest(const uint32_t duration, Adj
     // Pause the appliance
     if (mpDEMManufacturerDelegate != nullptr)
     {
+        // It is expected that the mpDEMManufacturerDelegate will update the forecast with the new expected end time
         mpDEMManufacturerDelegate->HandleDeviceEnergyManagementPauseRequest(duration, cause);
     }
-
-    // TODO
-    // 4) update the forecast with the new expected end time
 
     return status;
 }
@@ -446,8 +443,7 @@ void DeviceEnergyManagementDelegate::HandlePauseRequestTimerExpiry()
     // Send a Resumed event
     SendResumedEvent(CauseEnum::kNormalCompletion);
 
-    // TODO
-    //  Update the forecast with new expected end time
+    // It is expected the mpDEMManufacturerDelegate will update the forecast with new expected end time
     if (mpDEMManufacturerDelegate != nullptr)
     {
         mpDEMManufacturerDelegate->HandleDeviceEnergyManagementPauseCompletion();
@@ -480,11 +476,9 @@ CHIP_ERROR DeviceEnergyManagementDelegate::CancelPauseRequestAndSendEvent(CauseE
     // Notify the appliance's that it can resume its intended power setting (or go idle)
     if (mpDEMManufacturerDelegate != nullptr)
     {
+        // It is expected that the mpDEMManufacturerDelegate will update the forecast with new expected end time
         mpDEMManufacturerDelegate->HandleDeviceEnergyManagementCancelPauseRequest(cause);
     }
-
-    // TODO
-    // 3) if necessary, update the forecast with new expected end time
 
     return err;
 }
@@ -641,9 +635,9 @@ Status DeviceEnergyManagementDelegate::CancelRequest()
 
     mForecast.Value().forecastUpdateReason = ForecastUpdateReasonEnum::kInternalOptimization;
 
-    /* TODO:
-     *  Cancel the effects of any previous adjustment request commands, and re-evaluate its forecast
-     *  for intended operation ignoring those previous requests.
+    /* It is expected the mpDEMManufacturerDelegate will cancel the effects of any previous adjustment
+     * request commands, and re-evaluate its forecast for intended operation ignoring those previous
+     * requests.
      */
     if (mpDEMManufacturerDelegate != nullptr)
     {
@@ -685,7 +679,7 @@ PowerAdjustmentCapability::TypeInfo::Type DeviceEnergyManagementDelegate::GetPow
     return mPowerAdjustmentCapability;
 }
 
-DataModel::Nullable<Structs::ForecastStruct::Type> DeviceEnergyManagementDelegate::GetForecast()
+DataModel::Nullable<Structs::ForecastStruct::Type> & DeviceEnergyManagementDelegate::GetForecast()
 {
     ChipLogDetail(Zcl, "DeviceEnergyManagementDelegate::GetForecast");
 
@@ -789,7 +783,7 @@ DeviceEnergyManagementDelegate::SetPowerAdjustmentCapability(PowerAdjustmentCapa
     return CHIP_NO_ERROR;
 }
 
-CHIP_ERROR DeviceEnergyManagementDelegate::SetForecast(DataModel::Nullable<Structs::ForecastStruct::Type> forecast)
+CHIP_ERROR DeviceEnergyManagementDelegate::SetForecast(DataModel::Nullable<Structs::ForecastStruct::Type> & forecast)
 {
     // TODO see Issue #31147
     if (forecast.IsNull())

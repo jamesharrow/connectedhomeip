@@ -68,7 +68,7 @@ public:
     virtual int64_t GetAbsMinPower() override;
     virtual int64_t GetAbsMaxPower() override;
     virtual Attributes::PowerAdjustmentCapability::TypeInfo::Type GetPowerAdjustmentCapability() override;
-    virtual DataModel::Nullable<Structs::ForecastStruct::Type> GetForecast() override;
+    virtual DataModel::Nullable<Structs::ForecastStruct::Type> & GetForecast() override;
     virtual OptOutStateEnum GetOptOutState() override;
 
     // ------------------------------------------------------------------
@@ -79,7 +79,7 @@ public:
     virtual CHIP_ERROR SetAbsMinPower(int64_t) override;
     virtual CHIP_ERROR SetAbsMaxPower(int64_t) override;
     virtual CHIP_ERROR SetPowerAdjustmentCapability(Attributes::PowerAdjustmentCapability::TypeInfo::Type) override;
-    virtual CHIP_ERROR SetForecast(DataModel::Nullable<Structs::ForecastStruct::Type>) override;
+    virtual CHIP_ERROR SetForecast(DataModel::Nullable<Structs::ForecastStruct::Type>&) override;
     virtual CHIP_ERROR SetOptOutState(OptOutStateEnum) override;
 
 private:

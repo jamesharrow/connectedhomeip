@@ -519,53 +519,6 @@ int64_t EVSEManufacturer::GetEnergyUse()
     return 300;
 }
 
-CHIP_ERROR EVSEManufacturer::HandleDeviceEnergyManagementPowerAdjustRequest(const int64_t power, const uint32_t duration, AdjustmentCauseEnum cause)
-{
-    return CHIP_NO_ERROR;
-}
-
-CHIP_ERROR EVSEManufacturer::HandleDeviceEnergyManagementPowerAdjustCompletion()
-{
-    return CHIP_NO_ERROR;
-}
-
-CHIP_ERROR EVSEManufacturer::HandleDeviceEnergyManagementCancelPowerAdjustRequest(CauseEnum cause)
-{
-    return CHIP_NO_ERROR;
-}
-
-CHIP_ERROR EVSEManufacturer::HandleDeviceEnergyManagementStartTimeAdjustRequest(const uint32_t requestedStartTime, AdjustmentCauseEnum cause)
-{
-    return CHIP_NO_ERROR;
-}
-
-CHIP_ERROR EVSEManufacturer::HandleDeviceEnergyManagementPauseRequest(const uint32_t duration, AdjustmentCauseEnum cause)
-{
-    return CHIP_NO_ERROR;
-}
-
-CHIP_ERROR EVSEManufacturer::HandleDeviceEnergyManagementCancelPauseRequest(CauseEnum cause)
-{
-    return CHIP_NO_ERROR;
-}
-
-CHIP_ERROR EVSEManufacturer::HandleDeviceEnergyManagementPauseCompletion()
-{
-    return CHIP_NO_ERROR;
-}
-
-CHIP_ERROR EVSEManufacturer::HandleDeviceEnergyManagementCancelRequest()
-{
-    return CHIP_NO_ERROR;
-}
-
-CHIP_ERROR EVSEManufacturer::HandleModifyRequest(const uint32_t forecastId,
-                                                 const DataModel::DecodableList<DeviceEnergyManagement::Structs::SlotAdjustmentStruct::DecodableType> & slotAdjustments,
-                                                 AdjustmentCauseEnum cause)
-{
-    return CHIP_NO_ERROR;
-}
-
 CHIP_ERROR EVSEManufacturer::ConfigureForecast()
 {
     uint32_t chipEpoch = 0;
@@ -646,3 +599,51 @@ CHIP_ERROR EVSEManufacturer::ConfigureForecast()
 
     return CHIP_NO_ERROR;
 }
+
+CHIP_ERROR EVSEManufacturer::HandleDeviceEnergyManagementPowerAdjustRequest(const int64_t power, const uint32_t duration, AdjustmentCauseEnum cause)
+{
+    return CHIP_NO_ERROR;
+}
+
+CHIP_ERROR EVSEManufacturer::HandleDeviceEnergyManagementPowerAdjustCompletion()
+{
+    return CHIP_NO_ERROR;
+}
+
+CHIP_ERROR EVSEManufacturer::HandleDeviceEnergyManagementCancelPowerAdjustRequest(CauseEnum cause)
+{
+    return CHIP_NO_ERROR;
+}
+
+CHIP_ERROR EVSEManufacturer::HandleDeviceEnergyManagementStartTimeAdjustRequest(const uint32_t requestedStartTime, AdjustmentCauseEnum cause)
+{
+    return CHIP_NO_ERROR;
+}
+
+CHIP_ERROR EVSEManufacturer::HandleDeviceEnergyManagementPauseRequest(const uint32_t duration, AdjustmentCauseEnum cause)
+{
+    return CHIP_NO_ERROR;
+}
+
+CHIP_ERROR EVSEManufacturer::HandleDeviceEnergyManagementCancelPauseRequest(CauseEnum cause)
+{
+    return CHIP_NO_ERROR;
+}
+
+CHIP_ERROR EVSEManufacturer::HandleDeviceEnergyManagementPauseCompletion()
+{
+    return CHIP_NO_ERROR;
+}
+
+CHIP_ERROR EVSEManufacturer::HandleDeviceEnergyManagementCancelRequest()
+{
+    return CHIP_NO_ERROR;
+}
+
+CHIP_ERROR EVSEManufacturer::HandleModifyRequest(const uint32_t forecastId,
+                                                 const DataModel::DecodableList<DeviceEnergyManagement::Structs::SlotAdjustmentStruct::DecodableType> & slotAdjustments,
+                                                 AdjustmentCauseEnum cause)
+{
+    return CHIP_NO_ERROR;
+}
+
