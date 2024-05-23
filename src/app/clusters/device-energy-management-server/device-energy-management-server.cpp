@@ -292,7 +292,7 @@ Status Instance::CheckOptOutAllowsRequest(AdjustmentCauseEnum adjustmentCause)
 
     case OptOutStateEnum::kOptOut: /* User has opted out from both local and grid */
         ChipLogProgress(Zcl, "DEM: OptOutState = kOptOut");
-        return Status::Failure;
+        return Status::ConstraintError;
 
     default:
         ChipLogError(Zcl, "DEM: invalid optOutState %d", static_cast<int>(optOutState));
@@ -661,8 +661,6 @@ void Instance::HandleModifyForecastRequest(HandlerContext & ctx, const Commands:
             return;
         }
     }
-
-    //      slotAdjustments = [Clusters.DeviceEnergyManagement.Structs.SlotAdjustmentStruct(slotIndex=0, nominalPower=forecast.slots[0].minPowerAdjustment, duration=forecast.slots[0].maxDurationAdjustment)]
 
     status = mDelegate.ModifyForecastRequest(forecastId, slotAdjustments, adjustmentCause);
     ctx.mCommandHandler.AddStatus(ctx.mRequestPath, status);
