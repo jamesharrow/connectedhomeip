@@ -276,7 +276,7 @@ Status Instance::CheckOptOutAllowsRequest(AdjustmentCauseEnum adjustmentCause)
             return Status::Success;
         case AdjustmentCauseEnum::kLocalOptimization:
         default:
-            return Status::Failure;
+            return Status::ConstraintError;
         }
 
     case OptOutStateEnum::kGridOptOut: /* User has opted out from Grid only */
@@ -607,7 +607,6 @@ void Instance::HandleResumeRequest(HandlerContext & ctx, const Commands::ResumeR
 
 void Instance::HandleModifyForecastRequest(HandlerContext & ctx, const Commands::ModifyForecastRequest::DecodableType & commandData)
 {
-    ChipLogError(Zcl, "PETER WAS HERE");
     Status status;
     DataModel::Nullable<Structs::ForecastStruct::Type> forecast;
 
@@ -669,7 +668,6 @@ void Instance::HandleModifyForecastRequest(HandlerContext & ctx, const Commands:
         ChipLogError(Zcl, "DEM: ModifyForecastRequest FAILURE");
         return;
     }
-    ChipLogError(Zcl, "PETER WAS HERE GOOD");
 }
 
 void Instance::HandleRequestConstraintBasedForecast(HandlerContext & ctx,

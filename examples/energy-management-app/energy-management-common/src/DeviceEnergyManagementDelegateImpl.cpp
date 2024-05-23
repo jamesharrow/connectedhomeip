@@ -852,6 +852,7 @@ CHIP_ERROR DeviceEnergyManagementDelegate::SetOptOutState(OptOutStateEnum newVal
         case ForecastUpdateReasonEnum::kGridOptimization:
             if ((mOptOutState == OptOutStateEnum::kOptOut) || (mOptOutState == OptOutStateEnum::kGridOptOut))
             {
+                mForecast.Value().forecastUpdateReason = ForecastUpdateReasonEnum::kInternalOptimization;
                 // Generate a new forecast with Internal Optimization
                 // TODO
             }
