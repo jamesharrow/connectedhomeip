@@ -77,7 +77,6 @@ class DEMBaseTestHelper:
         except InteractionModelError as e:
             asserts.assert_equal(e.status, expected_status, "Unexpected error returned")
 
-##
     async def send_start_time_adjust_clear_command(self,
                                                    endpoint: int = None, timedRequestTimeoutMs: int = 3000,
                                                    expected_status: Status = Status.Success):
