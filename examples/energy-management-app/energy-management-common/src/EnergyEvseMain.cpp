@@ -16,6 +16,8 @@
  *    limitations under the License.
  */
 
+#include "EnergyManagementAppCmdLineOptions.h"
+
 #include <DeviceEnergyManagementManager.h>
 #include <EVSEManufacturerImpl.h>
 #include <ElectricalPowerMeasurementDelegate.h>
@@ -59,6 +61,8 @@ static std::unique_ptr<ElectricalEnergyMeasurementAttrAccess> gEEMAttrAccess;
 static std::unique_ptr<PowerTopologyDelegate> gPTDelegate;
 static std::unique_ptr<PowerTopologyInstance> gPTInstance;
 
+extern chip::BitMask<DeviceEnergyManagement::Feature> GetFeatureMap();
+
 EVSEManufacturer * EnergyEvse::GetEvseManufacturer()
 {
     return gEvseManufacturer.get();
@@ -86,14 +90,7 @@ CHIP_ERROR DeviceEnergyManagementInit()
         return CHIP_ERROR_NO_MEMORY;
     }
 
-    BitMask<DeviceEnergyManagement::Feature> featureMap;
-    featureMap.Set(DeviceEnergyManagement::Feature::kPowerAdjustment);
-    featureMap.Set(DeviceEnergyManagement::Feature::kPowerForecastReporting);
-    featureMap.Set(DeviceEnergyManagement::Feature::kStateForecastReporting);
-    featureMap.Set(DeviceEnergyManagement::Feature::kStartTimeAdjustment);
-    featureMap.Set(DeviceEnergyManagement::Feature::kPausable);
-    featureMap.Set(DeviceEnergyManagement::Feature::kForecastAdjustment);
-    featureMap.Set(DeviceEnergyManagement::Feature::kConstraintBasedAdjustment);
+    BitMask<DeviceEnergyManagement::Feature> featureMap = GetFeatureMap();
 
     /* Manufacturer may optionally not support all features, commands & attributes */
     gDEMInstance = std::make_unique<DeviceEnergyManagementManager>(

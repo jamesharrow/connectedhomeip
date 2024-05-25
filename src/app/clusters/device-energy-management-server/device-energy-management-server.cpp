@@ -644,12 +644,16 @@ void Instance::HandleModifyForecastRequest(HandlerContext & ctx, const Commands:
 
         const Structs::SlotStruct::Type & slot = forecast.Value().slots[slotAdjustment.slotIndex];
 
-        if ((!slot.minPowerAdjustment.HasValue() || slotAdjustment.nominalPower < slot.minPowerAdjustment.Value()) ||
-            (!slot.maxPowerAdjustment.HasValue() || slotAdjustment.nominalPower > slot.maxPowerAdjustment.Value()))
+        // NominalPower is only relevant if PFR is supported
+        if (HasFeature(Feature::kPowerForecastReporting))
         {
-            ChipLogError(Zcl, "DEM: Bad nominalPower");
-            ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::ConstraintError);
-            return;
+            if ((!slot.minPowerAdjustment.HasValue() || slotAdjustment.nominalPower < slot.minPowerAdjustment.Value()) ||
+                (!slot.maxPowerAdjustment.HasValue() || slotAdjustment.nominalPower > slot.maxPowerAdjustment.Value()))
+            {
+                ChipLogError(Zcl, "DEM: Bad nominalPower");
+                ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::ConstraintError);
+                return;
+            }
         }
 
         if ((!slot.minDurationAdjustment.HasValue() || slotAdjustment.duration < slot.minDurationAdjustment.Value()) ||
