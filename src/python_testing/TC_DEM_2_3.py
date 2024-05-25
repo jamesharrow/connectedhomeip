@@ -157,7 +157,7 @@ class TC_DEM_2_3(MatterBaseTest, DEMBaseTestHelper):
         self.step("5")
         await self.send_start_time_adjust_request_command(requestedStartTime=forecast.earliestStartTime,
                                                           cause=Clusters.DeviceEnergyManagement.Enums.AdjustmentCauseEnum.kLocalOptimization,
-                                                          expected_status=Status.Failure)
+                                                          expected_status=Status.ConstraintError)
 
         self.step("5a")
         await self.check_dem_attribute("ESAState", Clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kOnline)
@@ -244,7 +244,7 @@ class TC_DEM_2_3(MatterBaseTest, DEMBaseTestHelper):
         self.step("11")
         await self.send_start_time_adjust_request_command(requestedStartTime=forecast6.earliestStartTime - 1,
                                                           cause=Clusters.DeviceEnergyManagement.Enums.AdjustmentCauseEnum.kLocalOptimization,
-                                                          expected_status=Status.Failure)
+                                                          expected_status=Status.ConstraintError)
         self.step("11a")
         await self.check_dem_attribute("ESAState", Clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kOnline)
 
@@ -258,7 +258,7 @@ class TC_DEM_2_3(MatterBaseTest, DEMBaseTestHelper):
         self.step("12")
         await self.send_start_time_adjust_request_command(requestedStartTime=forecast7.startTime+(forecast7.latestEndTime-forecast7.endTime)+1,
                                                           cause=Clusters.DeviceEnergyManagement.Enums.AdjustmentCauseEnum.kLocalOptimization,
-                                                          expected_status=Status.Failure)
+                                                          expected_status=Status.ConstraintError)
         self.step("12a")
         await self.check_dem_attribute("ESAState", Clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kOnline)
 
