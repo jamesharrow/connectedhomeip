@@ -66,7 +66,7 @@ CHIP_ERROR EVSEManufacturer::Init()
     DeviceEnergyManagementDelegate * dem = GetEvseManufacturer()->GetDEMDelegate();
     VerifyOrReturnLogError(dem != nullptr, CHIP_ERROR_UNINITIALIZED);
 
-    ReturnErrorOnFailure(ConfigureForecast());
+    ReturnErrorOnFailure(ConfigureForecast(2));
 
     /* For Device Energy Management we need the ESA to be Online and ready to accept commands */
     dem->SetESAState(ESAStateEnum::kOnline);
@@ -519,6 +519,78 @@ int64_t EVSEManufacturer::GetEnergyUse()
     return 300;
 }
 
+CHIP_ERROR EVSEManufacturer::ConfigureForecast(uint16_t numSlots)
+{
+    uint32_t chipEpoch = 0;
+
+    CHIP_ERROR err = UtilsGetEpochTS(chipEpoch);
+    if (err != CHIP_NO_ERROR)
+    {
+        ChipLogError(Support, "ConfigureForecast could not get time");
+        return err;
+    }
+
+    // planned start time, in UTC, for the entire Forecast.
+    mForecastStruct.startTime = static_cast<uint32_t>(chipEpoch); 
+
+    // earliest start time, in UTC, that the entire Forecast can be shifted to. null value indicates that it can be started
+    // immediately.
+    mForecastStruct.earliestStartTime = Optional<DataModel::Nullable<uint32_t>>{ DataModel::Nullable<uint32_t>{ chipEpoch } };
+
+    // planned end time, in UTC, for the entire Forecast.
+    mForecastStruct.endTime = static_cast<uint32_t>(chipEpoch * 3);
+
+    // latest end time, in UTC, for the entire Forecast
+    mForecastStruct.latestEndTime = Optional<uint32_t>(static_cast<uint32_t>(chipEpoch * 3)); 
+
+    mForecastStruct.isPauseable = true;
+
+    mForecastStruct.activeSlotNumber.SetNonNull<uint16_t>(0);
+
+    mSlots[0].minDuration = 10;
+    mSlots[0].maxDuration = 20;
+    mSlots[0].defaultDuration = 15;
+    mSlots[0].elapsedSlotTime = 0;
+    mSlots[0].remainingSlotTime = 0;
+
+    mSlots[0].slotIsPauseable.SetValue(true);
+    mSlots[0].minPauseDuration.SetValue(10);
+    mSlots[0].maxPauseDuration.SetValue(60);
+    mSlots[0].nominalPower.SetValue(1500);
+    mSlots[0].minPower.SetValue(1000);
+    mSlots[0].maxPower.SetValue(2000);
+    mSlots[0].nominalEnergy.SetValue(2000);
+
+    for (uint16_t slotNo = 1; slotNo < numSlots; slotNo++)
+    {
+        mSlots[slotNo].minDuration = 2 * mSlots[slotNo - 1].minDuration;
+        mSlots[slotNo].maxDuration = 2 * mSlots[slotNo - 1].maxDuration;
+        mSlots[slotNo].defaultDuration = 2 * mSlots[slotNo - 1].defaultDuration;
+        mSlots[slotNo].elapsedSlotTime = 2 * mSlots[slotNo - 1].elapsedSlotTime;
+        mSlots[slotNo].remainingSlotTime = 2 * mSlots[slotNo - 1].remainingSlotTime;
+
+        mSlots[slotNo].slotIsPauseable.SetValue(true);
+        mSlots[slotNo].minPauseDuration.SetValue(2 * mSlots[slotNo - 1].slotIsPauseable.Value());
+        mSlots[slotNo].maxPauseDuration.SetValue(2 * mSlots[slotNo - 1].maxPauseDuration.Value());
+        mSlots[slotNo].nominalPower.SetValue(2 * mSlots[slotNo - 1].nominalPower.Value());
+        mSlots[slotNo].minPower.SetValue(2 * mSlots[slotNo - 1].minPower.Value());
+        mSlots[slotNo].maxPower.SetValue(2 * mSlots[slotNo - 1].maxPower.Value());
+        mSlots[slotNo].nominalEnergy.SetValue(2 * mSlots[slotNo - 1].nominalEnergy.Value());
+    }
+
+    mForecastStruct.slots = DataModel::List<const DeviceEnergyManagement::Structs::SlotStruct::Type>(mSlots, numSlots);
+
+    DataModel::Nullable<DeviceEnergyManagement::Structs::ForecastStruct::Type> forecast(mForecastStruct);
+
+    EVSEManufacturer * mn = GetEvseManufacturer();
+    mn->GetDEMDelegate()->SetForecast(forecast);
+
+    GetDEMDelegate()->SetAbsMinPower(1000);
+    GetDEMDelegate()->SetAbsMaxPower(256 * 2000 * 1000);
+
+    return CHIP_NO_ERROR;
+}
+
 CHIP_ERROR EVSEManufacturer::ConfigureForecast()
 {
     uint32_t chipEpoch = 0;
@@ -597,6 +669,9 @@ CHIP_ERROR EVSEManufacturer::ConfigureForecast()
 
     GetDEMDelegate()->SetForecast(forecast);
 
+    GetDEMDelegate()->SetAbsMinPower(1000 * 1000);
+    GetDEMDelegate()->SetAbsMaxPower(16 * 70000 * 1000);
+
     return CHIP_NO_ERROR;
 }
 
@@ -647,3 +722,8 @@ CHIP_ERROR EVSEManufacturer::HandleModifyRequest(const uint32_t forecastId,
     return CHIP_NO_ERROR;
 }
 
+CHIP_ERROR EVSEManufacturer::RequestConstraintBasedForecast(const DataModel::DecodableList<DeviceEnergyManagement::Structs::ConstraintsStruct::DecodableType> & constraints,
+                                                            AdjustmentCauseEnum cause)
+{
+    return CHIP_NO_ERROR;
+}

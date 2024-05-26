@@ -601,8 +601,38 @@ Status DeviceEnergyManagementDelegate::ModifyForecastRequest(
 Status DeviceEnergyManagementDelegate::RequestConstraintBasedForecast(
     const DataModel::DecodableList<Structs::ConstraintsStruct::DecodableType> & constraints, AdjustmentCauseEnum cause)
 {
-    Status status = Status::UnsupportedCommand; // Status::Success;
-    // TODO: implement the behaviour above
+    Status status = Status::Failure;
+
+    // Determine if the new forecast adjustments are acceptable to the appliance
+    if (mpDEMManufacturerDelegate != nullptr)
+    {
+        if (!HasFeature(DeviceEnergyManagement::Feature::kPowerAdjustment) ||
+            !HasFeature(DeviceEnergyManagement::Feature::kForecastAdjustment))
+        {
+            ChipLogError(AppServer, "RequestConstraintBasedForecast not supported as neither PFR or SFR supported");
+        }
+        else if (mpDEMManufacturerDelegate->RequestConstraintBasedForecast(constraints, cause) == CHIP_NO_ERROR)
+        {
+            switch (cause)
+            {
+            case AdjustmentCauseEnum::kLocalOptimization:
+                ChipLogError(Zcl, "PETER1");
+                mForecast.Value().forecastUpdateReason = ForecastUpdateReasonEnum::kLocalOptimization;
+                break;
+            case AdjustmentCauseEnum::kGridOptimization:
+                ChipLogError(Zcl, "PETER2");
+                mForecast.Value().forecastUpdateReason = ForecastUpdateReasonEnum::kGridOptimization;
+                break;
+            default:
+                // Already checked in chip::app::Clusters::DeviceEnergyManagement::Instance::HandleModifyForecastRequest
+                break;
+            }
+
+            mForecast.Value().forecastId++;
+            status = Status::Success;
+        }
+    }
+
     return status;
 }
 

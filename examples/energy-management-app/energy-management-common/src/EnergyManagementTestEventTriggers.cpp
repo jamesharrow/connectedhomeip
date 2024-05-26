@@ -246,6 +246,22 @@ void SetTestEventTrigger_ForecastAdjustmentClear()
     GetDEMDelegate()->SetForecast(forecast);
 }
 
+void SetTestEventTrigger_ConstraintBasedAdjustmentClear()
+{
+    // Get the current forecast ad update the earliestStartTime and latestEndTime
+    sForecastStruct = GetDEMDelegate()->GetForecast().Value();
+
+    sForecastStruct.startTime = static_cast<uint32_t>(0);
+    sForecastStruct.endTime = static_cast<uint32_t>(0);
+
+    sForecastStruct.earliestStartTime = Optional<DataModel::Nullable<uint32_t>>();
+    sForecastStruct.latestEndTime = Optional<uint32_t>();
+
+    DataModel::Nullable<DeviceEnergyManagement::Structs::ForecastStruct::Type> forecast(sForecastStruct);
+
+    GetDEMDelegate()->SetForecast(forecast);
+}
+
 void SetTestEventTrigger_ConstraintBasedAdjustment()
 {
     // Simulate a forecast power usage with at least 2 and at most 4 slots
@@ -312,6 +328,10 @@ bool HandleDeviceEnergyManagementTestEventTrigger(uint64_t eventTrigger)
     case DeviceEnergyManagementTrigger::kConstraintBasedAdjustment:
         ChipLogProgress(Support, "[ConstraintBasedAdjustment-Test-Event]");
         SetTestEventTrigger_ConstraintBasedAdjustment();
+        break;
+    case DeviceEnergyManagementTrigger::kConstraintBasedAdjustmentClear:
+        ChipLogProgress(Support, "[ConstraintBasedAdjustmentClear-Test-Event]");
+        SetTestEventTrigger_ConstraintBasedAdjustmentClear();
         break;
 
     default:

@@ -89,6 +89,12 @@ public:
     {
         return CHIP_NO_ERROR;
     }
+
+    virtual CHIP_ERROR RequestConstraintBasedForecast(const DataModel::DecodableList<DeviceEnergyManagement::Structs::ConstraintsStruct::DecodableType> & constraints,
+                                                      AdjustmentCauseEnum cause)
+    {
+        return CHIP_NO_ERROR;
+    }
 };
 
 } // namespace DeviceEnergyManagement

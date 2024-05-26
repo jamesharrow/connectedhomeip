@@ -199,8 +199,11 @@ public:
     CHIP_ERROR HandleModifyRequest(const uint32_t forecastId,
                                    const DataModel::DecodableList<DeviceEnergyManagement::Structs::SlotAdjustmentStruct::DecodableType> & slotAdjustments,
                                    AdjustmentCauseEnum cause) override;
+    CHIP_ERROR RequestConstraintBasedForecast(const DataModel::DecodableList<DeviceEnergyManagement::Structs::ConstraintsStruct::DecodableType> & constraints,
+                                              AdjustmentCauseEnum cause);
 
     CHIP_ERROR ConfigureForecast();
+    CHIP_ERROR ConfigureForecast(uint16_t numSlots);
 private:
     EnergyEvseManager * mEvseInstance;
     ElectricalPowerMeasurement::ElectricalPowerMeasurementInstance * mEPMInstance;

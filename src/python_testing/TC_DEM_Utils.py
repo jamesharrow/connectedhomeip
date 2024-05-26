@@ -50,6 +50,8 @@ class DEMBaseTestHelper:
                 endpoint=endpoint,
                 timedRequestTimeoutMs=timedRequestTimeoutMs)
 
+            asserts.assert_equal(expected_status, Status.Success)
+
         except InteractionModelError as e:
             asserts.assert_equal(e.status, expected_status, "Unexpected error returned")
 
@@ -59,6 +61,8 @@ class DEMBaseTestHelper:
             await self.send_single_cmd(cmd=Clusters.DeviceEnergyManagement.Commands.CancelPowerAdjustRequest(),
                 endpoint=endpoint,
                 timedRequestTimeoutMs=timedRequestTimeoutMs)
+
+            asserts.assert_equal(expected_status, Status.Success)
 
         except InteractionModelError as e:
             asserts.assert_equal(e.status, expected_status, "Unexpected error returned")
@@ -74,6 +78,8 @@ class DEMBaseTestHelper:
                 endpoint=endpoint,
                 timedRequestTimeoutMs=timedRequestTimeoutMs)
 
+            asserts.assert_equal(expected_status, Status.Success)
+
         except InteractionModelError as e:
             asserts.assert_equal(e.status, expected_status, "Unexpected error returned")
 
@@ -85,6 +91,8 @@ class DEMBaseTestHelper:
                                        endpoint=endpoint,
                                        timedRequestTimeoutMs=timedRequestTimeoutMs)
 
+            asserts.assert_equal(expected_status, Status.Success)
+
         except InteractionModelError as e:
             asserts.assert_equal(e.status, expected_status, "Unexpected error returned")
 
@@ -95,6 +103,8 @@ class DEMBaseTestHelper:
             await self.send_single_cmd(cmd=Clusters.DeviceEnergyManagement.Commands.CancelRequest(),
                                        endpoint=endpoint,
                                        timedRequestTimeoutMs=timedRequestTimeoutMs)
+
+            asserts.assert_equal(expected_status, Status.Success)
 
         except InteractionModelError as e:
             asserts.assert_equal(e.status, expected_status, "Unexpected error returned")
@@ -110,6 +120,8 @@ class DEMBaseTestHelper:
                 endpoint=endpoint,
                 timedRequestTimeoutMs=timedRequestTimeoutMs)
 
+            asserts.assert_equal(expected_status, Status.Success)
+
         except InteractionModelError as e:
             asserts.assert_equal(e.status, expected_status, "Unexpected error returned")
 
@@ -119,6 +131,8 @@ class DEMBaseTestHelper:
             await self.send_single_cmd(cmd=Clusters.DeviceEnergyManagement.Commands.ResumeRequest(),
                                        endpoint=endpoint,
                                        timedRequestTimeoutMs=timedRequestTimeoutMs)
+
+            asserts.assert_equal(expected_status, Status.Success)
 
         except InteractionModelError as e:
             asserts.assert_equal(e.status, expected_status, "Unexpected error returned")
@@ -135,7 +149,25 @@ class DEMBaseTestHelper:
                                        endpoint=endpoint,
                                        timedRequestTimeoutMs=timedRequestTimeoutMs)
 
+            asserts.assert_equal(expected_status, Status.Success)
+
         except InteractionModelError as e:
+            asserts.assert_equal(e.status, expected_status, "Unexpected error returned")
+
+    async def send_request_constraint_based_forecast(self, constraintList: list[Clusters.DeviceEnergyManagement.Structs.ConstraintsStruct],
+                                                     cause: Clusters.DeviceEnergyManagement.Enums.AdjustmentCauseEnum,
+                                                     endpoint: int = None, timedRequestTimeoutMs: int = 3000,
+                                                     expected_status: Status = Status.Success):
+        try:
+            await self.send_single_cmd(cmd=Clusters.DeviceEnergyManagement.Commands.RequestConstraintBasedForecast(constraints=constraintList,
+                                                                                                                   cause=cause),
+                                       endpoint=endpoint,
+                                       timedRequestTimeoutMs=timedRequestTimeoutMs)
+
+            asserts.assert_equal(expected_status, Status.Success)
+
+        except InteractionModelError as e:
+            logging.info(f"PETER {expected_status}")
             asserts.assert_equal(e.status, expected_status, "Unexpected error returned")
 
     async def send_test_event_trigger_power_adjustment(self):

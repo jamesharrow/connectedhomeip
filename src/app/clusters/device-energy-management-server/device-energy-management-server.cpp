@@ -677,7 +677,7 @@ void Instance::HandleModifyForecastRequest(HandlerContext & ctx, const Commands:
 void Instance::HandleRequestConstraintBasedForecast(HandlerContext & ctx,
                                                     const Commands::RequestConstraintBasedForecast::DecodableType & commandData)
 {
-    Status status;
+    Status status = Status::Success;
 
     DataModel::DecodableList<Structs::ConstraintsStruct::DecodableType> constraints = commandData.constraints;
     AdjustmentCauseEnum adjustmentCause                                             = commandData.cause;
@@ -688,6 +688,52 @@ void Instance::HandleRequestConstraintBasedForecast(HandlerContext & ctx,
         ChipLogError(Zcl, "DEM: RequestConstraintBasedForecast command rejected");
         ctx.mCommandHandler.AddStatus(ctx.mRequestPath, status);
         return;
+    }
+
+    // Check for invalid power levels
+    {
+        auto iterator = constraints.begin();
+        if (iterator.Next())
+        {
+            if (HasFeature(Feature::kPowerForecastReporting))
+            {
+                const Structs::ConstraintsStruct::DecodableType & constraint = iterator.GetValue();
+                if (!constraint.nominalPower.HasValue() ||
+                    constraint.nominalPower.Value() < mDelegate.GetAbsMinPower() ||
+                    constraint.nominalPower.Value() > mDelegate.GetAbsMaxPower())
+                {
+                    ChipLogError(Zcl, "DEM: RequestConstraintBasedForecast bad nominalPower %lu absMinPower %lu absMaxPower %lu",
+                                 constraint.nominalPower.HasValue() ? constraint.nominalPower.Value() : 0,
+                                 mDelegate.GetAbsMinPower(),
+                                 mDelegate.GetAbsMaxPower());
+                    ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::ConstraintError);
+                    return;
+                }
+            }
+        }
+    }
+
+    // Check for overlappping elements
+    {
+        auto iterator = constraints.begin();
+        if (iterator.Next())
+        {
+            // Get the first constraint
+            const Structs::ConstraintsStruct::DecodableType & prevConstraint = iterator.GetValue();
+
+            // Start comparing next vs prev constraints
+            while (iterator.Next())
+            {
+                const Structs::ConstraintsStruct::DecodableType & constraint = iterator.GetValue();
+                if (constraint.startTime < prevConstraint.startTime ||
+                    prevConstraint.startTime + prevConstraint.duration >= constraint.startTime)
+                {
+                    ChipLogError(Zcl, "DEM: RequestConstraintBasedForecast overlapping constraint times");
+                    ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::ConstraintError);
+                    return;
+                }
+            }
+        }
     }
 
     status = mDelegate.RequestConstraintBasedForecast(constraints, adjustmentCause);
