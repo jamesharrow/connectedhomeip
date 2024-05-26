@@ -248,6 +248,7 @@ void SetTestEventTrigger_ForecastAdjustmentClear()
 
 void SetTestEventTrigger_ConstraintBasedAdjustmentClear()
 {
+    // TODO
     // Get the current forecast ad update the earliestStartTime and latestEndTime
     sForecastStruct = GetDEMDelegate()->GetForecast().Value();
 
