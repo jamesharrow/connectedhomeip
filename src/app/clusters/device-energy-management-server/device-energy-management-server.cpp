@@ -714,6 +714,14 @@ void Instance::HandleRequestConstraintBasedForecast(HandlerContext & ctx,
         if (iterator.Next())
         {
             const Structs::ConstraintsStruct::DecodableType & constraint = iterator.GetValue();
+
+            // Check to see if this constraint is in the past
+            if (constraint.startTime + constraint.duration <= currentUtcTime)
+            {
+                ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::ConstraintError);
+                return;
+            }
+
             if (HasFeature(Feature::kPowerForecastReporting))
             {
                 if (!constraint.nominalPower.HasValue() ||
@@ -736,11 +744,15 @@ void Instance::HandleRequestConstraintBasedForecast(HandlerContext & ctx,
                 }
             }
 
-            // Check to see if this constraint is in the past
-            if (constraint.startTime + constraint.duration <= currentUtcTime)
+            if (HasFeature(Feature::kStateForecastReporting))
             {
-                ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::ConstraintError);
-                return;
+                if (!constraint.loadControl.HasValue() || constraint.loadControl.Value() < -100 || constraint.loadControl.Value() > 100)
+                {
+                    ChipLogError(Zcl, "DEM: RequestConstraintBasedForecast bad loadControl %d",
+                                 constraint.loadControl.HasValue() ? constraint.loadControl.Value() : -127);
+                    ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::ConstraintError);
+                    return;
+                }
             }
         }
     }
