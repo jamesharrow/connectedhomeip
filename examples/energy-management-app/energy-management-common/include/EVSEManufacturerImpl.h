@@ -30,8 +30,6 @@ namespace app {
 namespace Clusters {
 namespace EnergyEvse {
 
-#define MAX_SLOTS 10
-
 /**
  * The EVSEManufacturer example class
  */
@@ -212,8 +210,6 @@ public:
      */
     static void FakeReadingsTimerExpiry(System::Layer * systemLayer, void * manufacturer);
 
-    CHIP_ERROR ConfigureForecast(uint16_t numSlots);
-
 private:
     EnergyEvseManager * mEvseInstance;
     ElectricalPowerMeasurement::ElectricalPowerMeasurementInstance * mEPMInstance;
@@ -222,11 +218,6 @@ private:
 
     int64_t mLastChargingEnergyMeter    = 0;
     int64_t mLastDischargingEnergyMeter = 0;
-
-    DeviceEnergyManagement::Structs::SlotStruct::Type mSlots[MAX_SLOTS];
-    DeviceEnergyManagement::Structs::ForecastStruct::Type mForecastStruct;
-    DeviceEnergyManagement::Structs::PowerAdjustStruct::Type mPowerAdjustments[1];
-    DataModel::Nullable<DeviceEnergyManagement::Structs::ForecastStruct::Type> mForecast;
 };
 
 /** @brief Helper function to return the singleton EVSEManufacturer instance

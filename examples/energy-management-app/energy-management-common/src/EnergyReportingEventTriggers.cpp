@@ -16,7 +16,7 @@
  *    limitations under the License.
  */
 
-#include <EVSEManufacturerImpl.h>
+#include "FakeReadings.h"
 
 #include <app/clusters/electrical-energy-measurement-server/EnergyReportingTestEventTriggerHandler.h>
 
@@ -27,9 +27,6 @@ using namespace chip::app::Clusters::ElectricalEnergyMeasurement::Structs;
 
 void SetTestEventTrigger_FakeReadingsLoadStart()
 {
-    EVSEManufacturer * mn = GetEvseManufacturer();
-    VerifyOrDieWithMsg(mn != nullptr, AppServer, "EVSEManufacturer is null");
-
     int64_t aPower_mW              = 1'000'000; // Fake load 1000 W
     uint32_t aPowerRandomness_mW   = 20'000;    // randomness 20W
     int64_t aVoltage_mV            = 230'000;   // Fake Voltage 230V
@@ -38,15 +35,12 @@ void SetTestEventTrigger_FakeReadingsLoadStart()
     uint32_t aCurrentRandomness_mA = 500;       // randomness 500mA
     uint8_t aInterval_s            = 2;         // 2s updates
     bool bReset                    = true;
-    mn->StartFakeReadings(EndpointId(1), aPower_mW, aPowerRandomness_mW, aVoltage_mV, aVoltageRandomness_mV, aCurrent_mA,
-                          aCurrentRandomness_mA, aInterval_s, bReset);
+    FakeReadings::GetInstance().StartFakeReadings(EndpointId(1), aPower_mW, aPowerRandomness_mW, aVoltage_mV, aVoltageRandomness_mV, aCurrent_mA,
+                                                  aCurrentRandomness_mA, aInterval_s, bReset);
 }
 
 void SetTestEventTrigger_FakeReadingsGeneratorStart()
 {
-    EVSEManufacturer * mn = GetEvseManufacturer();
-    VerifyOrDieWithMsg(mn != nullptr, AppServer, "EVSEManufacturer is null");
-
     int64_t aPower_mW              = -3'000'000; // Fake Generator -3000 W
     uint32_t aPowerRandomness_mW   = 20'000;     // randomness 20W
     int64_t aVoltage_mV            = 230'000;    // Fake Voltage 230V
@@ -55,15 +49,13 @@ void SetTestEventTrigger_FakeReadingsGeneratorStart()
     uint32_t aCurrentRandomness_mA = 500;        // randomness 500mA
     uint8_t aInterval_s            = 5;          // 5s updates
     bool bReset                    = true;
-    mn->StartFakeReadings(EndpointId(1), aPower_mW, aPowerRandomness_mW, aVoltage_mV, aVoltageRandomness_mV, aCurrent_mA,
-                          aCurrentRandomness_mA, aInterval_s, bReset);
+    FakeReadings::GetInstance().StartFakeReadings(EndpointId(1), aPower_mW, aPowerRandomness_mW, aVoltage_mV, aVoltageRandomness_mV, aCurrent_mA,
+                                                  aCurrentRandomness_mA, aInterval_s, bReset);
 }
 
 void SetTestEventTrigger_FakeReadingsStop()
 {
-    EVSEManufacturer * mn = GetEvseManufacturer();
-    VerifyOrDieWithMsg(mn != nullptr, AppServer, "EVSEManufacturer is null");
-    mn->StopFakeReadings();
+    FakeReadings::GetInstance().StopFakeReadings();
 }
 
 bool HandleEnergyReportingTestEventTrigger(uint64_t eventTrigger)

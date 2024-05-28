@@ -22,15 +22,19 @@
 
 #include <utils.h>
 
+#include "FakeReadings.h"
+
 using namespace chip;
 using namespace chip::app;
 using namespace chip::app::Clusters;
 using namespace chip::app::Clusters::DeviceEnergyManagement;
 
 #define MAX_SLOTS 10
-static DeviceEnergyManagement::Structs::SlotStruct::Type sSlots[MAX_SLOTS];
-static DeviceEnergyManagement::Structs::ForecastStruct::Type sForecastStruct;
-static DeviceEnergyManagement::Structs::PowerAdjustStruct::Type sPowerAdjustments[1];
+static chip::app::Clusters::DeviceEnergyManagement::Structs::SlotStruct::Type sSlots[MAX_SLOTS];
+static chip::app::Clusters::DeviceEnergyManagement::Structs::ForecastStruct::Type sForecastStruct;
+static chip::app::DataModel::Nullable<chip::app::Clusters::DeviceEnergyManagement::Structs::ForecastStruct::Type> sForecast;
+
+static chip::app::Clusters::DeviceEnergyManagement::Structs::PowerAdjustStruct::Type sPowerAdjustments[1];
 
 DeviceEnergyManagementDelegate * GetDEMDelegate()
 {
@@ -42,8 +46,89 @@ DeviceEnergyManagementDelegate * GetDEMDelegate()
     return dg;
 }
 
+CHIP_ERROR ConfigureForecast(uint16_t numSlots)
+{
+    uint32_t chipEpoch = 0;
+
+    CHIP_ERROR err = UtilsGetEpochTS(chipEpoch);
+    if (err != CHIP_NO_ERROR)
+    {
+        ChipLogError(Support, "ConfigureForecast could not get time");
+        return err;
+    }
+
+    // planned start time, in UTC, for the entire Forecast.
+    sForecastStruct.startTime = static_cast<uint32_t>(chipEpoch);
+
+    // earliest start time, in UTC, that the entire Forecast can be shifted to. null value indicates that it can be started
+    // immediately.
+    sForecastStruct.earliestStartTime = Optional<DataModel::Nullable<uint32_t>>{ DataModel::Nullable<uint32_t>{ chipEpoch } };
+
+    // planned end time, in UTC, for the entire Forecast.
+    sForecastStruct.endTime = static_cast<uint32_t>(chipEpoch * 3);
+
+    // latest end time, in UTC, for the entire Forecast
+    sForecastStruct.latestEndTime = Optional<uint32_t>(static_cast<uint32_t>(chipEpoch * 3));
+
+    sForecastStruct.isPauseable = true;
+
+    sForecastStruct.activeSlotNumber.SetNonNull<uint16_t>(0);
+
+    sSlots[0].minDuration = 10;
+    sSlots[0].maxDuration = 20;
+    sSlots[0].defaultDuration = 15;
+    sSlots[0].elapsedSlotTime = 0;
+    sSlots[0].remainingSlotTime = 0;
+
+    sSlots[0].slotIsPauseable.SetValue(true);
+    sSlots[0].minPauseDuration.SetValue(10);
+    sSlots[0].maxPauseDuration.SetValue(60);
+    sSlots[0].nominalPower.SetValue(1500);
+    sSlots[0].minPower.SetValue(1000);
+    sSlots[0].maxPower.SetValue(2000);
+    sSlots[0].nominalEnergy.SetValue(2000);
+
+    sSlots[0].manufacturerESAState.SetValue(23);
+
+    for (uint16_t slotNo = 1; slotNo < numSlots; slotNo++)
+    {
+        sSlots[slotNo].minDuration = 2 * sSlots[slotNo - 1].minDuration;
+        sSlots[slotNo].maxDuration = 2 * sSlots[slotNo - 1].maxDuration;
+        sSlots[slotNo].defaultDuration = 2 * sSlots[slotNo - 1].defaultDuration;
+        sSlots[slotNo].elapsedSlotTime = 2 * sSlots[slotNo - 1].elapsedSlotTime;
+        sSlots[slotNo].remainingSlotTime = 2 * sSlots[slotNo - 1].remainingSlotTime;
+
+        // Need slotNo == 1 not to be pausible for test DEM 2.4 step 3b
+        sSlots[slotNo].slotIsPauseable.SetValue((slotNo & 1) == 0 ? true : false);
+        sSlots[slotNo].minPauseDuration.SetValue(2 * sSlots[slotNo - 1].slotIsPauseable.Value());
+        sSlots[slotNo].maxPauseDuration.SetValue(2 * sSlots[slotNo - 1].maxPauseDuration.Value());
+        sSlots[slotNo].nominalPower.SetValue(2 * sSlots[slotNo - 1].nominalPower.Value());
+        sSlots[slotNo].minPower.SetValue(2 * sSlots[slotNo - 1].minPower.Value());
+        sSlots[slotNo].maxPower.SetValue(2 * sSlots[slotNo - 1].maxPower.Value());
+        sSlots[slotNo].nominalEnergy.SetValue(2 * sSlots[slotNo - 1].nominalEnergy.Value());
+
+        sSlots[slotNo].manufacturerESAState.SetValue(sSlots[slotNo - 1].manufacturerESAState.Value() + 1);
+    }
+
+    sForecastStruct.slots = DataModel::List<const DeviceEnergyManagement::Structs::SlotStruct::Type>(sSlots, numSlots);
+
+    DataModel::Nullable<DeviceEnergyManagement::Structs::ForecastStruct::Type> forecast(sForecastStruct);
+
+    EVSEManufacturer * mn = GetEvseManufacturer();
+    mn->GetDEMDelegate()->SetForecast(forecast);
+
+    mn->GetDEMDelegate()->SetAbsMinPower(1000);
+    mn->GetDEMDelegate()->SetAbsMaxPower(256 * 2000 * 1000);
+
+    return CHIP_NO_ERROR;
+}
+
+
+
 void SetTestEventTrigger_PowerAdjustment()
 {
+    ConfigureForecast(2);
+
     sPowerAdjustments[0].minPower =  5000 * 1000; // 5kW
     sPowerAdjustments[0].maxPower = 30000 * 1000; // 30kW
     sPowerAdjustments[0].minDuration = 30;        // 30s
@@ -76,6 +161,8 @@ void SetTestEventTrigger_PowerAdjustClear()
 
 void SetTestEventTrigger_StartTimeAdjustment()
 {
+    ConfigureForecast(2);
+
     // Get the current forecast ad update the earliestStartTime and latestEndTime
     sForecastStruct = GetDEMDelegate()->GetForecast().Value();
 
@@ -125,6 +212,11 @@ void SetTestEventTrigger_UserOptOutOptimization(OptOutStateEnum optOutState)
     GetDEMDelegate()->SetOptOutState(optOutState);
 }
 
+void SetTestEventTrigger_Pausable()
+{
+    ConfigureForecast(2);
+}
+
 void SetTestEventTrigger_PausableNextSlot()
 {
     // Get the current forecast ad update the active slot number
@@ -138,7 +230,7 @@ void SetTestEventTrigger_PausableNextSlot()
 
 void SetTestEventTrigger_Forecast()
 {
-    GetEvseManufacturer()->ConfigureForecast(2);
+    ConfigureForecast(2);
 }
 
 void SetTestEventTrigger_ForecastClear()
@@ -158,6 +250,8 @@ void SetTestEventTrigger_ForecastClear()
 
 void SetTestEventTrigger_ForecastAdjustment()
 {
+    ConfigureForecast(2);
+
     // The following values need to match the equivalent values in src/python_testing/TC_DEM_2_5.py
     sForecastStruct = GetDEMDelegate()->GetForecast().Value();
     sSlots[0].minPowerAdjustment.SetValue(20);
@@ -216,7 +310,7 @@ void SetTestEventTrigger_ConstraintBasedAdjustmentClear()
 
 void SetTestEventTrigger_ConstraintBasedAdjustment()
 {
-    // Simulate a forecast power usage with at least 2 and at most 4 slots
+    ConfigureForecast(4);
 }
 
 bool HandleDeviceEnergyManagementTestEventTrigger(uint64_t eventTrigger)
@@ -255,7 +349,7 @@ bool HandleDeviceEnergyManagementTestEventTrigger(uint64_t eventTrigger)
         break;
     case DeviceEnergyManagementTrigger::kPausable:
         ChipLogProgress(Support, "[Pausable-Test-Event] => Simulate a fixed forecast with one pausable slo with MinPauseDuration >1, MaxPauseDuration>1 and one non pausable slot");
-        // Already configured in ConfigureForecast()
+        SetTestEventTrigger_Pausable();
         break;
     case DeviceEnergyManagementTrigger::kPausableNextSlot:
         ChipLogProgress(Support, "[PausableNextSlot-Test-Event] => Simulate a moving time to the next forecast slot");
@@ -300,5 +394,3 @@ bool HandleDeviceEnergyManagementTestEventTrigger(uint64_t eventTrigger)
 
     return true;
 }
-
-
