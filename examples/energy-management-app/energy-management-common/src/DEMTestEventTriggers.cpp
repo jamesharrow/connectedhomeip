@@ -143,7 +143,17 @@ void SetTestEventTrigger_Forecast()
 
 void SetTestEventTrigger_ForecastClear()
 {
-    // TODO call implementation - NOTHING TO DO?
+    sForecastStruct.startTime = 0;
+    sForecastStruct.endTime = 0;
+    sForecastStruct.earliestStartTime.ClearValue();
+    sForecastStruct.latestEndTime.ClearValue();
+    sForecastStruct.isPauseable = false;
+    sForecastStruct.activeSlotNumber.SetNull();
+    sForecastStruct.slots = DataModel::List<const DeviceEnergyManagement::Structs::SlotStruct::Type>();
+
+    DataModel::Nullable<DeviceEnergyManagement::Structs::ForecastStruct::Type> forecast(sForecastStruct);
+
+    GetDEMDelegate()->SetForecast(forecast);
 }
 
 void SetTestEventTrigger_ForecastAdjustment()
