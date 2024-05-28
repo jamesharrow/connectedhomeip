@@ -31,7 +31,7 @@ namespace Clusters {
 namespace EnergyEvse {
 
 #define MAX_SLOTS 10
-    
+
 /**
  * The EVSEManufacturer example class
  */
@@ -53,8 +53,15 @@ public:
     {
     }
 
-    EnergyEvseManager * GetEvseInstance() { return mEvseInstance; }
-    ElectricalPowerMeasurement::ElectricalPowerMeasurementInstance * GetEPMInstance() { return mEPMInstance; }
+    EnergyEvseManager * GetEvseInstance()
+    {
+        return mEvseInstance;
+    }
+
+    ElectricalPowerMeasurement::ElectricalPowerMeasurementInstance * GetEPMInstance()
+    {
+        return mEPMInstance;
+    }
 
     EnergyEvseDelegate * GetEvseDelegate()
     {
@@ -91,6 +98,26 @@ public:
         }
         return nullptr;
     }
+
+    /**
+     *
+     * Implement the DEMManufacturerDelegate interface
+     *
+     */
+    int64_t GetEnergyUse() override;
+    CHIP_ERROR HandleDeviceEnergyManagementPowerAdjustRequest(const int64_t power, const uint32_t duration, AdjustmentCauseEnum cause) override;
+    CHIP_ERROR HandleDeviceEnergyManagementPowerAdjustCompletion() override;
+    CHIP_ERROR HandleDeviceEnergyManagementCancelPowerAdjustRequest(CauseEnum cause) override;
+    CHIP_ERROR HandleDeviceEnergyManagementStartTimeAdjustRequest(const uint32_t requestedStartTime, AdjustmentCauseEnum cause) override;
+    CHIP_ERROR HandleDeviceEnergyManagementPauseRequest(const uint32_t duration, AdjustmentCauseEnum cause) override;
+    CHIP_ERROR HandleDeviceEnergyManagementPauseCompletion() override;
+    CHIP_ERROR HandleDeviceEnergyManagementCancelPauseRequest(CauseEnum cause) override;
+    CHIP_ERROR HandleDeviceEnergyManagementCancelRequest() override;
+    CHIP_ERROR HandleModifyRequest(const uint32_t forecastId,
+                                   const DataModel::DecodableList<DeviceEnergyManagement::Structs::SlotAdjustmentStruct::DecodableType> & slotAdjustments,
+                                   AdjustmentCauseEnum cause) override;
+    CHIP_ERROR RequestConstraintBasedForecast(const DataModel::DecodableList<DeviceEnergyManagement::Structs::ConstraintsStruct::DecodableType> & constraints,
+                                              AdjustmentCauseEnum cause);
 
     /**
      * @brief   Called at start up to apply hardware settings
@@ -185,25 +212,9 @@ public:
      */
     static void FakeReadingsTimerExpiry(System::Layer * systemLayer, void * manufacturer);
 
-    //    Status Configure();
-
-    int64_t GetEnergyUse() override;
-    CHIP_ERROR HandleDeviceEnergyManagementPowerAdjustRequest(const int64_t power, const uint32_t duration, AdjustmentCauseEnum cause) override;
-    CHIP_ERROR HandleDeviceEnergyManagementPowerAdjustCompletion() override;
-    CHIP_ERROR HandleDeviceEnergyManagementCancelPowerAdjustRequest(CauseEnum cause) override;
-    CHIP_ERROR HandleDeviceEnergyManagementStartTimeAdjustRequest(const uint32_t requestedStartTime, AdjustmentCauseEnum cause) override;
-    CHIP_ERROR HandleDeviceEnergyManagementPauseRequest(const uint32_t duration, AdjustmentCauseEnum cause) override;
-    CHIP_ERROR HandleDeviceEnergyManagementPauseCompletion() override;
-    CHIP_ERROR HandleDeviceEnergyManagementCancelPauseRequest(CauseEnum cause) override;
-    CHIP_ERROR HandleDeviceEnergyManagementCancelRequest() override;
-    CHIP_ERROR HandleModifyRequest(const uint32_t forecastId,
-                                   const DataModel::DecodableList<DeviceEnergyManagement::Structs::SlotAdjustmentStruct::DecodableType> & slotAdjustments,
-                                   AdjustmentCauseEnum cause) override;
-    CHIP_ERROR RequestConstraintBasedForecast(const DataModel::DecodableList<DeviceEnergyManagement::Structs::ConstraintsStruct::DecodableType> & constraints,
-                                              AdjustmentCauseEnum cause);
-
-    CHIP_ERROR ConfigureForecast();
+private:
     CHIP_ERROR ConfigureForecast(uint16_t numSlots);
+
 private:
     EnergyEvseManager * mEvseInstance;
     ElectricalPowerMeasurement::ElectricalPowerMeasurementInstance * mEPMInstance;

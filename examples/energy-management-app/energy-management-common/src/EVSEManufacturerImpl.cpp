@@ -45,6 +45,28 @@ using namespace chip::app::Clusters::PowerSource::Attributes;
 
 using Protocols::InteractionModel::Status;
 
+struct FakeReadingsData
+{
+    bool bEnabled;                  /* If enabled then the timer callback will re-trigger */
+    EndpointId mEndpointId;         /* Which endpoint the meter is on */
+    uint8_t mInterval_s;            /* Interval in seconds to callback */
+    int64_t mPower_mW;              /* Active Power on the load in mW (signed value) +ve = imported */
+    uint32_t mPowerRandomness_mW;   /* The amount to randomize the Power on the load in mW */
+    int64_t mVoltage_mV;            /* Voltage reading in mV (signed value) */
+    uint32_t mVoltageRandomness_mV; /* The amount to randomize the Voltage in mV */
+    int64_t mCurrent_mA;            /* ActiveCurrent reading in mA (signed value) */
+    uint32_t mCurrentRandomness_mA; /* The amount to randomize the ActiveCurrent in mA */
+
+    /* These energy values can only be positive values.
+     * however the underlying energy type (power_mWh) is signed, so keeping with that convention */
+    int64_t mTotalEnergyImported    = 0; /* Cumulative Energy Imported which is updated if mPower > 0 */
+    int64_t mTotalEnergyExported    = 0; /* Cumulative Energy Imported which is updated if mPower < 0 */
+    int64_t mPeriodicEnergyImported = 0; /* Periodic Energy Imported which is updated if mPower > 0 */
+    int64_t mPeriodicEnergyExported = 0; /* Periodic Energy Imported which is updated if mPower < 0 */
+};
+
+static FakeReadingsData gFakeReadingsData;
+
 CHIP_ERROR EVSEManufacturer::Init()
 {
     /* Manufacturers should modify this to do any custom initialisation */
@@ -335,28 +357,6 @@ CHIP_ERROR EVSEManufacturer::SendPeriodicEnergyReading(EndpointId aEndpointId, i
     return CHIP_NO_ERROR;
 }
 
-struct FakeReadingsData
-{
-    bool bEnabled;                  /* If enabled then the timer callback will re-trigger */
-    EndpointId mEndpointId;         /* Which endpoint the meter is on */
-    uint8_t mInterval_s;            /* Interval in seconds to callback */
-    int64_t mPower_mW;              /* Active Power on the load in mW (signed value) +ve = imported */
-    uint32_t mPowerRandomness_mW;   /* The amount to randomize the Power on the load in mW */
-    int64_t mVoltage_mV;            /* Voltage reading in mV (signed value) */
-    uint32_t mVoltageRandomness_mV; /* The amount to randomize the Voltage in mV */
-    int64_t mCurrent_mA;            /* ActiveCurrent reading in mA (signed value) */
-    uint32_t mCurrentRandomness_mA; /* The amount to randomize the ActiveCurrent in mA */
-
-    /* These energy values can only be positive values.
-     * however the underlying energy type (power_mWh) is signed, so keeping with that convention */
-    int64_t mTotalEnergyImported    = 0; /* Cumulative Energy Imported which is updated if mPower > 0 */
-    int64_t mTotalEnergyExported    = 0; /* Cumulative Energy Imported which is updated if mPower < 0 */
-    int64_t mPeriodicEnergyImported = 0; /* Periodic Energy Imported which is updated if mPower > 0 */
-    int64_t mPeriodicEnergyExported = 0; /* Periodic Energy Imported which is updated if mPower < 0 */
-};
-
-static FakeReadingsData gFakeReadingsData;
-
 /* This helper routine starts and handles a callback */
 /**
  * @brief   Starts a fake load/generator to periodically callback the power and energy
@@ -531,7 +531,7 @@ CHIP_ERROR EVSEManufacturer::ConfigureForecast(uint16_t numSlots)
     }
 
     // planned start time, in UTC, for the entire Forecast.
-    mForecastStruct.startTime = static_cast<uint32_t>(chipEpoch); 
+    mForecastStruct.startTime = static_cast<uint32_t>(chipEpoch);
 
     // earliest start time, in UTC, that the entire Forecast can be shifted to. null value indicates that it can be started
     // immediately.
@@ -541,7 +541,7 @@ CHIP_ERROR EVSEManufacturer::ConfigureForecast(uint16_t numSlots)
     mForecastStruct.endTime = static_cast<uint32_t>(chipEpoch * 3);
 
     // latest end time, in UTC, for the entire Forecast
-    mForecastStruct.latestEndTime = Optional<uint32_t>(static_cast<uint32_t>(chipEpoch * 3)); 
+    mForecastStruct.latestEndTime = Optional<uint32_t>(static_cast<uint32_t>(chipEpoch * 3));
 
     mForecastStruct.isPauseable = true;
 
@@ -569,7 +569,8 @@ CHIP_ERROR EVSEManufacturer::ConfigureForecast(uint16_t numSlots)
         mSlots[slotNo].elapsedSlotTime = 2 * mSlots[slotNo - 1].elapsedSlotTime;
         mSlots[slotNo].remainingSlotTime = 2 * mSlots[slotNo - 1].remainingSlotTime;
 
-        mSlots[slotNo].slotIsPauseable.SetValue(true);
+        // Need slotNo == 1 not to be pausible for test DEM 2.4 step 3b
+        mSlots[slotNo].slotIsPauseable.SetValue((slotNo & 1) == 0 ? true : false);
         mSlots[slotNo].minPauseDuration.SetValue(2 * mSlots[slotNo - 1].slotIsPauseable.Value());
         mSlots[slotNo].maxPauseDuration.SetValue(2 * mSlots[slotNo - 1].maxPauseDuration.Value());
         mSlots[slotNo].nominalPower.SetValue(2 * mSlots[slotNo - 1].nominalPower.Value());
@@ -587,90 +588,6 @@ CHIP_ERROR EVSEManufacturer::ConfigureForecast(uint16_t numSlots)
 
     GetDEMDelegate()->SetAbsMinPower(1000);
     GetDEMDelegate()->SetAbsMaxPower(256 * 2000 * 1000);
-
-    return CHIP_NO_ERROR;
-}
-
-CHIP_ERROR EVSEManufacturer::ConfigureForecast()
-{
-    uint32_t chipEpoch = 0;
-
-    CHIP_ERROR err = UtilsGetEpochTS(chipEpoch);
-    if (err != CHIP_NO_ERROR)
-    {
-        ChipLogError(Support, "EVSEManufacturer::ConfigureForecast could not get time");
-        return err;
-    }
-
-    mForecastStruct.startTime = static_cast<uint32_t>(chipEpoch); // planned start time, in UTC, for the entire Forecast.
-
-    // earliest start time, in UTC, that the entire Forecast can be shifted to. null value indicates that it can be started
-    // immediately.
-    mForecastStruct.earliestStartTime = Optional<DataModel::Nullable<uint32_t>>{ DataModel::Nullable<uint32_t>{ chipEpoch } };
-    mForecastStruct.endTime           = static_cast<uint32_t>(chipEpoch * 3); // planned end time, in UTC, for the entire Forecast.
-    mForecastStruct.latestEndTime =
-        Optional<uint32_t>(static_cast<uint32_t>(chipEpoch * 3)); // latest end time, in UTC, for the entire Forecast
-
-    mForecastStruct.isPauseable = true;
-
-    mSlots[0].minDuration = 10;
-    mSlots[0].maxDuration = 20;
-
-    // time to when the tariff is good,
-    mSlots[0].defaultDuration =15;
-    mSlots[0].elapsedSlotTime = 0;
-    mSlots[0].remainingSlotTime = 0;
-    mSlots[0].slotIsPauseable.SetValue(true);
-    mSlots[0].minPauseDuration.SetValue(2);
-    mSlots[0].maxPauseDuration.SetValue(10);
-
-    // minPauseDuration=maxPauseDuration=null,
-    mSlots[0].nominalPower.SetValue(0);
-    mSlots[0].minPower = mSlots[1].minPower;
-    mSlots[0].maxPower = mSlots[1].maxPower;
-
-    // Slot 2 has e.g.
-    // set by battery charge capacity
-    mSlots[1].nominalEnergy.SetValue(20000 * 1000);
-
-    // nominalPower set by a reasonable charge rate for efficiency
-    mSlots[1].nominalPower.SetValue(20000 * 1000);
-
-    // maxPower set by EV and EVSE etc capability
-    mSlots[1].maxPower.SetValue(70000 * 1000);
-
-    // minPower set by EVSE and EV capability
-    mSlots[1].minPower.SetValue(2300 * 1000);
-
-    mSlots[1].minDuration     = 20;
-    mSlots[1].maxDuration     = 40;
-    mSlots[1].defaultDuration = 30;
-
-    //    P = E * T
-    //72000 * 3600
-    // elapsedSlotTime and remainingSlotTime start as null and show live values as the slot is reached
-
-    mSlots[1].slotIsPauseable.SetValue(false);
-    mSlots[1].minPauseDuration.SetValue(2);
-    mSlots[1].maxPauseDuration.SetValue(10);
-
-    // no clue on costs(omit),
-
-    mSlots[1].minPowerAdjustment.SetValue(mSlots[1].minPower.Value());
-    mSlots[1].maxPowerAdjustment.SetValue(mSlots[1].maxPower.Value());
-    mSlots[1].minDurationAdjustment.SetValue(mSlots[1].minDuration);
-    mSlots[1].maxDurationAdjustment.SetValue(mSlots[1].maxDuration);
-
-    mForecastStruct.activeSlotNumber.SetNonNull<uint16_t>(0);
-
-    mForecastStruct.slots = DataModel::List<const DeviceEnergyManagement::Structs::SlotStruct::Type>(mSlots, 2);
-
-    static DataModel::Nullable<DeviceEnergyManagement::Structs::ForecastStruct::Type> forecast(mForecastStruct);
-
-    GetDEMDelegate()->SetForecast(forecast);
-
-    GetDEMDelegate()->SetAbsMinPower(1000 * 1000);
-    GetDEMDelegate()->SetAbsMaxPower(16 * 70000 * 1000);
 
     return CHIP_NO_ERROR;
 }

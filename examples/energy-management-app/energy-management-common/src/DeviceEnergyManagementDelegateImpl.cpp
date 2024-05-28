@@ -651,18 +651,6 @@ Status DeviceEnergyManagementDelegate::CancelRequest()
 {
     Status status = Status::Success;
 
-    if (mForecast.IsNull())
-    {
-        ChipLogDetail(AppServer, "Cancelling on a Null forecast!");
-        return Status::Failure;
-    }
-
-    if (mForecast.Value().forecastUpdateReason == ForecastUpdateReasonEnum::kInternalOptimization)
-    {
-        ChipLogDetail(AppServer, "Bad Cancel when ESA ForecastUpdateReason was already Internal Optimization!");
-        return Status::Failure;
-    }
-
     mForecast.Value().forecastUpdateReason = ForecastUpdateReasonEnum::kInternalOptimization;
 
     /* It is expected the mpDEMManufacturerDelegate will cancel the effects of any previous adjustment
@@ -671,7 +659,11 @@ Status DeviceEnergyManagementDelegate::CancelRequest()
      */
     if (mpDEMManufacturerDelegate != nullptr)
     {
-        mpDEMManufacturerDelegate->HandleDeviceEnergyManagementCancelRequest();
+        CHIP_ERROR error = mpDEMManufacturerDelegate->HandleDeviceEnergyManagementCancelRequest();
+        if (error != CHIP_NO_ERROR)
+        {
+            status = Status::Failure;
+        }
     }
 
     return status;
@@ -823,6 +815,7 @@ CHIP_ERROR DeviceEnergyManagementDelegate::SetForecast(DataModel::Nullable<Struc
     else
     {
         mForecast = forecast;
+        ChipLogError(Zcl, "DeviceEnergyManagementDelegate::SetForecast activeSlotNumber %d", !forecast.Value().activeSlotNumber.IsNull() ? forecast.Value().activeSlotNumber.Value() : -1 );
     }
 
     return CHIP_NO_ERROR;

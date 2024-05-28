@@ -209,7 +209,7 @@ class TC_DEM_2_2(MatterBaseTest, DEMBaseTestHelper):
         await self.send_power_adjustment_command(power=max_power,
                                                  duration=max_duration,
                                                  cause=Clusters.DeviceEnergyManagement.Enums.AdjustmentCauseEnum.kGridOptimization,
-                                                 expected_status=Status.Failure)
+                                                 expected_status=Status.ConstraintError)
 
         self.step("15")
         await self.send_test_event_trigger_user_opt_out_local()

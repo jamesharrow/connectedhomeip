@@ -287,7 +287,7 @@ Status Instance::CheckOptOutAllowsRequest(AdjustmentCauseEnum adjustmentCause)
             return Status::Success;
         case AdjustmentCauseEnum::kGridOptimization:
         default:
-            return Status::Failure;
+            return Status::ConstraintError;
         }
 
     case OptOutStateEnum::kOptOut: /* User has opted out from both local and grid */
@@ -559,7 +559,6 @@ void Instance::HandlePauseRequest(HandlerContext & ctx, const Commands::PauseReq
         return;
     }
 
-    ChipLogError(Zcl, "duration %u min %u max %u", duration, forecast.Value().slots[activeSlotNumber].minPauseDuration.Value(), forecast.Value().slots[activeSlotNumber].maxPauseDuration.Value());
     if ((duration < forecast.Value().slots[activeSlotNumber].minPauseDuration.Value()) ||
         (duration > forecast.Value().slots[activeSlotNumber].maxPauseDuration.Value()))
     {
@@ -630,14 +629,24 @@ void Instance::HandleModifyForecastRequest(HandlerContext & ctx, const Commands:
         return;
     }
 
+    // Check the various values in the slot structures
     auto iterator = slotAdjustments.begin();
     while (iterator.Next())
     {
         const Structs::SlotAdjustmentStruct::Type & slotAdjustment = iterator.GetValue();
 
+        // Check for an invalid slotIndex
         if (slotAdjustment.slotIndex > forecast.Value().slots.size())
         {
             ChipLogError(Zcl, "DEM: Bad slot index %d", slotAdjustment.slotIndex);
+            ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::ConstraintError);
+            return;
+        }
+
+        // Check to see if trying to modify a slot which have already been run
+        if (!forecast.Value().activeSlotNumber.IsNull() && slotAdjustment.slotIndex < forecast.Value().activeSlotNumber.Value())
+        {
+            ChipLogError(Zcl, "DEM: Modifying already run slot index %d", slotAdjustment.slotIndex);
             ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::ConstraintError);
             return;
         }
@@ -659,7 +668,7 @@ void Instance::HandleModifyForecastRequest(HandlerContext & ctx, const Commands:
         if ((!slot.minDurationAdjustment.HasValue() || slotAdjustment.duration < slot.minDurationAdjustment.Value()) ||
             (!slot.maxDurationAdjustment.HasValue() || slotAdjustment.duration > slot.maxDurationAdjustment.Value()))
         {
-            ChipLogError(Zcl, "DEM: Bad nominalDuration");
+            ChipLogError(Zcl, "DEM: Bad min/max duration");
             ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::ConstraintError);
             return;
         }
@@ -747,15 +756,25 @@ void Instance::HandleRequestConstraintBasedForecast(HandlerContext & ctx,
 
 void Instance::HandleCancelRequest(HandlerContext & ctx, const Commands::CancelRequest::DecodableType & commandData)
 {
-    Status status;
+    Status status = Status::Failure;
+    DataModel::Nullable<Structs::ForecastStruct::Type> forecast = mDelegate.GetForecast();
 
-    status = mDelegate.CancelRequest();
-    ctx.mCommandHandler.AddStatus(ctx.mRequestPath, status);
-    if (status != Status::Success)
+    if (forecast.IsNull())
     {
-        ChipLogError(Zcl, "DEM: CancelRequest FAILURE");
-        return;
+        ChipLogDetail(AppServer, "Cancelling on a Null forecast!");
+        status = Status::Failure;
     }
+    else if (forecast.Value().forecastUpdateReason == ForecastUpdateReasonEnum::kInternalOptimization)
+    {
+        ChipLogDetail(AppServer, "Bad Cancel when ESA ForecastUpdateReason was already Internal Optimization!");
+        status = Status::InvalidInState;
+    }
+    else
+    {
+        status = mDelegate.CancelRequest();
+    }
+
+    ctx.mCommandHandler.AddStatus(ctx.mRequestPath, status);
 }
 
 } // namespace DeviceEnergyManagement

@@ -18,12 +18,9 @@
 
 #pragma once
 
-#include "app/clusters/device-energy-management-server/device-energy-management-server.h"
-
 #include <app/util/config.h>
-#include <cstring>
+#include <app/clusters/device-energy-management-server/device-energy-management-server.h>
 
-#define DELEGATE_TEST_DATA // TODO: comment out if not needed
 
 using chip::Protocols::InteractionModel::Status;
 namespace chip {
@@ -42,26 +39,132 @@ public:
     DeviceEnergyManagementDelegate();
 
     void SetDeviceEnergyManagementInstance(DeviceEnergyManagement::Instance & instance);
-    uint32_t HasFeature(Feature feature) const;
 
     void SetDemManufacturerDelegate(DEMManufacturerDelegate & deviceEnergyManagementManufacturerDelegate);
 
+    /**
+     *
+     * Implement the DeviceEnergyManagement::Delegate interface
+     *
+     */
+
+    /**
+     * @brief Implements a handler to begin to adjust client power
+     *        consumption/generation to the level requested.
+     *
+     * @param power Milli-Watts the ESA SHALL use during the adjustment period.
+     * @param duration The duration that the ESA SHALL maintain the requested power for.
+     * @return  Success if the adjustment is accepted; otherwise the command SHALL be rejected with appropriate error.
+     */
     virtual Status PowerAdjustRequest(const int64_t power, const uint32_t duration, AdjustmentCauseEnum cause) override;
+
+    /**
+     * @brief Make the ESA end the active power adjustment session & return to normal (or idle) power levels.
+     *        The ESA SHALL also generate an PowerAdjustEnd Event and the ESAState SHALL be restored to Online.
+     *
+     * @return It should report SUCCESS if successful and FAILURE otherwise.
+     */
     virtual Status CancelPowerAdjustRequest() override;
+
+    /**
+     * @brief The ESA SHALL update its Forecast attribute with the RequestedStartTime including a new ForecastId.
+     *
+     *   If the ESA supports ForecastAdjustment, and the ESAState is not UserOptOut and the RequestedStartTime is after
+     *   the EarliestStartTime and the resulting EndTime is before the LatestEndTime, then ESA SHALL accept the request
+     *   to modify the Start Time.
+     *   A client can estimate the entire Forecast sequence duration by computing the EndTime - StartTime fields from the
+     *   Forecast attribute, and therefore avoid scheduling the start time too late.
+     *
+     * @param requestedStartTime The requested start time in UTC that the client would like the appliance to shift its power
+     * forecast to.
+     * @param cause    Who (Grid/local) is triggering this change.
+     *
+     * @return Success if the StartTime in the Forecast is updated, otherwise the command SHALL be rejected with appropriate
+     * IM_Status.
+     */
     virtual Status StartTimeAdjustRequest(const uint32_t requestedStartTime, AdjustmentCauseEnum cause) override;
+
+    /**
+     * @brief Handler for PauseRequest command
+     *
+     *   If the ESA supports FA and the SlotIsPauseable field is true in the ActiveSlotNumber
+     *   index in the Slots list, and the ESAState is not UserOptOut then the ESA SHALL allow its current
+     *   operation to be Paused.
+     *
+     *   During this state the ESA SHALL not consume or produce significant power (other than required to keep its
+     *   basic control system operational).
+     *
+     * @param duration Duration that the ESA SHALL be paused for.
+     * @return  Success if the ESA is paused, otherwise returns other IM_Status.
+     */
     virtual Status PauseRequest(const uint32_t duration, AdjustmentCauseEnum cause) override;
+
+    /**
+     * @brief Handler for ResumeRequest command
+     *
+     *   If the ESA supports FA and it is currently Paused then the ESA SHALL resume its operation.
+     *   The ESA SHALL also generate a Resumed Event and the ESAState SHALL be updated accordingly to
+     *   reflect its current state.
+     *
+     * @return  Success if the ESA is resumed, otherwise returns other IM_Status.
+     */
     virtual Status ResumeRequest() override;
+
+    /**
+     * @brief Handler for ModifyForecastRequest
+     *
+     *   If the ESA supports FA, and the ESAState is not UserOptOut it SHALL attempt to adjust its power forecast.
+     *   This allows a one or more modifications in a single command by sending a list of modifications (one for each 'slot').
+     *   Attempts to modify slots which have already past, SHALL result in the entire command being rejected.
+     *   If the ESA accepts the requested Forecast then it SHALL update its Forecast attribute (incrementing its ForecastId)
+     *   and run the revised Forecast as its new intended operation.
+     *
+     * @param forecastId Indicates the ESA ForecastId that is to be modified.
+     * @param slotAdjustments List of adjustments to be applied to the ESA, corresponding to the expected ESA forecastId.
+     * @return  Success if the entire list of SlotAdjustmentStruct are accepted, otherwise the command
+     *          SHALL be rejected returning other IM_Status.
+     */
     virtual Status
     ModifyForecastRequest(const uint32_t forecastId,
                           const DataModel::DecodableList<Structs::SlotAdjustmentStruct::DecodableType> & slotAdjustments,
                           AdjustmentCauseEnum cause) override;
+
+    /**
+     * @brief Handler for RequestConstraintBasedForecast
+     *
+     *   The ESA SHALL inspect the requested power limits to ensure that there are no overlapping elements. The ESA
+     *   manufacturer may also reject the request if it could cause the user’s preferences to be breached (e.g. may
+     *   cause the home to be too hot or too cold, or a battery to be insufficiently charged).
+     *   If the ESA can meet the requested power limits, it SHALL regenerate a new Power Forecast with a new ForecastId.
+     *
+     * @param constraints  Sequence of turn up/down power requests that the ESA is being asked to constrain its operation within.
+     * @return  Success if successful, otherwise the command SHALL be rejected returning other IM_Status.
+     */
     virtual Status
     RequestConstraintBasedForecast(const DataModel::DecodableList<Structs::ConstraintsStruct::DecodableType> & constraints,
                                    AdjustmentCauseEnum cause) override;
+
+    /**
+     * @brief Handler for CancelRequest
+     *
+     *   The ESA SHALL attempt to cancel the effects of any previous adjustment request commands, and re-evaluate its
+     *   forecast for intended operation ignoring those previous requests.
+     *
+     *   If the ESA ForecastStruct ForecastUpdateReason was already `Internal Optimization`, then the command SHALL
+     *   be rejected with FAILURE.
+     *
+     *   If the command is accepted, the ESA SHALL update its ESAState if required, and the command status returned
+     *   SHALL be SUCCESS.
+     *
+     *   The ESA SHALL update its Forecast attribute to match its new intended operation, and update the
+     *   ForecastStruct.ForecastUpdateReason to `Internal Optimization`
+     *
+     * @return  Success if successful, otherwise the command SHALL be rejected returning other IM_Status.
+     */
     virtual Status CancelRequest() override;
 
     // ------------------------------------------------------------------
-    // Get attribute methods
+    // Overridden DeviceEnergyManagement::Delegate Get attribute methods
     virtual ESATypeEnum GetESAType() override;
     virtual bool GetESACanGenerate() override;
     virtual ESAStateEnum GetESAState() override;
@@ -72,7 +175,7 @@ public:
     virtual OptOutStateEnum GetOptOutState() override;
 
     // ------------------------------------------------------------------
-    // Set attribute methods
+    // Overridden DeviceEnergyManagement::Delegate Set attribute methods
     virtual CHIP_ERROR SetESAType(ESATypeEnum) override;
     virtual CHIP_ERROR SetESACanGenerate(bool) override;
     virtual CHIP_ERROR SetESAState(ESAStateEnum) override;
@@ -83,6 +186,9 @@ public:
     virtual CHIP_ERROR SetOptOutState(OptOutStateEnum) override;
 
 private:
+    // Returns whether the DeviceEnergyManagement is supported
+    uint32_t HasFeature(Feature feature) const;
+
     // Methods to handle when a PowerAdjustment completes
     static void PowerAdjustTimerExpiry(System::Layer * systemLayer, void * delegate);
     void HandlePowerAdjustTimerExpiry();
@@ -104,10 +210,14 @@ private:
     CHIP_ERROR SendResumedEvent(CauseEnum cause);
 
 private:
+    // Have a pointer to partner instance object
     DeviceEnergyManagement::Instance *mpDEMInstance;
-    
+
+    // The DEMManufacturerDelegate object knows how to handle
+    // manufacturer/product specific operations
     DEMManufacturerDelegate *mpDEMManufacturerDelegate;
 
+    // Various attributes
     ESATypeEnum mEsaType;
     bool mEsaCanGenerate;
     ESAStateEnum mEsaState;
@@ -116,6 +226,7 @@ private:
     OptOutStateEnum mOptOutState;
 
     Attributes::PowerAdjustmentCapability::TypeInfo::Type mPowerAdjustmentCapability;
+
     DataModel::Nullable<Structs::ForecastStruct::Type> mForecast;
 
     // Keep track whether a PowerAdjustment is in progress

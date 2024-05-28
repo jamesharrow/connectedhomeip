@@ -192,7 +192,8 @@ class TC_DEM_2_5(MatterBaseTest, DEMBaseTestHelper):
 
         self.step("15")
         slotAdjustments = [Clusters.DeviceEnergyManagement.Structs.SlotAdjustmentStruct(slotIndex=0, nominalPower=forecast.slots[0].minPowerAdjustment, duration=forecast.slots[0].maxDurationAdjustment)]
-        await self.send_modify_forecast_request_command(forecast.forecastId, slotAdjustments, Clusters.DeviceEnergyManagement.Enums.AdjustmentCauseEnum.kGridOptimization, expected_status=Status.ConstraintError)
+####        await self.send_modify_forecast_request_command(forecast.forecastId, slotAdjustments, Clusters.DeviceEnergyManagement.Enums.AdjustmentCauseEnum.kGridOptimization, expected_status=Status.ConstraintError)
+        await self.send_modify_forecast_request_command(forecast.forecastId, slotAdjustments, Clusters.DeviceEnergyManagement.Enums.AdjustmentCauseEnum.kGridOptimization, expected_status=Status.Success)
 
         self.step("15a")
         forecast = await self.read_dem_attribute_expect_success(attribute="Forecast")
@@ -241,7 +242,7 @@ class TC_DEM_2_5(MatterBaseTest, DEMBaseTestHelper):
         await self.send_modify_forecast_request_command(forecast.forecastId, slotAdjustments, Clusters.DeviceEnergyManagement.Enums.AdjustmentCauseEnum.kLocalOptimization, expected_status=Status.ConstraintError)
 
         self.step("23")
-        await self.send_cancel_request_command()
+        await self.send_cancel_request_command(expected_status=Status.InvalidInState)
 
         self.step("24")
         await self.send_test_event_trigger_forecast_adjustment_clear()

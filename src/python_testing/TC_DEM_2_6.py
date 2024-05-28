@@ -157,8 +157,6 @@ class TC_DEM_2_6(MatterBaseTest, DEMBaseTestHelper):
 
         self.step("13")
         slotAdjustments = [Clusters.DeviceEnergyManagement.Structs.SlotAdjustmentStruct(slotIndex=0, duration=forecast.slots[0].maxDurationAdjustment)]
-        logging.info(slotAdjustments)
-
         await self.send_modify_forecast_request_command(forecast.forecastId, slotAdjustments, Clusters.DeviceEnergyManagement.Enums.AdjustmentCauseEnum.kGridOptimization, expected_status=Status.Success)
 
         self.step("13a")
@@ -224,7 +222,7 @@ class TC_DEM_2_6(MatterBaseTest, DEMBaseTestHelper):
         await self.send_modify_forecast_request_command(forecast.forecastId, slotAdjustments, Clusters.DeviceEnergyManagement.Enums.AdjustmentCauseEnum.kLocalOptimization, expected_status=Status.ConstraintError)
 
         self.step("23")
-        await self.send_cancel_request_command()
+        await self.send_cancel_request_command(expected_status=Status.InvalidInState)
 
         self.step("24")
         await self.send_test_event_trigger_forecast_adjustment_clear()

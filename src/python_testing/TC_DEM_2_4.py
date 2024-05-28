@@ -190,9 +190,9 @@ class TC_DEM_2_4(MatterBaseTest, DEMBaseTestHelper):
         await self.check_dem_attribute("OptOutState", Clusters.DeviceEnergyManagement.Enums.OptOutStateEnum.kGridOptOut)
 
         self.step("7")
-        await self.send_pause_request_command(forecast.slots[0].minPauseDuration + 1,
+        await self.send_pause_request_command(forecast.slots[0].minPauseDuration,
                                               Clusters.DeviceEnergyManagement.Enums.AdjustmentCauseEnum.kGridOptimization,
-                                              expected_status=Status.Failure)
+                                              expected_status=Status.ConstraintError)
 
         self.step("7a")
         await self.check_dem_attribute("ESAState", Clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kOnline)
