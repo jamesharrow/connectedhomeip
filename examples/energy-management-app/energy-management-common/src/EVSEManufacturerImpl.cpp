@@ -561,6 +561,8 @@ CHIP_ERROR EVSEManufacturer::ConfigureForecast(uint16_t numSlots)
     mSlots[0].maxPower.SetValue(2000);
     mSlots[0].nominalEnergy.SetValue(2000);
 
+    mSlots[0].manufacturerESAState.SetValue(23);
+
     for (uint16_t slotNo = 1; slotNo < numSlots; slotNo++)
     {
         mSlots[slotNo].minDuration = 2 * mSlots[slotNo - 1].minDuration;
@@ -577,6 +579,8 @@ CHIP_ERROR EVSEManufacturer::ConfigureForecast(uint16_t numSlots)
         mSlots[slotNo].minPower.SetValue(2 * mSlots[slotNo - 1].minPower.Value());
         mSlots[slotNo].maxPower.SetValue(2 * mSlots[slotNo - 1].maxPower.Value());
         mSlots[slotNo].nominalEnergy.SetValue(2 * mSlots[slotNo - 1].nominalEnergy.Value());
+
+        mSlots[slotNo].manufacturerESAState.SetValue(mSlots[slotNo - 1].manufacturerESAState.Value() + 1);
     }
 
     mForecastStruct.slots = DataModel::List<const DeviceEnergyManagement::Structs::SlotStruct::Type>(mSlots, numSlots);

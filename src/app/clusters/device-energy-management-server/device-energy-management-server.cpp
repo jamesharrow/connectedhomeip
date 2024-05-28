@@ -699,14 +699,23 @@ void Instance::HandleRequestConstraintBasedForecast(HandlerContext & ctx,
         return;
     }
 
-    // Check for invalid power levels
+    uint32_t currentUtcTime = 0;
+    status = GetCurrentUtcTime(currentUtcTime);
+    if (status != Status::Success)
+    {
+        ChipLogError(Zcl, "DEM: Forecast is Null");
+        ctx.mCommandHandler.AddStatus(ctx.mRequestPath, status);
+        return;
+    }
+
+    // Check for invalid power levels and whether the constraint time/duration is in the past
     {
         auto iterator = constraints.begin();
         if (iterator.Next())
         {
+            const Structs::ConstraintsStruct::DecodableType & constraint = iterator.GetValue();
             if (HasFeature(Feature::kPowerForecastReporting))
             {
-                const Structs::ConstraintsStruct::DecodableType & constraint = iterator.GetValue();
                 if (!constraint.nominalPower.HasValue() ||
                     constraint.nominalPower.Value() < mDelegate.GetAbsMinPower() ||
                     constraint.nominalPower.Value() > mDelegate.GetAbsMaxPower())
@@ -718,6 +727,20 @@ void Instance::HandleRequestConstraintBasedForecast(HandlerContext & ctx,
                     ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::ConstraintError);
                     return;
                 }
+
+                if (!constraint.maximumEnergy.HasValue())
+                {
+                    ChipLogError(Zcl, "DEM: RequestConstraintBasedForecast no value for maximumEnergy");
+                    ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::ConstraintError);
+                    return;
+                }
+            }
+
+            // Check to see if this constraint is in the past
+            if (constraint.startTime + constraint.duration <= currentUtcTime)
+            {
+                ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::ConstraintError);
+                return;
             }
         }
     }
@@ -775,6 +798,28 @@ void Instance::HandleCancelRequest(HandlerContext & ctx, const Commands::CancelR
     }
 
     ctx.mCommandHandler.AddStatus(ctx.mRequestPath, status);
+}
+
+Status Instance::GetCurrentUtcTime(uint32_t & currentUtcTime) const
+{
+    currentUtcTime = 0;
+    System::Clock::Milliseconds64 cTMs;
+
+    CHIP_ERROR err = System::SystemClock().GetClock_RealTimeMS(cTMs);
+    if (err != CHIP_NO_ERROR)
+    {
+        ChipLogError(Zcl, "DEM: Unable to get current time - err:%" CHIP_ERROR_FORMAT, err.Format());
+        return Status::Failure;
+    }
+
+    auto unixEpoch = std::chrono::duration_cast<System::Clock::Seconds32>(cTMs).count();
+    if (!UnixEpochToChipEpochTime(unixEpoch, currentUtcTime))
+    {
+        ChipLogError(Zcl, "DEM: unable to convert Unix Epoch time to Matter Epoch Time");
+        return Status::Failure;
+    }
+
+    return Status::Success;
 }
 
 } // namespace DeviceEnergyManagement

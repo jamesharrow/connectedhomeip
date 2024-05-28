@@ -221,7 +221,7 @@ class TC_DEM_2_8(MatterBaseTest, DEMBaseTestHelper):
         asserts.assert_equal(forecast.forecastUpdateReason, Clusters.DeviceEnergyManagement.Enums.ForecastUpdateReasonEnum.kInternalOptimization)
 
         self.step("20")
-        await self.send_cancel_request_command(expected_status=Status.Failure)
+        await self.send_cancel_request_command(expected_status=Status.InvalidInState)
 
         self.step("21")
         await self.send_test_event_trigger_constraint_based_adjustment_clear()

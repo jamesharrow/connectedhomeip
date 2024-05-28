@@ -122,16 +122,18 @@ class TC_DEM_2_7(MatterBaseTest, DEMBaseTestHelper):
         await self.check_dem_attribute("OptOutState", Clusters.DeviceEnergyManagement.Enums.OptOutStateEnum.kNoOptOut)
 
         self.step("4")
-        now = datetime.datetime.now(tz=datetime.timezone.utc)
-        constraintList = [Clusters.DeviceEnergyManagement.Structs.ConstraintsStruct(startTime=now.timestamp() - 10, duration=10, nominalPower=forecast.slots[0].nominalPower, maximumEnergy=forecast.slots[0].nominalEnergy)]
-        #await self.send_request_constraint_based_forecast(constraintList, cause=Clusters.DeviceEnergyManagement.Enums.AdjustmentCauseEnum.kLocalOptimization, expected_status=Status.ConstraintError)
-        # TODO
-        await self.send_request_constraint_based_forecast(constraintList, cause=Clusters.DeviceEnergyManagement.Enums.AdjustmentCauseEnum.kLocalOptimization, expected_status=Status.Success)
+        # Matter UTC is time since 00:00:00 1/1/2000
+        datetime.datetime.now(tz=datetime.timezone.utc)
+        now = datetime.datetime.now(tz=datetime.timezone.utc) - datetime.datetime(2000, 1, 1, 0, 0, 0, 0, datetime.timezone.utc)
+
+        constraintList = [Clusters.DeviceEnergyManagement.Structs.ConstraintsStruct(startTime=now.total_seconds() - 20, duration=10, nominalPower=forecast.slots[0].nominalPower, maximumEnergy=forecast.slots[0].nominalEnergy)]
+        constraintList = [Clusters.DeviceEnergyManagement.Structs.ConstraintsStruct(startTime=now.total_seconds() - 20, duration=10, nominalPower=forecast.slots[0].nominalPower)]
+        await self.send_request_constraint_based_forecast(constraintList, cause=Clusters.DeviceEnergyManagement.Enums.AdjustmentCauseEnum.kLocalOptimization, expected_status=Status.ConstraintError)
 
         self.step("5")
-        now = datetime.datetime.now(tz=datetime.timezone.utc)
-        constraintList = [Clusters.DeviceEnergyManagement.Structs.ConstraintsStruct(startTime=now.timestamp() + 10, duration=10, nominalPower=forecast.slots[0].nominalPower, maximumEnergy=forecast.slots[0].nominalEnergy),
-                          Clusters.DeviceEnergyManagement.Structs.ConstraintsStruct(startTime=now.timestamp() + 15, duration=10, nominalPower=forecast.slots[0].nominalPower, maximumEnergy=forecast.slots[0].nominalEnergy)]
+        now = datetime.datetime.now(tz=datetime.timezone.utc) - datetime.datetime(2000, 1, 1, 0, 0, 0, 0, datetime.timezone.utc)
+        constraintList = [Clusters.DeviceEnergyManagement.Structs.ConstraintsStruct(startTime=now.total_seconds() + 10, duration=10, nominalPower=forecast.slots[0].nominalPower, maximumEnergy=forecast.slots[0].nominalEnergy),
+                          Clusters.DeviceEnergyManagement.Structs.ConstraintsStruct(startTime=now.total_seconds() + 15, duration=10, nominalPower=forecast.slots[0].nominalPower, maximumEnergy=forecast.slots[0].nominalEnergy)]
         await self.send_request_constraint_based_forecast(constraintList, cause=Clusters.DeviceEnergyManagement.Enums.AdjustmentCauseEnum.kLocalOptimization, expected_status=Status.ConstraintError)
 
         self.step("6")
@@ -221,7 +223,7 @@ class TC_DEM_2_7(MatterBaseTest, DEMBaseTestHelper):
         asserts.assert_equal(forecast.forecastUpdateReason, Clusters.DeviceEnergyManagement.Enums.ForecastUpdateReasonEnum.kInternalOptimization)
 
         self.step("20")
-        await self.send_cancel_request_command(expected_status=Status.Failure)
+        await self.send_cancel_request_command(expected_status=Status.InvalidInState)
 
         self.step("21")
         await self.send_test_event_trigger_constraint_based_adjustment_clear()

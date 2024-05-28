@@ -167,7 +167,6 @@ class DEMBaseTestHelper:
             asserts.assert_equal(expected_status, Status.Success)
 
         except InteractionModelError as e:
-            logging.info(f"PETER {expected_status}")
             asserts.assert_equal(e.status, expected_status, "Unexpected error returned")
 
     async def send_test_event_trigger_power_adjustment(self):

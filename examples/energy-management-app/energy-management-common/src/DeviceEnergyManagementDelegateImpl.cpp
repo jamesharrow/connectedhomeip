@@ -616,11 +616,9 @@ Status DeviceEnergyManagementDelegate::RequestConstraintBasedForecast(
             switch (cause)
             {
             case AdjustmentCauseEnum::kLocalOptimization:
-                ChipLogError(Zcl, "PETER1");
                 mForecast.Value().forecastUpdateReason = ForecastUpdateReasonEnum::kLocalOptimization;
                 break;
             case AdjustmentCauseEnum::kGridOptimization:
-                ChipLogError(Zcl, "PETER2");
                 mForecast.Value().forecastUpdateReason = ForecastUpdateReasonEnum::kGridOptimization;
                 break;
             default:

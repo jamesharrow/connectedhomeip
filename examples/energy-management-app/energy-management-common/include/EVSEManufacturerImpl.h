@@ -212,7 +212,6 @@ public:
      */
     static void FakeReadingsTimerExpiry(System::Layer * systemLayer, void * manufacturer);
 
-private:
     CHIP_ERROR ConfigureForecast(uint16_t numSlots);
 
 private:
