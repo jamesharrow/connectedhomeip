@@ -84,12 +84,20 @@ CHIP_ERROR ConfigureForecast(uint16_t numSlots)
     sSlots[0].slotIsPausable.SetValue(true);
     sSlots[0].minPauseDuration.SetValue(10);
     sSlots[0].maxPauseDuration.SetValue(60);
-    sSlots[0].nominalPower.SetValue(1500);
-    sSlots[0].minPower.SetValue(1000);
-    sSlots[0].maxPower.SetValue(2000);
+
+    if (GetDEMDelegate()->HasFeature(DeviceEnergyManagement::Feature::kPowerForecastReporting))
+    {
+        sSlots[0].nominalPower.SetValue(1500);
+        sSlots[0].minPower.SetValue(1000);
+        sSlots[0].maxPower.SetValue(2000);
+    }
+
     sSlots[0].nominalEnergy.SetValue(2000);
 
-    sSlots[0].manufacturerESAState.SetValue(23);
+    if (GetDEMDelegate()->HasFeature(DeviceEnergyManagement::Feature::kStateForecastReporting))
+    {
+        sSlots[0].manufacturerESAState.SetValue(23);
+    }
 
     for (uint16_t slotNo = 1; slotNo < numSlots; slotNo++)
     {
@@ -103,12 +111,20 @@ CHIP_ERROR ConfigureForecast(uint16_t numSlots)
         sSlots[slotNo].slotIsPausable.SetValue((slotNo & 1) == 0 ? true : false);
         sSlots[slotNo].minPauseDuration.SetValue(2 * sSlots[slotNo - 1].slotIsPausable.Value());
         sSlots[slotNo].maxPauseDuration.SetValue(2 * sSlots[slotNo - 1].maxPauseDuration.Value());
-        sSlots[slotNo].nominalPower.SetValue(2 * sSlots[slotNo - 1].nominalPower.Value());
-        sSlots[slotNo].minPower.SetValue(2 * sSlots[slotNo - 1].minPower.Value());
-        sSlots[slotNo].maxPower.SetValue(2 * sSlots[slotNo - 1].maxPower.Value());
-        sSlots[slotNo].nominalEnergy.SetValue(2 * sSlots[slotNo - 1].nominalEnergy.Value());
 
-        sSlots[slotNo].manufacturerESAState.SetValue(sSlots[slotNo - 1].manufacturerESAState.Value() + 1);
+        if (GetDEMDelegate()->HasFeature(DeviceEnergyManagement::Feature::kPowerForecastReporting))
+        {
+            sSlots[slotNo].nominalPower.SetValue(2 * sSlots[slotNo - 1].nominalPower.Value());
+            sSlots[slotNo].minPower.SetValue(2 * sSlots[slotNo - 1].minPower.Value());
+            sSlots[slotNo].maxPower.SetValue(2 * sSlots[slotNo - 1].maxPower.Value());
+
+            sSlots[slotNo].nominalEnergy.SetValue(2 * sSlots[slotNo - 1].nominalEnergy.Value());
+        }
+
+        if (GetDEMDelegate()->HasFeature(DeviceEnergyManagement::Feature::kStateForecastReporting))
+        {
+            sSlots[slotNo].manufacturerESAState.SetValue(sSlots[slotNo - 1].manufacturerESAState.Value() + 1);
+        }
     }
 
     sForecastStruct.slots = DataModel::List<const DeviceEnergyManagement::Structs::SlotStruct::Type>(sSlots, numSlots);

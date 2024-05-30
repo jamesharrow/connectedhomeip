@@ -753,11 +753,17 @@ void Instance::HandleRequestConstraintBasedForecast(HandlerContext & ctx,
 
             if (HasFeature(Feature::kStateForecastReporting))
             {
-                if (!constraint.loadControl.HasValue() || constraint.loadControl.Value() < -100 || constraint.loadControl.Value() > 100)
+                if (!constraint.loadControl.HasValue())
                 {
-                    ChipLogError(Zcl, "DEM: RequestConstraintBasedForecast bad loadControl %d",
-                                 constraint.loadControl.HasValue() ? constraint.loadControl.Value() : -127);
+                    ChipLogError(Zcl, "DEM: RequestConstraintBasedForecast no loadControl");
                     ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::InvalidCommand);
+                    return;
+                }
+
+                if (constraint.loadControl.Value() < -100 || constraint.loadControl.Value() > 100)
+                {
+                    ChipLogError(Zcl, "DEM: RequestConstraintBasedForecast bad loadControl %d", constraint.loadControl.HasValue());
+                    ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::ConstraintError);
                     return;
                 }
             }

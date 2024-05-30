@@ -185,10 +185,10 @@ public:
     virtual CHIP_ERROR SetForecast(DataModel::Nullable<Structs::ForecastStruct::Type>&) override;
     virtual CHIP_ERROR SetOptOutState(OptOutStateEnum) override;
 
-private:
     // Returns whether the DeviceEnergyManagement is supported
     uint32_t HasFeature(Feature feature) const;
 
+private:
     // Methods to handle when a PowerAdjustment completes
     static void PowerAdjustTimerExpiry(System::Layer * systemLayer, void * delegate);
     void HandlePowerAdjustTimerExpiry();
