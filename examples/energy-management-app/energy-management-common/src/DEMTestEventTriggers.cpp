@@ -34,7 +34,8 @@ static chip::app::Clusters::DeviceEnergyManagement::Structs::SlotStruct::Type sS
 static chip::app::Clusters::DeviceEnergyManagement::Structs::ForecastStruct::Type sForecastStruct;
 static chip::app::DataModel::Nullable<chip::app::Clusters::DeviceEnergyManagement::Structs::ForecastStruct::Type> sForecast;
 
-static chip::app::Clusters::DeviceEnergyManagement::Structs::PowerAdjustStruct::Type sPowerAdjustments[1];
+#define MAX_POWER_ADJUSTMENTS 5
+static chip::app::Clusters::DeviceEnergyManagement::Structs::PowerAdjustStruct::Type sPowerAdjustments[MAX_POWER_ADJUSTMENTS];
 
 DeviceEnergyManagementDelegate * GetDEMDelegate()
 {
@@ -70,7 +71,7 @@ CHIP_ERROR ConfigureForecast(uint16_t numSlots)
     // latest end time, in UTC, for the entire Forecast
     sForecastStruct.latestEndTime = Optional<uint32_t>(static_cast<uint32_t>(chipEpoch * 3));
 
-    sForecastStruct.isPauseable = true;
+    sForecastStruct.isPausable = true;
 
     sForecastStruct.activeSlotNumber.SetNonNull<uint16_t>(0);
 
@@ -80,7 +81,7 @@ CHIP_ERROR ConfigureForecast(uint16_t numSlots)
     sSlots[0].elapsedSlotTime = 0;
     sSlots[0].remainingSlotTime = 0;
 
-    sSlots[0].slotIsPauseable.SetValue(true);
+    sSlots[0].slotIsPausable.SetValue(true);
     sSlots[0].minPauseDuration.SetValue(10);
     sSlots[0].maxPauseDuration.SetValue(60);
     sSlots[0].nominalPower.SetValue(1500);
@@ -99,8 +100,8 @@ CHIP_ERROR ConfigureForecast(uint16_t numSlots)
         sSlots[slotNo].remainingSlotTime = 2 * sSlots[slotNo - 1].remainingSlotTime;
 
         // Need slotNo == 1 not to be pausible for test DEM 2.4 step 3b
-        sSlots[slotNo].slotIsPauseable.SetValue((slotNo & 1) == 0 ? true : false);
-        sSlots[slotNo].minPauseDuration.SetValue(2 * sSlots[slotNo - 1].slotIsPauseable.Value());
+        sSlots[slotNo].slotIsPausable.SetValue((slotNo & 1) == 0 ? true : false);
+        sSlots[slotNo].minPauseDuration.SetValue(2 * sSlots[slotNo - 1].slotIsPausable.Value());
         sSlots[slotNo].maxPauseDuration.SetValue(2 * sSlots[slotNo - 1].maxPauseDuration.Value());
         sSlots[slotNo].nominalPower.SetValue(2 * sSlots[slotNo - 1].nominalPower.Value());
         sSlots[slotNo].minPower.SetValue(2 * sSlots[slotNo - 1].minPower.Value());
@@ -131,7 +132,7 @@ void SetTestEventTrigger_PowerAdjustment()
 
     sPowerAdjustments[0].minPower =  5000 * 1000; // 5kW
     sPowerAdjustments[0].maxPower = 30000 * 1000; // 30kW
-    sPowerAdjustments[0].minDuration = 30;        // 30s
+    sPowerAdjustments[0].minDuration = 10;        // 30s
     sPowerAdjustments[0].maxDuration = 60;        // 60s
 
     DataModel::List<const DeviceEnergyManagement::Structs::PowerAdjustStruct::Type> powerAdjustmentList(sPowerAdjustments, 1);
@@ -239,7 +240,7 @@ void SetTestEventTrigger_ForecastClear()
     sForecastStruct.endTime = 0;
     sForecastStruct.earliestStartTime.ClearValue();
     sForecastStruct.latestEndTime.ClearValue();
-    sForecastStruct.isPauseable = false;
+    sForecastStruct.isPausable = false;
     sForecastStruct.activeSlotNumber.SetNull();
     sForecastStruct.slots = DataModel::List<const DeviceEnergyManagement::Structs::SlotStruct::Type>();
 

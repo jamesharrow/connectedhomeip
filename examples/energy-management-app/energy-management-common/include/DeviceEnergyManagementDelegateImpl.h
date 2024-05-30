@@ -193,6 +193,9 @@ private:
     static void PowerAdjustTimerExpiry(System::Layer * systemLayer, void * delegate);
     void HandlePowerAdjustTimerExpiry();
 
+    // Update the PowerAdjustmentCapability cause
+    void UpdatePowerAdjustmentCapabilityCause(PowerAdjustReasonEnum cause);
+
     // Method to cancel a PowerAdjustment
     CHIP_ERROR CancelPowerAdjustRequestAndSendEvent(CauseEnum cause);
 
@@ -234,6 +237,8 @@ private:
 
     // Keep track of when that PowerAdjustment started
     uint32_t mPowerAdjustmentStartTime;
+
+    AdjustmentCauseEnum mPowerAdjustmentCause;
 
     // Keep track whether a PauseRequest is in progress
     bool mPauseRequestInProgress;

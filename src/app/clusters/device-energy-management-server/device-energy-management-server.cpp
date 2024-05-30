@@ -365,7 +365,7 @@ void Instance::HandleCancelPowerAdjustRequest(HandlerContext & ctx,
     if (ESAStateEnum::kPowerAdjustActive != esaStatus)
     {
         ChipLogError(Zcl, "DEM: kPowerAdjustActive != esaStatus");
-        ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::Failure);
+        ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::InvalidInState);
         return;
     }
 
@@ -530,10 +530,10 @@ void Instance::HandlePauseRequest(HandlerContext & ctx, const Commands::PauseReq
         return;
     }
 
-    /* We expect that there should be a slotIsPauseable entry (but it is optional) */
-    if (!forecast.Value().slots[activeSlotNumber].slotIsPauseable.HasValue())
+    /* We expect that there should be a slotIsPausable entry (but it is optional) */
+    if (!forecast.Value().slots[activeSlotNumber].slotIsPausable.HasValue())
     {
-        ChipLogError(Zcl, "DEM: activeSlotNumber %d does not include slotIsPauseable.", activeSlotNumber);
+        ChipLogError(Zcl, "DEM: activeSlotNumber %d does not include slotIsPausable.", activeSlotNumber);
         ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::Failure);
         return;
     }
@@ -552,9 +552,9 @@ void Instance::HandlePauseRequest(HandlerContext & ctx, const Commands::PauseReq
         return;
     }
 
-    if (!forecast.Value().slots[activeSlotNumber].slotIsPauseable.Value())
+    if (!forecast.Value().slots[activeSlotNumber].slotIsPausable.Value())
     {
-        ChipLogError(Zcl, "DEM: activeSlotNumber %d is NOT pauseable.", activeSlotNumber);
+        ChipLogError(Zcl, "DEM: activeSlotNumber %d is NOT pausable.", activeSlotNumber);
         ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::ConstraintError);
         return;
     }
@@ -656,8 +656,9 @@ void Instance::HandleModifyForecastRequest(HandlerContext & ctx, const Commands:
         // NominalPower is only relevant if PFR is supported
         if (HasFeature(Feature::kPowerForecastReporting))
         {
-            if ((!slot.minPowerAdjustment.HasValue() || slotAdjustment.nominalPower < slot.minPowerAdjustment.Value()) ||
-                (!slot.maxPowerAdjustment.HasValue() || slotAdjustment.nominalPower > slot.maxPowerAdjustment.Value()))
+            // TODO
+            if ((!slot.minPowerAdjustment.HasValue() || slotAdjustment.nominalPower.Value() < slot.minPowerAdjustment.Value()) ||
+                (!slot.maxPowerAdjustment.HasValue() || slotAdjustment.nominalPower.Value() > slot.maxPowerAdjustment.Value()))
             {
                 ChipLogError(Zcl, "DEM: Bad nominalPower");
                 ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::ConstraintError);

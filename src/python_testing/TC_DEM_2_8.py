@@ -123,7 +123,7 @@ class TC_DEM_2_8(MatterBaseTest, DEMBaseTestHelper):
 
         self.step("4")
         now = datetime.datetime.now(tz=datetime.timezone.utc)
-        constraintList = [Clusters.DeviceEnergyManagement.Structs.ConstraintsStruct(startTime=now.timestamp() - 10, duration=10, nominalPower=forecast.slots[0].nominalPower, maximumEnergy=forecast.slots[0].nominalEnergy)]
+        constraintList = [Clusters.DeviceEnergyManagement.Structs.ConstraintsStruct(startTime=now.timestamp() - 10, duration=10, loadControl=0, maximumEnergy=forecast.slots[0].nominalEnergy)]
         #await self.send_request_constraint_based_forecast(constraintList, cause=Clusters.DeviceEnergyManagement.Enums.AdjustmentCauseEnum.kLocalOptimization, expected_status=Status.ConstraintError)
         # TODO
         await self.send_request_constraint_based_forecast(constraintList, cause=Clusters.DeviceEnergyManagement.Enums.AdjustmentCauseEnum.kLocalOptimization, expected_status=Status.Success)
@@ -139,7 +139,7 @@ class TC_DEM_2_8(MatterBaseTest, DEMBaseTestHelper):
         forecast = await self.read_dem_attribute_expect_success(attribute="Forecast")
 
         self.step("7")
-        constraintList = [Clusters.DeviceEnergyManagement.Structs.ConstraintsStruct(startTime=forecast.startTime, duration=forecast.slots[0].defaultDuration, nominalPower=absMaxPower + 1, maximumEnergy=forecast.slots[0].nominalEnergy)]
+        constraintList = [Clusters.DeviceEnergyManagement.Structs.ConstraintsStruct(startTime=forecast.startTime, duration=forecast.slots[0].defaultDuration, loadControl=-102, maximumEnergy=forecast.slots[0].nominalEnergy)]
         await self.send_request_constraint_based_forecast(constraintList, cause=Clusters.DeviceEnergyManagement.Enums.AdjustmentCauseEnum.kLocalOptimization, expected_status=Status.ConstraintError)
 
         self.step("8")
