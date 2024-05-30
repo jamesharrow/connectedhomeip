@@ -122,7 +122,7 @@ class TC_DEM_2_4(MatterBaseTest, DEMBaseTestHelper):
         await self.check_test_event_triggers_enabled()
 
         self.step("3")
-        await self.send_test_event_trigger_pauseable()
+        await self.send_test_event_trigger_pausable()
 
         self.step("3a")
         await self.check_dem_attribute("ESAState", Clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kOnline)
@@ -131,11 +131,11 @@ class TC_DEM_2_4(MatterBaseTest, DEMBaseTestHelper):
         forecast = await self.read_dem_attribute_expect_success(attribute="Forecast")
 
         asserts.assert_not_equal(forecast, NullValue)
-        asserts.assert_equal(forecast.isPauseable, True)
+        asserts.assert_equal(forecast.isPausable, True)
         asserts.assert_greater(forecast.slots[0].minPauseDuration, 1)
         asserts.assert_greater(forecast.slots[0].maxPauseDuration, 1)
-        asserts.assert_equal(forecast.slots[0].slotIsPauseable, True)
-        asserts.assert_equal(forecast.slots[1].slotIsPauseable, False)
+        asserts.assert_equal(forecast.slots[0].slotIsPausable, True)
+        asserts.assert_equal(forecast.slots[1].slotIsPausable, False)
         asserts.assert_equal(forecast.activeSlotNumber, 0)
 
         if forecast is not NullValue:
@@ -150,7 +150,7 @@ class TC_DEM_2_4(MatterBaseTest, DEMBaseTestHelper):
                     f"   [{index}] MinDuration: {slot.minDuration} MaxDuration: {slot.maxDuration} DefaultDuration: {slot.defaultDuration}")
                 logging.info(f"       ElapseSlotTime: {slot.elapsedSlotTime} RemainingSlotTime: {slot.remainingSlotTime}")
                 logging.info(
-                    f"       SlotIsPauseable: {slot.slotIsPauseable} MinPauseDuration: {slot.minPauseDuration} MaxPauseDuration: {slot.maxPauseDuration}")
+                    f"       SlotIsPausable: {slot.slotIsPausable} MinPauseDuration: {slot.minPauseDuration} MaxPauseDuration: {slot.maxPauseDuration}")
                 logging.info(f"       ManufacturerESAState: {slot.manufacturerESAState}")
                 logging.info(f"       NominalPower: {slot.nominalPower} MinPower: {slot.minPower} MaxPower: {slot.maxPower}")
                 logging.info(f"       MinPowerAdjustment: {slot.minPowerAdjustment} MaxPowerAdjustment: {slot.maxPowerAdjustment}")
@@ -254,11 +254,11 @@ class TC_DEM_2_4(MatterBaseTest, DEMBaseTestHelper):
 
         self.step("12b")
         forecast = await self.read_dem_attribute_expect_success(attribute="Forecast")
-        asserts.assert_equal(forecast.isPauseable, True)
+        asserts.assert_equal(forecast.isPausable, True)
         asserts.assert_greater(forecast.slots[0].minPauseDuration, 1)
         asserts.assert_greater(forecast.slots[0].maxPauseDuration, 1)
-        asserts.assert_equal(forecast.slots[0].slotIsPauseable, True)
-        asserts.assert_equal(forecast.slots[1].slotIsPauseable, False)
+        asserts.assert_equal(forecast.slots[0].slotIsPausable, True)
+        asserts.assert_equal(forecast.slots[1].slotIsPausable, False)
         asserts.assert_equal(forecast.activeSlotNumber, 0)
         asserts.assert_equal(forecast.forecastUpdateReason, Clusters.DeviceEnergyManagement.Enums.ForecastUpdateReasonEnum.kLocalOptimization)
 
@@ -299,7 +299,7 @@ class TC_DEM_2_4(MatterBaseTest, DEMBaseTestHelper):
         await self.check_dem_attribute("ESAState", Clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kOnline)
 
         self.step("17")
-        await self.send_test_event_trigger_pauseable_next_slot()
+        await self.send_test_event_trigger_pausable_next_slot()
 
         self.step("17a")
         await self.check_dem_attribute("ESAState", Clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kOnline)

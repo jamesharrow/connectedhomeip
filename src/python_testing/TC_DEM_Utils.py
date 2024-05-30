@@ -190,13 +190,13 @@ class DEMBaseTestHelper:
     async def send_test_event_trigger_start_time_adjustment_clear(self):
         await self.send_test_event_triggers(eventTrigger=0x0098000000000006)
 
-    async def send_test_event_trigger_pauseable(self):
+    async def send_test_event_trigger_pausable(self):
         await self.send_test_event_triggers(eventTrigger=0x0098000000000007)
 
-    async def send_test_event_trigger_pauseable_next_slot(self):
+    async def send_test_event_trigger_pausable_next_slot(self):
         await self.send_test_event_triggers(eventTrigger=0x0098000000000008)
 
-    async def send_test_event_trigger_pauseable_clear(self):
+    async def send_test_event_trigger_pausable_clear(self):
         await self.send_test_event_triggers(eventTrigger=0x0098000000000009)
 
     async def send_test_event_trigger_forecast_adjustment(self):
