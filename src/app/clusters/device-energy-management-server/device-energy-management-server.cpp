@@ -717,7 +717,7 @@ void Instance::HandleRequestConstraintBasedForecast(HandlerContext & ctx,
             const Structs::ConstraintsStruct::DecodableType & constraint = iterator.GetValue();
 
             // Check to see if this constraint is in the past
-            if (constraint.startTime + constraint.duration <= currentUtcTime)
+            if (constraint.startTime < currentUtcTime)
             {
                 ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::ConstraintError);
                 return;
@@ -725,8 +725,14 @@ void Instance::HandleRequestConstraintBasedForecast(HandlerContext & ctx,
 
             if (HasFeature(Feature::kPowerForecastReporting))
             {
-                if (!constraint.nominalPower.HasValue() ||
-                    constraint.nominalPower.Value() < mDelegate.GetAbsMinPower() ||
+                if (!constraint.nominalPower.HasValue())
+                {
+                    ChipLogError(Zcl, "DEM: RequestConstraintBasedForecast no nominalPower");
+                    ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::InvalidCommand);
+                    return;
+                }
+
+                if (constraint.nominalPower.Value() < mDelegate.GetAbsMinPower() ||
                     constraint.nominalPower.Value() > mDelegate.GetAbsMaxPower())
                 {
                     ChipLogError(Zcl, "DEM: RequestConstraintBasedForecast bad nominalPower %lu absMinPower %lu absMaxPower %lu",
@@ -740,7 +746,7 @@ void Instance::HandleRequestConstraintBasedForecast(HandlerContext & ctx,
                 if (!constraint.maximumEnergy.HasValue())
                 {
                     ChipLogError(Zcl, "DEM: RequestConstraintBasedForecast no value for maximumEnergy");
-                    ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::ConstraintError);
+                    ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::InvalidCommand);
                     return;
                 }
             }
@@ -751,7 +757,7 @@ void Instance::HandleRequestConstraintBasedForecast(HandlerContext & ctx,
                 {
                     ChipLogError(Zcl, "DEM: RequestConstraintBasedForecast bad loadControl %d",
                                  constraint.loadControl.HasValue() ? constraint.loadControl.Value() : -127);
-                    ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::ConstraintError);
+                    ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::InvalidCommand);
                     return;
                 }
             }

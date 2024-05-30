@@ -108,7 +108,7 @@ Status DeviceEnergyManagementDelegate::PowerAdjustRequest(const int64_t power, c
         sendEvent = true;
 
         // Record when this PowerAdjustment starts. Note if we do not set this value if a PowerAdjustment is in progress
-        err = UtilsGetEpochTS(mPowerAdjustmentStartTime);
+        CHIP_ERROR err = UtilsGetEpochTS(mPowerAdjustmentStartTime);
         if (err != CHIP_NO_ERROR)
         {
             ChipLogError(AppServer, "Unable to get time: %" CHIP_ERROR_FORMAT, err.Format());
