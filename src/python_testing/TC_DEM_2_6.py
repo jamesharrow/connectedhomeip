@@ -48,41 +48,41 @@ class TC_DEM_2_6(MatterBaseTest, DEMBaseTestHelper):
     def steps_TC_DEM_2_6(self) -> list[TestStep]:
         """Execute the test steps."""
         steps = [
-            TestStep("1", "Commissioning, already done. "),
+            TestStep("1", "Commissioning, already done", is_commissioning=True),
             TestStep("2", "TH reads TestEventTriggersEnabled attribute from General Diagnostics Cluster. Verify that TestEventTriggersEnabled attribute has a value of 1 (True)"),
-            TestStep("3", "TH sends TestEventTrigger command for Forecast Adjustment Test Event. "),
-            TestStep("3a", "TH reads EsaState. Verify value is 0x01 (Online)"),
-            TestStep("3b", "TH reads Forecast. Value has to include slots[0].MinDurationAdjustment, slots[0].MaxDurationAdjustment"),
-            TestStep("3c", "TH reads OptOutState. Verify value is 0x00 (NoOptOut)"),
+            TestStep("3", "TH sends TestEventTrigger command to General Diagnostics Cluster on Endpoint 0 with EnableKey field set to PIXIT.DEM.TEST_EVENT_TRIGGER_KEY and EventTrigger field set to PIXIT.DEM.TEST_EVENT_TRIGGER for Forecast Adjustment Test Event"),
+            TestStep("3a", "TH reads ESAState attribute. Verify value is 0x01 (Online)"),
+            TestStep("3b", "TH reads Forecast attribute. Value has to include slots[0].MinDurationAdjustment, slots[0].MaxDurationAdjustment"),
+            TestStep("3c", "TH reads OptOutState attribute. Verify value is 0x00 (NoOptOut)"),
             TestStep("4", "TH sends ModifyForecastRequest with ForecastId=Forecast.ForecastId+1, SlotAdjustments[0].{SlotIndex=0, Duration=Forecast.Slots[0].MaxDurationAdjustment}, Cause=GridOptimization. Verify Command response is Failure"),
             TestStep("5", "TH sends ModifyForecastRequest with ForecastId=Forecast.ForecastId, SlotAdjustments[0].{SlotIndex=4, Duration=Forecast.Slots[0].MaxDurationAdjustment}, Cause=GridOptimization. Verify Command response is Failure"),
-            TestStep("8", "TH sends ModifyForecastRequest with ForecastId=Forecast.ForecastId, SlotAdjustments[0].{SlotIndex=0, Duration=Forecast.Slots[0].MaxDurationAdjustment+1}, Cause=GridOptimization. Verify Command response is ConstraintError"),
-            TestStep("9", "TH sends ModifyForecastRequest with ForecastId=Forecast.ForecastId, SlotAdjustments[0].{SlotIndex=0, Duration=Forecast.Slots[0].MinDurationAdjustment-1}, Cause=GridOptimization. Verify Command response is ConstraintError"),
-            TestStep("10", "TH sends ModifyForecastRequest with ForecastId=Forecast.ForecastId, SlotAdjustments[0].{SlotIndex=0, Duration=Forecast.Slots[0].MaxDurationAdjustment}, SlotAdjustments[1].{SlotIndex=4, Duration=Forecast.Slots[0].MaxDurationAdjustment}, Cause=GridOptimization. Verify Command response is Failure"),
-            TestStep("11", "TH sends TestEventTrigger command for User Opt-out Local Optimization Test Event. "),
-            TestStep("11a", "TH reads EsaState. Verify value is 0x01 (Online)"),
-            TestStep("11b", "TH reads OptOutState. Verify value is 0x02 (LocalOptOut)"),
-            TestStep("12", "TH sends ModifyForecastRequest with ForecastId=Forecast.ForecastId, SlotAdjustments[0].{SlotIndex=0, Duration=Forecast.Slots[0].MaxDurationAdjustment}, Cause=LocalOptimization. Verify Command response is ConstraintError"),
+            TestStep("6", "TH sends ModifyForecastRequest with ForecastId=Forecast.ForecastId, SlotAdjustments[0].{SlotIndex=0, Duration=Forecast.Slots[0].MaxDurationAdjustment+1}, Cause=GridOptimization. Verify Command response is ConstraintError"),
+            TestStep("7", "TH sends ModifyForecastRequest with ForecastId=Forecast.ForecastId, SlotAdjustments[0].{SlotIndex=0, Duration=Forecast.Slots[0].MinDurationAdjustment-1}, Cause=GridOptimization. Verify Command response is ConstraintError"),
+            TestStep("8", "TH sends ModifyForecastRequest with ForecastId=Forecast.ForecastId, SlotAdjustments[0].{SlotIndex=0, Duration=Forecast.Slots[0].MaxDurationAdjustment}, SlotAdjustments[1].{SlotIndex=4, Duration=Forecast.Slots[0].MaxDurationAdjustment}, Cause=GridOptimization. Verify Command response is Failure"),
+            TestStep("9", "TH sends TestEventTrigger command to General Diagnostics Cluster on Endpoint 0 with EnableKey field set to PIXIT.DEM.TEST_EVENT_TRIGGER_KEY and EventTrigger field set to PIXIT.DEM.TEST_EVENT_TRIGGER for User Opt-out Local Optimization Test Event"),
+            TestStep("9a", "TH reads ESAState attribute. Verify value is 0x01 (Online)"),
+            TestStep("9b", "TH reads OptOutState attribute. Verify value is 0x02 (LocalOptOut)"),
+            TestStep("10", "TH sends ModifyForecastRequest with ForecastId=Forecast.ForecastId, SlotAdjustments[0].{SlotIndex=0, Duration=Forecast.Slots[0].MaxDurationAdjustment}, Cause=LocalOptimization. Verify Command response is ConstraintError"),
+            TestStep("11", "TH sends ModifyForecastRequest with ForecastId=Forecast.ForecastId, SlotAdjustments[0].{SlotIndex=0, Duration=Forecast.Slots[0].MaxDurationAdjustment}, Cause=GridOptimization. Verify Command response is Success"),
+            TestStep("11a", "TH reads Forecast attribute. Value has to include ForecastUpdateReason=GridOptimization"),
+            TestStep("12", "TH sends CancelRequest. Verify Command response is Success"),
+            TestStep("12a", "TH reads Forecast attribute. Value has to include ForecastUpdateReason=InternalOptimization"),
             TestStep("13", "TH sends ModifyForecastRequest with ForecastId=Forecast.ForecastId, SlotAdjustments[0].{SlotIndex=0, Duration=Forecast.Slots[0].MaxDurationAdjustment}, Cause=GridOptimization. Verify Command response is Success"),
-            TestStep("13a", "TH reads Forecast. Value has to include ForecastUpdateReason=GridOptimization"),
-            TestStep("14", "TH sends CancelRequest. Verify Command response is Success"),
-            TestStep("14a", "TH reads Forecast. Value has to include ForecastUpdateReason=InternalOptimization"),
-            TestStep("15", "TH sends ModifyForecastRequest with ForecastId=Forecast.ForecastId, SlotAdjustments[0].{SlotIndex=0, Duration=Forecast.Slots[0].MaxDurationAdjustment}, Cause=GridOptimization. Verify Command response is Success"),
-            TestStep("15a", "TH reads Forecast. Value has to include ForecastUpdateReason=GridOptimization"),
-            TestStep("16", "TH sends TestEventTrigger command for User Opt-out Grid Optimization Test Event. "),
-            TestStep("16a", "TH reads OptOutState. Verify value is 0x03 (OptOut)"),
-            TestStep("16b", "TH reads Forecast. Value has to include ForecastUpdateReason=Internal Optimization"),
-            TestStep("17", "TH sends ModifyForecastRequest with ForecastId=Forecast.ForecastId, SlotAdjustments[0].{SlotIndex=0, Duration=Forecast.Slots[0].MaxDurationAdjustment}, Cause=GridOptimization. Verify Command response is ConstraintError"),
-            TestStep("18", "TH sends TestEventTrigger command for User Opt-out Test Event Clear. "),
-            TestStep("18a", "TH reads OptOutState. Verify value is 0x00 (NoOptOut)"),
-            TestStep("19", "TH sends ModifyForecastRequest with ForecastId=Forecast.ForecastId, SlotAdjustments[0].{SlotIndex=0, Duration=Forecast.Slots[0].MinDurationAdjustment}, Cause=LocalOptimization. Verify Command response is Success"),
-            TestStep("19a", "TH reads Forecast. Value has to include ForecastUpdateReason=LocalOptimization"),
-            TestStep("20", "TH sends CancelRequest. Verify Command response is Success"),
-            TestStep("20a", "TH reads Forecast. Value has to include ForecastUpdateReason=InternalOptimization"),
-            TestStep("21", "TH sends TestEventTrigger command for Forecast Adjustment Test Event Next Slot. "),
-            TestStep("22", "TH sends ModifyForecastRequest with ForecastId=Forecast.ForecastId, SlotAdjustments[0].{SlotIndex=0, Duration=Forecast.Slots[0].MinDurationAdjustment}, Cause=LocalOptimization. Verify Command response is ConstraintError"),
-            TestStep("23", "TH sends CancelRequest. Verify Command response is InvalidInStateError"),
-            TestStep("24", "TH sends TestEventTrigger command for Forecast Adjustment Test Event Clear. "),
+            TestStep("13a", "TH reads Forecast attribute. Value has to include ForecastUpdateReason=GridOptimization"),
+            TestStep("14", "TH sends TestEventTrigger command to General Diagnostics Cluster on Endpoint 0 with EnableKey field set to PIXIT.DEM.TEST_EVENT_TRIGGER_KEY and EventTrigger field set to PIXIT.DEM.TEST_EVENT_TRIGGER for User Opt-out Grid Optimization Test Event"),
+            TestStep("14a", "TH reads OptOutState attribute. Verify value is 0x03 (OptOut)"),
+            TestStep("14b", "TH reads Forecast attribute. Value has to include ForecastUpdateReason=Internal Optimization"),
+            TestStep("15", "TH sends ModifyForecastRequest with ForecastId=Forecast.ForecastId, SlotAdjustments[0].{SlotIndex=0, Duration=Forecast.Slots[0].MaxDurationAdjustment}, Cause=GridOptimization. Verify Command response is ConstraintError"),
+            TestStep("16", "TH sends TestEventTrigger command to General Diagnostics Cluster on Endpoint 0 with EnableKey field set to PIXIT.DEM.TEST_EVENT_TRIGGER_KEY and EventTrigger field set to PIXIT.DEM.TEST_EVENT_TRIGGER for User Opt-out Test Event Clear"),
+            TestStep("16a", "TH reads OptOutState attribute. Verify value is 0x00 (NoOptOut)"),
+            TestStep("17", "TH sends ModifyForecastRequest with ForecastId=Forecast.ForecastId, SlotAdjustments[0].{SlotIndex=0, Duration=Forecast.Slots[0].MinDurationAdjustment}, Cause=LocalOptimization. Verify Command response is Success"),
+            TestStep("17a", "TH reads Forecast attribute. Value has to include ForecastUpdateReason=LocalOptimization"),
+            TestStep("18", "TH sends CancelRequest. Verify Command response is Success"),
+            TestStep("18a", "TH reads Forecast attribute. Value has to include ForecastUpdateReason=InternalOptimization"),
+            TestStep("19", "TH sends TestEventTrigger command to General Diagnostics Cluster on Endpoint 0 with EnableKey field set to PIXIT.DEM.TEST_EVENT_TRIGGER_KEY and EventTrigger field set to PIXIT.DEM.TEST_EVENT_TRIGGER for Forecast Adjustment Test Event Next Slot"),
+            TestStep("20", "TH sends ModifyForecastRequest with ForecastId=Forecast.ForecastId, SlotAdjustments[0].{SlotIndex=0, Duration=Forecast.Slots[0].MinDurationAdjustment}, Cause=LocalOptimization. Verify Command response is ConstraintError"),
+            TestStep("21", "TH sends CancelRequest. Verify Command response is InvalidInStateError"),
+            TestStep("22", "TH sends TestEventTrigger command to General Diagnostics Cluster on Endpoint 0 with EnableKey field set to PIXIT.DEM.TEST_EVENT_TRIGGER_KEY and EventTrigger field set to PIXIT.DEM.TEST_EVENT_TRIGGER for Forecast Adjustment Test Event Clear"),
         ]
 
         return steps
@@ -129,31 +129,47 @@ class TC_DEM_2_6(MatterBaseTest, DEMBaseTestHelper):
         slotAdjustments = [Clusters.DeviceEnergyManagement.Structs.SlotAdjustmentStruct(slotIndex=4, duration=forecast.slots[0].maxDurationAdjustment)]
         await self.send_modify_forecast_request_command(forecast.forecastId, slotAdjustments, Clusters.DeviceEnergyManagement.Enums.AdjustmentCauseEnum.kGridOptimization, expected_status=Status.ConstraintError)
 
-        self.step("8")
+        self.step("6")
         slotAdjustments = [Clusters.DeviceEnergyManagement.Structs.SlotAdjustmentStruct(slotIndex=0, duration=forecast.slots[0].maxDurationAdjustment + 1)]
         await self.send_modify_forecast_request_command(forecast.forecastId, slotAdjustments, Clusters.DeviceEnergyManagement.Enums.AdjustmentCauseEnum.kGridOptimization, expected_status=Status.ConstraintError)
 
-        self.step("9")
+        self.step("7")
         slotAdjustments = [Clusters.DeviceEnergyManagement.Structs.SlotAdjustmentStruct(slotIndex=0, duration=forecast.slots[0].minDurationAdjustment - 1)]
         await self.send_modify_forecast_request_command(forecast.forecastId, slotAdjustments, Clusters.DeviceEnergyManagement.Enums.AdjustmentCauseEnum.kGridOptimization, expected_status=Status.ConstraintError)
 
-        self.step("10")
+        self.step("8")
         slotAdjustments = [Clusters.DeviceEnergyManagement.Structs.SlotAdjustmentStruct(slotIndex=0, duration=forecast.slots[0].maxDurationAdjustment),
                            Clusters.DeviceEnergyManagement.Structs.SlotAdjustmentStruct(slotIndex=4, duration=forecast.slots[0].maxDurationAdjustment)]
         await self.send_modify_forecast_request_command(forecast.forecastId, slotAdjustments, Clusters.DeviceEnergyManagement.Enums.AdjustmentCauseEnum.kGridOptimization, expected_status=Status.ConstraintError)
 
-        self.step("11")
+        self.step("9")
         await self.send_test_event_trigger_user_opt_out_local()
 
-        self.step("11a")
+        self.step("9a")
         await self.check_dem_attribute("ESAState", Clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kOnline)
 
-        self.step("11b")
+        self.step("9b")
         await self.check_dem_attribute("OptOutState", Clusters.DeviceEnergyManagement.Enums.OptOutStateEnum.kLocalOptOut)
 
-        self.step("12")
+        self.step("10")
         slotAdjustments = [Clusters.DeviceEnergyManagement.Structs.SlotAdjustmentStruct(slotIndex=0, duration=forecast.slots[0].maxDurationAdjustment)]
         await self.send_modify_forecast_request_command(forecast.forecastId, slotAdjustments, Clusters.DeviceEnergyManagement.Enums.AdjustmentCauseEnum.kLocalOptimization, expected_status=Status.ConstraintError)
+
+        self.step("11")
+        slotAdjustments = [Clusters.DeviceEnergyManagement.Structs.SlotAdjustmentStruct(slotIndex=0, duration=forecast.slots[0].maxDurationAdjustment)]
+        await self.send_modify_forecast_request_command(forecast.forecastId, slotAdjustments, Clusters.DeviceEnergyManagement.Enums.AdjustmentCauseEnum.kGridOptimization, expected_status=Status.Success)
+
+        self.step("11a")
+        forecast = await self.read_dem_attribute_expect_success(attribute="Forecast")
+        logging.info(forecast)
+        asserts.assert_equal(forecast.forecastUpdateReason, Clusters.DeviceEnergyManagement.Enums.ForecastUpdateReasonEnum.kGridOptimization)
+
+        self.step("12")
+        await self.send_cancel_request_command()
+
+        self.step("12a")
+        forecast = await self.read_dem_attribute_expect_success(attribute="Forecast")
+        asserts.assert_equal(forecast.forecastUpdateReason, Clusters.DeviceEnergyManagement.Enums.ForecastUpdateReasonEnum.kInternalOptimization)
 
         self.step("13")
         slotAdjustments = [Clusters.DeviceEnergyManagement.Structs.SlotAdjustmentStruct(slotIndex=0, duration=forecast.slots[0].maxDurationAdjustment)]
@@ -161,72 +177,55 @@ class TC_DEM_2_6(MatterBaseTest, DEMBaseTestHelper):
 
         self.step("13a")
         forecast = await self.read_dem_attribute_expect_success(attribute="Forecast")
-        logging.info(forecast)
         asserts.assert_equal(forecast.forecastUpdateReason, Clusters.DeviceEnergyManagement.Enums.ForecastUpdateReasonEnum.kGridOptimization)
 
         self.step("14")
-        await self.send_cancel_request_command()
+        await self.send_test_event_trigger_user_opt_out_grid()
 
         self.step("14a")
+        await self.check_dem_attribute("OptOutState", Clusters.DeviceEnergyManagement.Enums.OptOutStateEnum.kOptOut)
+
+        self.step("14b")
         forecast = await self.read_dem_attribute_expect_success(attribute="Forecast")
         asserts.assert_equal(forecast.forecastUpdateReason, Clusters.DeviceEnergyManagement.Enums.ForecastUpdateReasonEnum.kInternalOptimization)
 
         self.step("15")
         slotAdjustments = [Clusters.DeviceEnergyManagement.Structs.SlotAdjustmentStruct(slotIndex=0, duration=forecast.slots[0].maxDurationAdjustment)]
-        await self.send_modify_forecast_request_command(forecast.forecastId, slotAdjustments, Clusters.DeviceEnergyManagement.Enums.AdjustmentCauseEnum.kGridOptimization, expected_status=Status.Success)
-
-        self.step("15a")
-        forecast = await self.read_dem_attribute_expect_success(attribute="Forecast")
-        asserts.assert_equal(forecast.forecastUpdateReason, Clusters.DeviceEnergyManagement.Enums.ForecastUpdateReasonEnum.kGridOptimization)
-
-        self.step("16")
-        await self.send_test_event_trigger_user_opt_out_grid()
-
-        self.step("16a")
-        await self.check_dem_attribute("OptOutState", Clusters.DeviceEnergyManagement.Enums.OptOutStateEnum.kOptOut)
-
-        self.step("16b")
-        forecast = await self.read_dem_attribute_expect_success(attribute="Forecast")
-        asserts.assert_equal(forecast.forecastUpdateReason, Clusters.DeviceEnergyManagement.Enums.ForecastUpdateReasonEnum.kInternalOptimization)
-
-        self.step("17")
-        slotAdjustments = [Clusters.DeviceEnergyManagement.Structs.SlotAdjustmentStruct(slotIndex=0, duration=forecast.slots[0].maxDurationAdjustment)]
         await self.send_modify_forecast_request_command(forecast.forecastId, slotAdjustments, Clusters.DeviceEnergyManagement.Enums.AdjustmentCauseEnum.kGridOptimization, expected_status=Status.ConstraintError)
 
-        self.step("18")
+        self.step("16")
         await self.send_test_event_trigger_user_opt_out_clear_all()
 
-        self.step("18a")
+        self.step("16a")
         await self.check_dem_attribute("OptOutState", Clusters.DeviceEnergyManagement.Enums.OptOutStateEnum.kNoOptOut)
 
-        self.step("19")
+        self.step("17")
         slotAdjustments = [Clusters.DeviceEnergyManagement.Structs.SlotAdjustmentStruct(slotIndex=0, duration=forecast.slots[0].minDurationAdjustment)]
         await self.send_modify_forecast_request_command(forecast.forecastId, slotAdjustments, Clusters.DeviceEnergyManagement.Enums.AdjustmentCauseEnum.kLocalOptimization, expected_status=Status.Success)
 
-        self.step("19a")
+        self.step("17a")
         forecast = await self.read_dem_attribute_expect_success(attribute="Forecast")
         asserts.assert_equal(forecast.forecastUpdateReason, Clusters.DeviceEnergyManagement.Enums.ForecastUpdateReasonEnum.kLocalOptimization)
 
-        self.step("20")
+        self.step("18")
         await self.send_cancel_request_command()
 
-        self.step("20a")
+        self.step("18a")
         forecast = await self.read_dem_attribute_expect_success(attribute="Forecast")
         asserts.assert_equal(forecast.forecastUpdateReason, Clusters.DeviceEnergyManagement.Enums.ForecastUpdateReasonEnum.kInternalOptimization)
 
-        self.step("21")
+        self.step("19")
         await self.send_test_event_trigger_forecast_adjustment_next_slot()
 
-        self.step("22")
+        self.step("20")
         slotAdjustments = [Clusters.DeviceEnergyManagement.Structs.SlotAdjustmentStruct(slotIndex=0, duration=forecast.slots[0].minDurationAdjustment)]
         await self.send_modify_forecast_request_command(forecast.forecastId, slotAdjustments, Clusters.DeviceEnergyManagement.Enums.AdjustmentCauseEnum.kLocalOptimization, expected_status=Status.ConstraintError)
 
-        self.step("23")
+        self.step("21")
         await self.send_cancel_request_command(expected_status=Status.InvalidInState)
 
-        self.step("24")
+        self.step("22")
         await self.send_test_event_trigger_forecast_adjustment_clear()
-
 
 
 if __name__ == "__main__":
