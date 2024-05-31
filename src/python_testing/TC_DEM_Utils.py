@@ -137,13 +137,13 @@ class DEMBaseTestHelper:
         except InteractionModelError as e:
             asserts.assert_equal(e.status, expected_status, "Unexpected error returned")
 
-    async def send_modify_forecast_request_command(self, forecastId: int,
+    async def send_modify_forecast_request_command(self, forecastID: int,
                                                    slotAdjustments: list[Clusters.DeviceEnergyManagement.Structs.SlotAdjustmentStruct],
                                                    cause: Clusters.DeviceEnergyManagement.Enums.AdjustmentCauseEnum,
                                                    endpoint: int = None, timedRequestTimeoutMs: int = 3000,
                                                    expected_status: Status = Status.Success):
         try:
-            await self.send_single_cmd(cmd=Clusters.DeviceEnergyManagement.Commands.ModifyForecastRequest(forecastId=forecastId,
+            await self.send_single_cmd(cmd=Clusters.DeviceEnergyManagement.Commands.ModifyForecastRequest(forecastID=forecastID,
                                                                                                           slotAdjustments=slotAdjustments,
                                                                                                           cause=cause),
                                        endpoint=endpoint,

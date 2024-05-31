@@ -36,6 +36,7 @@ static chip::app::DataModel::Nullable<chip::app::Clusters::DeviceEnergyManagemen
 
 #define MAX_POWER_ADJUSTMENTS 5
 static chip::app::Clusters::DeviceEnergyManagement::Structs::PowerAdjustStruct::Type sPowerAdjustments[MAX_POWER_ADJUSTMENTS];
+static chip::app::Clusters::DeviceEnergyManagement::Structs::PowerAdjustCapabilityStruct::Type sPowerAdjustmentCapabilityStruct;
 
 DeviceEnergyManagementDelegate * GetDEMDelegate()
 {
@@ -153,7 +154,10 @@ void SetTestEventTrigger_PowerAdjustment()
 
     DataModel::List<const DeviceEnergyManagement::Structs::PowerAdjustStruct::Type> powerAdjustmentList(sPowerAdjustments, 1);
 
-    CHIP_ERROR err = GetDEMDelegate()->SetPowerAdjustmentCapability(MakeNullable(powerAdjustmentList));
+    sPowerAdjustmentCapabilityStruct.cause = PowerAdjustReasonEnum::kUnknownEnumValue;
+    sPowerAdjustmentCapabilityStruct.powerAdjustCapability.SetNonNull(powerAdjustmentList);
+
+    CHIP_ERROR err = GetDEMDelegate()->SetPowerAdjustmentCapability(sPowerAdjustmentCapabilityStruct);
     if (err != CHIP_NO_ERROR)
     {
         ChipLogError(Support, "SetTestEventTrigger_PowerAdjustment failed %s", chip::ErrorStr(err));
@@ -169,7 +173,10 @@ void SetTestEventTrigger_PowerAdjustClear()
 
     DataModel::List<const DeviceEnergyManagement::Structs::PowerAdjustStruct::Type> powerAdjustmentList(sPowerAdjustments, 1);
 
-    CHIP_ERROR err = GetDEMDelegate()->SetPowerAdjustmentCapability(MakeNullable(powerAdjustmentList));
+    sPowerAdjustmentCapabilityStruct.powerAdjustCapability.SetNonNull(powerAdjustmentList);
+    sPowerAdjustmentCapabilityStruct.cause = PowerAdjustReasonEnum::kUnknownEnumValue;
+
+    CHIP_ERROR err = GetDEMDelegate()->SetPowerAdjustmentCapability(sPowerAdjustmentCapabilityStruct);
     if (err != CHIP_NO_ERROR)
     {
         ChipLogError(Support, "SetTestEventTrigger_PowerAdjustment failed %s", chip::ErrorStr(err));
@@ -295,7 +302,7 @@ void SetTestEventTrigger_ForecastAdjustmentNextSlot()
 void SetTestEventTrigger_ForecastAdjustmentClear()
 {
     // ModifyForecastRequest with:
-    //     ForecastId=Forecast.ForecastId+1,
+    //     ForecastID=Forecast.ForecastID+1,
     //     SlotAdjustments[0].{SlotIndex=0, NominalPower=Forecast.Slots[0].MinPowerAdjustment, Duration=Forecast.Slots[0].MaxDurationAdjustment},
     //     Cause=GridOptimization.
 

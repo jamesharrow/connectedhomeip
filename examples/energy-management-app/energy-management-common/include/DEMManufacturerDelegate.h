@@ -83,7 +83,7 @@ public:
         return CHIP_NO_ERROR;
     }
 
-    virtual CHIP_ERROR HandleModifyRequest(const uint32_t forecastId,
+    virtual CHIP_ERROR HandleModifyRequest(const uint32_t forecastID,
                                            const DataModel::DecodableList<Structs::SlotAdjustmentStruct::DecodableType> & slotAdjustments,
                                            AdjustmentCauseEnum cause)
     {

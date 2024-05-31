@@ -67,7 +67,7 @@ public:
     virtual Status CancelPowerAdjustRequest() override;
 
     /**
-     * @brief The ESA SHALL update its Forecast attribute with the RequestedStartTime including a new ForecastId.
+     * @brief The ESA SHALL update its Forecast attribute with the RequestedStartTime including a new ForecastID.
      *
      *   If the ESA supports ForecastAdjustment, and the ESAState is not UserOptOut and the RequestedStartTime is after
      *   the EarliestStartTime and the resulting EndTime is before the LatestEndTime, then ESA SHALL accept the request
@@ -116,16 +116,16 @@ public:
      *   If the ESA supports FA, and the ESAState is not UserOptOut it SHALL attempt to adjust its power forecast.
      *   This allows a one or more modifications in a single command by sending a list of modifications (one for each 'slot').
      *   Attempts to modify slots which have already past, SHALL result in the entire command being rejected.
-     *   If the ESA accepts the requested Forecast then it SHALL update its Forecast attribute (incrementing its ForecastId)
+     *   If the ESA accepts the requested Forecast then it SHALL update its Forecast attribute (incrementing its ForecastID)
      *   and run the revised Forecast as its new intended operation.
      *
-     * @param forecastId Indicates the ESA ForecastId that is to be modified.
-     * @param slotAdjustments List of adjustments to be applied to the ESA, corresponding to the expected ESA forecastId.
+     * @param forecastID Indicates the ESA ForecastID that is to be modified.
+     * @param slotAdjustments List of adjustments to be applied to the ESA, corresponding to the expected ESA forecastID.
      * @return  Success if the entire list of SlotAdjustmentStruct are accepted, otherwise the command
      *          SHALL be rejected returning other IM_Status.
      */
     virtual Status
-    ModifyForecastRequest(const uint32_t forecastId,
+    ModifyForecastRequest(const uint32_t forecastID,
                           const DataModel::DecodableList<Structs::SlotAdjustmentStruct::DecodableType> & slotAdjustments,
                           AdjustmentCauseEnum cause) override;
 
@@ -135,7 +135,7 @@ public:
      *   The ESA SHALL inspect the requested power limits to ensure that there are no overlapping elements. The ESA
      *   manufacturer may also reject the request if it could cause the user’s preferences to be breached (e.g. may
      *   cause the home to be too hot or too cold, or a battery to be insufficiently charged).
-     *   If the ESA can meet the requested power limits, it SHALL regenerate a new Power Forecast with a new ForecastId.
+     *   If the ESA can meet the requested power limits, it SHALL regenerate a new Power Forecast with a new ForecastID.
      *
      * @param constraints  Sequence of turn up/down power requests that the ESA is being asked to constrain its operation within.
      * @return  Success if successful, otherwise the command SHALL be rejected returning other IM_Status.
@@ -170,7 +170,7 @@ public:
     virtual ESAStateEnum GetESAState() override;
     virtual int64_t GetAbsMinPower() override;
     virtual int64_t GetAbsMaxPower() override;
-    virtual Attributes::PowerAdjustmentCapability::TypeInfo::Type GetPowerAdjustmentCapability() override;
+    virtual Structs::PowerAdjustCapabilityStruct::Type & GetPowerAdjustmentCapability() override;
     virtual DataModel::Nullable<Structs::ForecastStruct::Type> & GetForecast() override;
     virtual OptOutStateEnum GetOptOutState() override;
 
@@ -181,7 +181,7 @@ public:
     virtual CHIP_ERROR SetESAState(ESAStateEnum) override;
     virtual CHIP_ERROR SetAbsMinPower(int64_t) override;
     virtual CHIP_ERROR SetAbsMaxPower(int64_t) override;
-    virtual CHIP_ERROR SetPowerAdjustmentCapability(Attributes::PowerAdjustmentCapability::TypeInfo::Type) override;
+    virtual CHIP_ERROR SetPowerAdjustmentCapability(Structs::PowerAdjustCapabilityStruct::Type&) override;
     virtual CHIP_ERROR SetForecast(DataModel::Nullable<Structs::ForecastStruct::Type>&) override;
     virtual CHIP_ERROR SetOptOutState(OptOutStateEnum) override;
 
@@ -192,9 +192,6 @@ private:
     // Methods to handle when a PowerAdjustment completes
     static void PowerAdjustTimerExpiry(System::Layer * systemLayer, void * delegate);
     void HandlePowerAdjustTimerExpiry();
-
-    // Update the PowerAdjustmentCapability cause
-    void UpdatePowerAdjustmentCapabilityCause(PowerAdjustReasonEnum cause);
 
     // Method to cancel a PowerAdjustment
     CHIP_ERROR CancelPowerAdjustRequestAndSendEvent(CauseEnum cause);
@@ -228,7 +225,7 @@ private:
     int64_t mAbsMaxPower;
     OptOutStateEnum mOptOutState;
 
-    Attributes::PowerAdjustmentCapability::TypeInfo::Type mPowerAdjustmentCapability;
+    Structs::PowerAdjustCapabilityStruct::Type mPowerAdjustmentCapabilityStruct;
 
     DataModel::Nullable<Structs::ForecastStruct::Type> mForecast;
 
@@ -237,8 +234,6 @@ private:
 
     // Keep track of when that PowerAdjustment started
     uint32_t mPowerAdjustmentStartTime;
-
-    AdjustmentCauseEnum mPowerAdjustmentCause;
 
     // Keep track whether a PauseRequest is in progress
     bool mPauseRequestInProgress;

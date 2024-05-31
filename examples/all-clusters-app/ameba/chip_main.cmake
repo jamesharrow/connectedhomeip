@@ -188,7 +188,6 @@ list(
     ${chip_dir}/examples/microwave-oven-app/microwave-oven-common/src/microwave-oven-device.cpp
 
     ${chip_dir}/examples/energy-management-app/energy-management-common/src/DeviceEnergyManagementDelegateImpl.cpp
-    ${chip_dir}/examples/energy-management-app/energy-management-common/src/DeviceEnergyManagementDelegateImpl_TestData.cpp
     ${chip_dir}/examples/energy-management-app/energy-management-common/src/DeviceEnergyManagementManager.cpp
     ${chip_dir}/examples/energy-management-app/energy-management-common/src/DeviceEnergyManagementManufacturerImpl.cpp
     ${chip_dir}/examples/energy-management-app/energy-management-common/src/ElectricalPowerMeasurementDelegate.cpp

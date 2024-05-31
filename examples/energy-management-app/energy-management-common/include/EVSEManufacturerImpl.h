@@ -111,7 +111,7 @@ public:
     CHIP_ERROR HandleDeviceEnergyManagementPauseCompletion() override;
     CHIP_ERROR HandleDeviceEnergyManagementCancelPauseRequest(CauseEnum cause) override;
     CHIP_ERROR HandleDeviceEnergyManagementCancelRequest() override;
-    CHIP_ERROR HandleModifyRequest(const uint32_t forecastId,
+    CHIP_ERROR HandleModifyRequest(const uint32_t forecastID,
                                    const DataModel::DecodableList<DeviceEnergyManagement::Structs::SlotAdjustmentStruct::DecodableType> & slotAdjustments,
                                    AdjustmentCauseEnum cause) override;
     CHIP_ERROR RequestConstraintBasedForecast(const DataModel::DecodableList<DeviceEnergyManagement::Structs::ConstraintsStruct::DecodableType> & constraints,

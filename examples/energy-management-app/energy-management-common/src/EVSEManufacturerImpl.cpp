@@ -416,7 +416,7 @@ CHIP_ERROR EVSEManufacturer::HandleDeviceEnergyManagementCancelRequest()
     return CHIP_NO_ERROR;
 }
 
-CHIP_ERROR EVSEManufacturer::HandleModifyRequest(const uint32_t forecastId,
+CHIP_ERROR EVSEManufacturer::HandleModifyRequest(const uint32_t forecastID,
                                                  const DataModel::DecodableList<DeviceEnergyManagement::Structs::SlotAdjustmentStruct::DecodableType> & slotAdjustments,
                                                  AdjustmentCauseEnum cause)
 {

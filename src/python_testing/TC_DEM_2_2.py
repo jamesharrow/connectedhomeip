@@ -127,7 +127,7 @@ class TC_DEM_2_2(MatterBaseTest, DEMBaseTestHelper):
         powerAdjustmentCapability = await self.read_dem_attribute_expect_success(attribute="PowerAdjustmentCapability")
         asserts.assert_greater_equal(len(powerAdjustmentCapability), 1)
         logging.info(powerAdjustmentCapability)
-        asserts.assert_equal(powerAdjustmentCapability[0].cause, Clusters.DeviceEnergyManagement.Enums.PowerAdjustReasonEnum.kNoAdjustment)
+        asserts.assert_equal(powerAdjustmentCapability.cause, Clusters.DeviceEnergyManagement.Enums.PowerAdjustReasonEnum.kNoAdjustment)
 
         # we should expect powerAdjustmentCapability to have multiple entries with different max powers, min powers, max and min durations
         found_min_power = sys.maxsize
