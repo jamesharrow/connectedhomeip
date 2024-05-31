@@ -48,12 +48,12 @@ class TC_DEM_2_9(MatterBaseTest, DEMBaseTestHelper):
     def steps_TC_DEM_2_9(self) -> list[TestStep]:
         """Execute the test steps."""
         steps = [
-            TestStep("1", "Commissioning, already done. "),
+            TestStep("1", "Commissioning, already done", is_commissioning=True),
             TestStep("2", "TH reads TestEventTriggersEnabled attribute from General Diagnostics Cluster. Verify that TestEventTriggersEnabled attribute has a value of 1 (True)"),
-            TestStep("3", "TH sends TestEventTrigger command for Forecast Test Event. "),
-            TestStep("3a", "TH reads Forecast. Value has to include a valid slots[0].ManufacturerESAState"),
-            TestStep("3b", "TH reads Forecast. Value has to include valid slots[0].NominalPower, slots[0].MinPower, slots[0].MaxPower, slots[0].NominalEnergy"),
-            TestStep("4", "TH sends TestEventTrigger command for Forecast Test Event Clear. "),
+            TestStep("3", "TH sends TestEventTrigger command to General Diagnostics Cluster on Endpoint 0 with EnableKey field set to PIXIT.DEM.TEST_EVENT_TRIGGER_KEY and EventTrigger field set to PIXIT.DEM.TEST_EVENT_TRIGGER for Forecast Test Event"),
+            TestStep("3a", "TH reads Forecast attribute. Value has to include a valid slots[0].ManufacturerESAState"),
+            TestStep("3b", "TH reads Forecast attribute. Value has to include valid slots[0].NominalPower, slots[0].MinPower, slots[0].MaxPower, slots[0].NominalEnergy"),
+            TestStep("4", "TH sends TestEventTrigger command to General Diagnostics Cluster on Endpoint 0 with EnableKey field set to PIXIT.DEM.TEST_EVENT_TRIGGER_KEY and EventTrigger field set to PIXIT.DEM.TEST_EVENT_TRIGGER for Forecast Test Event Clear"),
         ]
 
         return steps

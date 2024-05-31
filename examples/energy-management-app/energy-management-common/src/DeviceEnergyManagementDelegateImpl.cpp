@@ -398,9 +398,13 @@ Status DeviceEnergyManagementDelegate::PauseRequest(const uint32_t duration, Adj
         return Status::Failure;
     }
 
-    Status status = Status::Success;
-
-    SetESAState(ESAStateEnum::kPaused);
+    // Record when this PauseRequest starts
+    CHIP_ERROR err = UtilsGetEpochTS(mPauseRequestStartTime);
+    if (err != CHIP_NO_ERROR)
+    {
+        ChipLogError(AppServer, "Unable to get time: %" CHIP_ERROR_FORMAT, err.Format());
+        return Status::Failure;
+    }
 
     // If a timer is running, cancel it so we can start it with the new duration
     if (mPauseRequestInProgress)
@@ -411,7 +415,7 @@ Status DeviceEnergyManagementDelegate::PauseRequest(const uint32_t duration, Adj
     {
         Events::Paused::Type event;
         EventNumber eventNumber;
-        CHIP_ERROR err = LogEvent(event, mEndpointId, eventNumber);
+        err = LogEvent(event, mEndpointId, eventNumber);
         if (CHIP_NO_ERROR != err)
         {
             ChipLogError(AppServer, "Unable to send notify Paused event: %" CHIP_ERROR_FORMAT, err.Format());
@@ -423,13 +427,26 @@ Status DeviceEnergyManagementDelegate::PauseRequest(const uint32_t duration, Adj
         mPauseRequestInProgress = true;
     }
 
-    // Record when this PauseRequest starts
-    CHIP_ERROR err = UtilsGetEpochTS(mPauseRequestStartTime);
+    err = DeviceLayer::SystemLayer().StartTimer(System::Clock::Seconds32(duration), PauseRequestTimerExpiry, this);
     if (err != CHIP_NO_ERROR)
     {
-        ChipLogError(AppServer, "Unable to get time: %" CHIP_ERROR_FORMAT, err.Format());
+        mPauseRequestInProgress = false;
         return Status::Failure;
     }
+
+    // Pause the appliance
+    if (mpDEMManufacturerDelegate != nullptr)
+    {
+        // It is expected that the mpDEMManufacturerDelegate will update the forecast with the new expected end time
+        err = mpDEMManufacturerDelegate->HandleDeviceEnergyManagementPauseRequest(duration, cause);
+        if (err != CHIP_NO_ERROR)
+        {
+            mPauseRequestInProgress = false;
+            return Status::Failure;
+        }
+    }
+
+    SetESAState(ESAStateEnum::kPaused);
 
     // Update the forecaseUpdateReason based on the AdjustmentCause
     if (cause == AdjustmentCauseEnum::kLocalOptimization)
@@ -441,16 +458,7 @@ Status DeviceEnergyManagementDelegate::PauseRequest(const uint32_t duration, Adj
         mForecast.Value().forecastUpdateReason = ForecastUpdateReasonEnum::kGridOptimization;
     }
 
-    DeviceLayer::SystemLayer().StartTimer(System::Clock::Seconds32(duration), PauseRequestTimerExpiry, this);
-
-    // Pause the appliance
-    if (mpDEMManufacturerDelegate != nullptr)
-    {
-        // It is expected that the mpDEMManufacturerDelegate will update the forecast with the new expected end time
-        mpDEMManufacturerDelegate->HandleDeviceEnergyManagementPauseRequest(duration, cause);
-    }
-
-    return status;
+    return Status::Success;
 }
 
 /**
