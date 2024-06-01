@@ -189,6 +189,13 @@ public:
     uint32_t HasFeature(Feature feature) const;
 
 private:
+    /**
+     * @brief Handle a PowerAdjustRequest failing
+     *
+     *  Cleans up the PowerAdjust state should the request fail
+     */
+    void HandlePowerAdjustRequestFailure();
+
     // Methods to handle when a PowerAdjustment completes
     static void PowerAdjustTimerExpiry(System::Layer * systemLayer, void * delegate);
     void HandlePowerAdjustTimerExpiry();
@@ -198,6 +205,13 @@ private:
 
     // Method to send a PowerAdjustEnd event
     CHIP_ERROR SendPowerAdjustEndEvent(CauseEnum cause);
+
+    /**
+     * @brief Handle a PauseRequest failing
+     *
+     *  Cleans up the state should the PauseRequest fail
+     */
+    void HandlePauseRequestFailure();
 
     // Methods to handle when a PauseRequest completes
     static void PauseRequestTimerExpiry(System::Layer * systemLayer, void * delegate);

@@ -86,16 +86,7 @@ void DeviceEnergyManagementDelegate::SetDemManufacturerDelegate(DEMManufacturerD
  */
 Status DeviceEnergyManagementDelegate::PowerAdjustRequest(const int64_t power, const uint32_t duration, AdjustmentCauseEnum cause)
 {
-    ChipLogDetail(AppServer, "DeviceEnergyManagementDelegate::PowerAdjustRequest mPowerAdjustmentInProgress %d", mPowerAdjustmentInProgress);
-
     bool sendEvent = false;
-
-    //  Notify the appliance if the appliance hardware cannot be adjusted, then return Failure
-    if (!HasFeature(DeviceEnergyManagement::Feature::kPowerAdjustment))
-    {
-        ChipLogError(AppServer, "PowerAdjust not supported");
-        return Status::Failure;
-    }
 
     // If a timer is running, cancel it so we can start it with the new duration
     if (mPowerAdjustmentInProgress)
@@ -104,6 +95,7 @@ Status DeviceEnergyManagementDelegate::PowerAdjustRequest(const int64_t power, c
     }
     else
     {
+        // Going to start a new power adjustment so will need to send an event
         sendEvent = true;
 
         // Record when this PowerAdjustment starts. Note if we do not set this value if a PowerAdjustment is in progress
@@ -138,6 +130,7 @@ Status DeviceEnergyManagementDelegate::PowerAdjustRequest(const int64_t power, c
         break;
 
     default:
+        HandlePowerAdjustRequestFailure();
         return Status::Failure;
     }
 
@@ -145,22 +138,49 @@ Status DeviceEnergyManagementDelegate::PowerAdjustRequest(const int64_t power, c
     // in before this timer expires
     mPowerAdjustmentInProgress = true;
 
-    DeviceLayer::SystemLayer().StartTimer(System::Clock::Seconds32(duration), PowerAdjustTimerExpiry, this);
+    CHIP_ERROR err = DeviceLayer::SystemLayer().StartTimer(System::Clock::Seconds32(duration), PowerAdjustTimerExpiry, this);
+    if (err != CHIP_NO_ERROR)
+     {
+         // TODO: Note: should the PowerAdjust just initiated be cancelled because an Event could not be logged?
+         ChipLogError(AppServer, "Unable to start a PowerAdjustStart timer: %" CHIP_ERROR_FORMAT, err.Format());
+         HandlePowerAdjustRequestFailure();
+         return Status::Failure;
+     }
 
     if (sendEvent)
     {
         Events::PowerAdjustStart::Type event;
         EventNumber eventNumber;
-        CHIP_ERROR err = LogEvent(event, mEndpointId, eventNumber);
+        err = LogEvent(event, mEndpointId, eventNumber);
         if (CHIP_NO_ERROR != err)
         {
             // TODO: Note: should the PowerAdjust just initiated be cancelled because an Event could not be logged?
             ChipLogError(AppServer, "Unable to send notify PowerAdjustStart event: %" CHIP_ERROR_FORMAT, err.Format());
+            HandlePowerAdjustRequestFailure();
             return Status::Failure;
         }
     }
 
     return Status::Success;
+}
+
+/**
+ * @brief Handle a PowerAdjustRequest failing
+ *
+ *  Cleans up the PowerAdjust state should the request fail
+ */
+void DeviceEnergyManagementDelegate::HandlePowerAdjustRequestFailure()
+{
+    DeviceLayer::SystemLayer().CancelTimer(PowerAdjustTimerExpiry, this);
+
+    SetESAState(ESAStateEnum::kOnline);
+
+    mPowerAdjustmentInProgress = false;
+
+    mPowerAdjustCapabilityStruct.Value().cause = PowerAdjustReasonEnum::kNoAdjustment;
+
+    // TODO
+    // Should we inform the mpDEMManufacturerDelegate that PowerAdjustRequest has failed?
 }
 
 /**
@@ -241,15 +261,13 @@ Status DeviceEnergyManagementDelegate::CancelPowerAdjustRequest()
  */
 CHIP_ERROR DeviceEnergyManagementDelegate::CancelPowerAdjustRequestAndSendEvent(CauseEnum cause)
 {
-    ChipLogError(Zcl, "DeviceEnergyManagementDelegate::CancelPowerAdjustRequestAndSendEvent");
-
-    mPowerAdjustmentInProgress = false;
+    DeviceLayer::SystemLayer().CancelTimer(PowerAdjustTimerExpiry, this);
 
     SetESAState(ESAStateEnum::kOnline);
 
-    mPowerAdjustCapabilityStruct.Value().cause = PowerAdjustReasonEnum::kNoAdjustment;
+    mPowerAdjustmentInProgress = false;
 
-    DeviceLayer::SystemLayer().CancelTimer(PowerAdjustTimerExpiry, this);
+    mPowerAdjustCapabilityStruct.Value().cause = PowerAdjustReasonEnum::kNoAdjustment;
 
     CHIP_ERROR err = SendPowerAdjustEndEvent(cause);
 
@@ -323,14 +341,6 @@ Status DeviceEnergyManagementDelegate::StartTimeAdjustRequest(const uint32_t req
         return Status::Failure;
     }
 
-    mForecast.Value().forecastID++;
-
-    uint32_t duration = mForecast.Value().endTime - mForecast.Value().startTime; // the current entire forecast duration
-
-    /* Modify start time and end time */
-    mForecast.Value().startTime = requestedStartTime;
-    mForecast.Value().endTime   = requestedStartTime + duration;
-
     switch (cause)
     {
     case AdjustmentCauseEnum::kLocalOptimization:
@@ -345,9 +355,26 @@ Status DeviceEnergyManagementDelegate::StartTimeAdjustRequest(const uint32_t req
         break;
     }
 
+    mForecast.Value().forecastID++;
+
+    uint32_t duration = mForecast.Value().endTime - mForecast.Value().startTime; // the current entire forecast duration
+
+    /* Modify start time and end time */
+    mForecast.Value().startTime = requestedStartTime;
+    mForecast.Value().endTime   = requestedStartTime + duration;
+
     if (mpDEMManufacturerDelegate != nullptr)
     {
-        mpDEMManufacturerDelegate->HandleDeviceEnergyManagementStartTimeAdjustRequest(requestedStartTime, cause);
+        CHIP_ERROR err = mpDEMManufacturerDelegate->HandleDeviceEnergyManagementStartTimeAdjustRequest(requestedStartTime, cause);
+        if (err != CHIP_NO_ERROR)
+        {
+            // Reset state
+            mForecast.Value().forecastUpdateReason = ForecastUpdateReasonEnum::kInternalOptimization;
+            mForecast.Value().startTime = 0;
+            mForecast.Value().endTime   = 0;
+
+            return Status::Failure;
+        }
     }
 
     return Status::Success;
@@ -372,13 +399,7 @@ Status DeviceEnergyManagementDelegate::StartTimeAdjustRequest(const uint32_t req
  */
 Status DeviceEnergyManagementDelegate::PauseRequest(const uint32_t duration, AdjustmentCauseEnum cause)
 {
-    ChipLogDetail(AppServer, "DeviceEnergyManagementDelegate::PauseRequest mPauseRequestInProgress %d", mPauseRequestInProgress);
-
-    if (!HasFeature(DeviceEnergyManagement::Feature::kPausable))
-    {
-        ChipLogError(AppServer, "Pause not supported");
-        return Status::Failure;
-    }
+    bool sendEvent = false;
 
     // Record when this PauseRequest starts
     CHIP_ERROR err = UtilsGetEpochTS(mPauseRequestStartTime);
@@ -395,16 +416,9 @@ Status DeviceEnergyManagementDelegate::PauseRequest(const uint32_t duration, Adj
     }
     else
     {
-        Events::Paused::Type event;
-        EventNumber eventNumber;
-        err = LogEvent(event, mEndpointId, eventNumber);
-        if (CHIP_NO_ERROR != err)
-        {
-            ChipLogError(AppServer, "Unable to send notify Paused event: %" CHIP_ERROR_FORMAT, err.Format());
-            return Status::Failure;
-        }
+        sendEvent = true;
 
-        // Remember we have a timer running so we don't send a PowerAdjustStart event should another request come
+        // Remember we have a timer running so we don't send a Paused event should another request come
         // in before this timer expires
         mPauseRequestInProgress = true;
     }
@@ -412,7 +426,7 @@ Status DeviceEnergyManagementDelegate::PauseRequest(const uint32_t duration, Adj
     err = DeviceLayer::SystemLayer().StartTimer(System::Clock::Seconds32(duration), PauseRequestTimerExpiry, this);
     if (err != CHIP_NO_ERROR)
     {
-        mPauseRequestInProgress = false;
+        HandlePauseRequestFailure();
         return Status::Failure;
     }
 
@@ -423,7 +437,20 @@ Status DeviceEnergyManagementDelegate::PauseRequest(const uint32_t duration, Adj
         err = mpDEMManufacturerDelegate->HandleDeviceEnergyManagementPauseRequest(duration, cause);
         if (err != CHIP_NO_ERROR)
         {
-            mPauseRequestInProgress = false;
+            HandlePauseRequestFailure();
+            return Status::Failure;
+        }
+    }
+
+    if (sendEvent)
+    {
+        Events::Paused::Type event;
+        EventNumber eventNumber;
+        err = LogEvent(event, mEndpointId, eventNumber);
+        if (CHIP_NO_ERROR != err)
+        {
+            ChipLogError(AppServer, "Unable to send notify Paused event: %" CHIP_ERROR_FORMAT, err.Format());
+            HandlePauseRequestFailure();
             return Status::Failure;
         }
     }
@@ -441,6 +468,23 @@ Status DeviceEnergyManagementDelegate::PauseRequest(const uint32_t duration, Adj
     }
 
     return Status::Success;
+}
+
+/**
+ * @brief Handle a PauseRequest failing
+ *
+ *  Cleans up the state should the PauseRequest fail
+ */
+void DeviceEnergyManagementDelegate::HandlePauseRequestFailure()
+{
+    DeviceLayer::SystemLayer().CancelTimer(PowerAdjustTimerExpiry, this);
+
+    SetESAState(ESAStateEnum::kOnline);
+
+    mPauseRequestInProgress = false;
+
+    // TODO
+    // Should we inform the mpDEMManufacturerDelegate that PauseRequest has failed?
 }
 
 /**
@@ -465,8 +509,6 @@ void DeviceEnergyManagementDelegate::PauseRequestTimerExpiry(System::Layer * sys
  */
 void DeviceEnergyManagementDelegate::HandlePauseRequestTimerExpiry()
 {
-    ChipLogError(AppServer, "DeviceEnergyManagementDelegate::HandlePauseRequestTimerExpiry");
-
     // The PauseRequestment is no longer in progress
     mPauseRequestInProgress = false;
 
@@ -495,8 +537,6 @@ void DeviceEnergyManagementDelegate::HandlePauseRequestTimerExpiry()
  */
 CHIP_ERROR DeviceEnergyManagementDelegate::CancelPauseRequestAndSendEvent(CauseEnum cause)
 {
-    ChipLogError(Zcl, "DeviceEnergyManagementDelegate::CancelPauseRequestAndSendEvent");
-
     mPauseRequestInProgress = false;
 
     SetESAState(ESAStateEnum::kOnline);
@@ -504,12 +544,24 @@ CHIP_ERROR DeviceEnergyManagementDelegate::CancelPauseRequestAndSendEvent(CauseE
     DeviceLayer::SystemLayer().CancelTimer(PauseRequestTimerExpiry, this);
 
     CHIP_ERROR err = SendResumedEvent(cause);
+    CHIP_ERROR err2 = CHIP_NO_ERROR;
 
     // Notify the appliance's that it can resume its intended power setting (or go idle)
     if (mpDEMManufacturerDelegate != nullptr)
     {
         // It is expected that the mpDEMManufacturerDelegate will update the forecast with new expected end time
-        mpDEMManufacturerDelegate->HandleDeviceEnergyManagementCancelPauseRequest(cause);
+        err2 = mpDEMManufacturerDelegate->HandleDeviceEnergyManagementCancelPauseRequest(cause);
+    }
+
+    // Need to pick one of the error codes two return...
+    if (err == CHIP_NO_ERROR && err2 == CHIP_NO_ERROR)
+    {
+        return CHIP_NO_ERROR;
+    }
+
+    if (err2 != CHIP_NO_ERROR)
+    {
+        return err2;
     }
 
     return err;
@@ -529,7 +581,6 @@ CHIP_ERROR DeviceEnergyManagementDelegate::SendResumedEvent(CauseEnum cause)
     if (CHIP_NO_ERROR != err)
     {
         ChipLogError(AppServer, "Unable to send notify Resumed event: %" CHIP_ERROR_FORMAT, err.Format());
-        return err;
     }
 
     return err;
@@ -582,37 +633,42 @@ Status DeviceEnergyManagementDelegate::ModifyForecastRequest(
     const uint32_t forecastID, const DataModel::DecodableList<Structs::SlotAdjustmentStruct::DecodableType> & slotAdjustments,
     AdjustmentCauseEnum cause)
 {
-    Status status = Status::Failure;
+    Status status = Status::Success;
 
-    // Determine if the new forecast adjustments are acceptable to the appliance
-    if (mpDEMManufacturerDelegate != nullptr)
+    if (mForecast.IsNull())
     {
-        if (!HasFeature(DeviceEnergyManagement::Feature::kForecastAdjustment))
+        status = Status::Failure;
+    }
+    else if (mForecast.Value().forecastID != forecastID)
+    {
+        status = Status::ConstraintError;
+    }
+    else if (mpDEMManufacturerDelegate != nullptr)
+    {
+        // Determine if the new forecast adjustments are acceptable to the appliance
+        CHIP_ERROR err = mpDEMManufacturerDelegate->HandleModifyRequest(forecastID, slotAdjustments, cause);
+        if (err != CHIP_NO_ERROR)
         {
-            ChipLogError(AppServer, "ModifyForecast not supported");
+            status = Status::Failure;
         }
-        else if (mForecast.Value().forecastID != forecastID)
-        {
-            status = Status::ConstraintError;
-        }
-        else if (mpDEMManufacturerDelegate->HandleModifyRequest(forecastID, slotAdjustments, cause) == CHIP_NO_ERROR)
-        {
-            switch (cause)
-            {
-            case AdjustmentCauseEnum::kLocalOptimization:
-                mForecast.Value().forecastUpdateReason = ForecastUpdateReasonEnum::kLocalOptimization;
-                break;
-            case AdjustmentCauseEnum::kGridOptimization:
-                mForecast.Value().forecastUpdateReason = ForecastUpdateReasonEnum::kGridOptimization;
-                break;
-            default:
-                // Already checked in chip::app::Clusters::DeviceEnergyManagement::Instance::HandleModifyForecastRequest
-                break;
-            }
+    }
 
-            mForecast.Value().forecastID++;
-            status = Status::Success;
+    if (status == Status::Success)
+    {
+        switch (cause)
+        {
+        case AdjustmentCauseEnum::kLocalOptimization:
+            mForecast.Value().forecastUpdateReason = ForecastUpdateReasonEnum::kLocalOptimization;
+            break;
+        case AdjustmentCauseEnum::kGridOptimization:
+            mForecast.Value().forecastUpdateReason = ForecastUpdateReasonEnum::kGridOptimization;
+            break;
+        default:
+            // Already checked in chip::app::Clusters::DeviceEnergyManagement::Instance::HandleModifyForecastRequest
+            break;
         }
+
+        mForecast.Value().forecastID++;
     }
 
     return status;
@@ -633,34 +689,40 @@ Status DeviceEnergyManagementDelegate::ModifyForecastRequest(
 Status DeviceEnergyManagementDelegate::RequestConstraintBasedForecast(
     const DataModel::DecodableList<Structs::ConstraintsStruct::DecodableType> & constraints, AdjustmentCauseEnum cause)
 {
-    Status status = Status::Failure;
+    Status status = Status::Success;
 
-    // Determine if the new forecast adjustments are acceptable to the appliance
-    if (mpDEMManufacturerDelegate != nullptr)
+    if (mForecast.IsNull())
     {
-        if (!HasFeature(DeviceEnergyManagement::Feature::kPowerAdjustment) ||
-            !HasFeature(DeviceEnergyManagement::Feature::kForecastAdjustment))
+        status = Status::Failure;
+    }
+    else if (mpDEMManufacturerDelegate != nullptr)
+    {
+        // Determine if the new forecast adjustments are acceptable to the appliance
+        CHIP_ERROR err = mpDEMManufacturerDelegate->RequestConstraintBasedForecast(constraints, cause);
+        if (err != CHIP_NO_ERROR)
         {
-            ChipLogError(AppServer, "RequestConstraintBasedForecast not supported as neither PFR or SFR supported");
+            status = Status::Failure;
         }
-        else if (mpDEMManufacturerDelegate->RequestConstraintBasedForecast(constraints, cause) == CHIP_NO_ERROR)
-        {
-            switch (cause)
-            {
-            case AdjustmentCauseEnum::kLocalOptimization:
-                mForecast.Value().forecastUpdateReason = ForecastUpdateReasonEnum::kLocalOptimization;
-                break;
-            case AdjustmentCauseEnum::kGridOptimization:
-                mForecast.Value().forecastUpdateReason = ForecastUpdateReasonEnum::kGridOptimization;
-                break;
-            default:
-                // Already checked in chip::app::Clusters::DeviceEnergyManagement::Instance::HandleModifyForecastRequest
-                break;
-            }
+    }
 
-            mForecast.Value().forecastID++;
-            status = Status::Success;
+    if (status == Status::Success)
+    {
+        switch (cause)
+        {
+        case AdjustmentCauseEnum::kLocalOptimization:
+            mForecast.Value().forecastUpdateReason = ForecastUpdateReasonEnum::kLocalOptimization;
+            break;
+        case AdjustmentCauseEnum::kGridOptimization:
+            mForecast.Value().forecastUpdateReason = ForecastUpdateReasonEnum::kGridOptimization;
+            break;
+        default:
+            // Already checked in chip::app::Clusters::DeviceEnergyManagement::Instance::HandleModifyForecastRequest
+            break;
         }
+
+        mForecast.Value().forecastID++;
+
+        status = Status::Success;
     }
 
     return status;

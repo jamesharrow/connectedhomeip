@@ -309,6 +309,14 @@ void Instance::HandlePowerAdjustRequest(HandlerContext & ctx, const Commands::Po
     uint32_t durationSec                = commandData.duration;
     AdjustmentCauseEnum adjustmentCause = commandData.cause;
 
+    //  Notify the appliance if the appliance hardware cannot be adjusted, then return Failure
+    if (!HasFeature(DeviceEnergyManagement::Feature::kPowerAdjustment))
+    {
+        ChipLogError(Zcl, "PowerAdjust not supported");
+        ctx.mCommandHandler.AddStatus(ctx.mRequestPath, status);
+        return;
+    }
+
     status = CheckOptOutAllowsRequest(adjustmentCause);
     if (status != Status::Success)
     {
@@ -365,6 +373,13 @@ void Instance::HandleCancelPowerAdjustRequest(HandlerContext & ctx,
                                               const Commands::CancelPowerAdjustRequest::DecodableType & commandData)
 {
     Status status;
+
+    if (!HasFeature(DeviceEnergyManagement::Feature::kPowerAdjustment))
+    {
+        ChipLogError(Zcl, "PowerAdjust not supported");
+        ctx.mCommandHandler.AddStatus(ctx.mRequestPath, status);
+        return;
+    }
 
     /* Check that the ESA state is PowerAdjustActive */
     ESAStateEnum esaStatus = mDelegate.GetESAState();
@@ -498,6 +513,13 @@ void Instance::HandlePauseRequest(HandlerContext & ctx, const Commands::PauseReq
     CHIP_ERROR err                                              = CHIP_NO_ERROR;
     DataModel::Nullable<Structs::ForecastStruct::Type> forecast = mDelegate.GetForecast();
 
+    if (!HasFeature(DeviceEnergyManagement::Feature::kPausable))
+    {
+        ChipLogError(AppServer, "Pause not supported");
+        ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::Failure);
+        return;
+    }
+
     uint32_t duration                   = commandData.duration;
     AdjustmentCauseEnum adjustmentCause = commandData.cause;
 
@@ -594,6 +616,13 @@ void Instance::HandleResumeRequest(HandlerContext & ctx, const Commands::ResumeR
 {
     Status status;
 
+    if (!HasFeature(DeviceEnergyManagement::Feature::kPausable))
+    {
+        ChipLogError(AppServer, "Pause not supported");
+        ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::Failure);
+        return;
+    }
+
     if (ESAStateEnum::kPaused != mDelegate.GetESAState())
     {
         ChipLogError(Zcl, "DEM: ESAState not Paused.");
@@ -612,6 +641,13 @@ void Instance::HandleResumeRequest(HandlerContext & ctx, const Commands::ResumeR
 
 void Instance::HandleModifyForecastRequest(HandlerContext & ctx, const Commands::ModifyForecastRequest::DecodableType & commandData)
 {
+    if (!HasFeature(DeviceEnergyManagement::Feature::kForecastAdjustment))
+    {
+        ChipLogError(Zcl, "ModifyForecast not supported");
+        ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::Failure);
+        return;
+    }
+
     Status status;
     DataModel::Nullable<Structs::ForecastStruct::Type> forecast;
 
@@ -693,6 +729,13 @@ void Instance::HandleModifyForecastRequest(HandlerContext & ctx, const Commands:
 void Instance::HandleRequestConstraintBasedForecast(HandlerContext & ctx,
                                                     const Commands::RequestConstraintBasedForecast::DecodableType & commandData)
 {
+    if (!HasFeature(DeviceEnergyManagement::Feature::kConstraintBasedAdjustment))
+    {
+        ChipLogError(AppServer, "RequestConstraintBasedForecast CON not supported");
+        ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::Failure);
+        return;
+    }
+
     Status status = Status::Success;
 
     DataModel::DecodableList<Structs::ConstraintsStruct::DecodableType> constraints = commandData.constraints;
