@@ -29,7 +29,6 @@ class DEMBaseTestHelper:
     async def read_dem_attribute_expect_success(self, endpoint: int = None, attribute: str = ""):
         cluster = Clusters.Objects.DeviceEnergyManagement
         full_attr = getattr(cluster.Attributes, attribute)
-        logging.info(cluster.Attributes)
         logging.info(f"endpoint {endpoint} full_attr {full_attr}")
         return await self.read_single_attribute_check_success(endpoint=endpoint, cluster=cluster, attribute=full_attr)
 

@@ -36,7 +36,8 @@ static chip::app::DataModel::Nullable<chip::app::Clusters::DeviceEnergyManagemen
 
 #define MAX_POWER_ADJUSTMENTS 5
 static chip::app::Clusters::DeviceEnergyManagement::Structs::PowerAdjustStruct::Type sPowerAdjustments[MAX_POWER_ADJUSTMENTS];
-static chip::app::Clusters::DeviceEnergyManagement::Structs::PowerAdjustCapabilityStruct::Type sPowerAdjustmentCapabilityStruct;
+static chip::app::Clusters::DeviceEnergyManagement::Structs::PowerAdjustCapabilityStruct::Type sPowerAdjustCapabilityStruct;
+static chip::app::DataModel::Nullable<chip::app::Clusters::DeviceEnergyManagement::Structs::PowerAdjustCapabilityStruct::Type> sPowerAdjustmentCapability;
 
 DeviceEnergyManagementDelegate * GetDEMDelegate()
 {
@@ -145,6 +146,7 @@ CHIP_ERROR ConfigureForecast(uint16_t numSlots)
 
 void SetTestEventTrigger_PowerAdjustment()
 {
+    ChipLogError(Zcl, "SetTestEventTrigger_PowerAdjustment");
     ConfigureForecast(2);
 
     sPowerAdjustments[0].minPower =  5000 * 1000; // 5kW
@@ -154,10 +156,15 @@ void SetTestEventTrigger_PowerAdjustment()
 
     DataModel::List<const DeviceEnergyManagement::Structs::PowerAdjustStruct::Type> powerAdjustmentList(sPowerAdjustments, 1);
 
-    sPowerAdjustmentCapabilityStruct.cause = PowerAdjustReasonEnum::kUnknownEnumValue;
-    sPowerAdjustmentCapabilityStruct.powerAdjustCapability.SetNonNull(powerAdjustmentList);
+    sPowerAdjustCapabilityStruct.cause = PowerAdjustReasonEnum::kNoAdjustment;
+    sPowerAdjustCapabilityStruct.powerAdjustCapability.SetNonNull(powerAdjustmentList);
 
-    CHIP_ERROR err = GetDEMDelegate()->SetPowerAdjustmentCapability(sPowerAdjustmentCapabilityStruct);
+    DataModel::Nullable<DeviceEnergyManagement::Structs::PowerAdjustCapabilityStruct::Type> powerAdjustmentCapability(sPowerAdjustCapabilityStruct);
+    sPowerAdjustmentCapability.SetNonNull(sPowerAdjustCapabilityStruct);
+
+    ChipLogError(Zcl, "SetTestEventTrigger_PowerAdjustment2");
+
+    CHIP_ERROR err = GetDEMDelegate()->SetPowerAdjustmentCapability(sPowerAdjustmentCapability);
     if (err != CHIP_NO_ERROR)
     {
         ChipLogError(Support, "SetTestEventTrigger_PowerAdjustment failed %s", chip::ErrorStr(err));
@@ -173,10 +180,12 @@ void SetTestEventTrigger_PowerAdjustClear()
 
     DataModel::List<const DeviceEnergyManagement::Structs::PowerAdjustStruct::Type> powerAdjustmentList(sPowerAdjustments, 1);
 
-    sPowerAdjustmentCapabilityStruct.powerAdjustCapability.SetNonNull(powerAdjustmentList);
-    sPowerAdjustmentCapabilityStruct.cause = PowerAdjustReasonEnum::kUnknownEnumValue;
+    sPowerAdjustCapabilityStruct.powerAdjustCapability.SetNonNull(powerAdjustmentList);
+    sPowerAdjustCapabilityStruct.cause = PowerAdjustReasonEnum::kNoAdjustment;
 
-    CHIP_ERROR err = GetDEMDelegate()->SetPowerAdjustmentCapability(sPowerAdjustmentCapabilityStruct);
+    DataModel::Nullable<DeviceEnergyManagement::Structs::PowerAdjustCapabilityStruct::Type> powerAdjustmentCapabilityStruct(sPowerAdjustCapabilityStruct);
+
+    CHIP_ERROR err = GetDEMDelegate()->SetPowerAdjustmentCapability(powerAdjustmentCapabilityStruct);
     if (err != CHIP_NO_ERROR)
     {
         ChipLogError(Support, "SetTestEventTrigger_PowerAdjustment failed %s", chip::ErrorStr(err));

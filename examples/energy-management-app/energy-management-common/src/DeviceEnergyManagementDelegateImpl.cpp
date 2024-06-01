@@ -130,11 +130,11 @@ Status DeviceEnergyManagementDelegate::PowerAdjustRequest(const int64_t power, c
     switch (cause)
     {
     case AdjustmentCauseEnum::kLocalOptimization:
-        mPowerAdjustmentCapabilityStruct.cause = PowerAdjustReasonEnum::kLocalOptimizationAdjustment;
+        mPowerAdjustCapabilityStruct.Value().cause = PowerAdjustReasonEnum::kLocalOptimizationAdjustment;
         break;
 
     case AdjustmentCauseEnum::kGridOptimization:
-        mPowerAdjustmentCapabilityStruct.cause = PowerAdjustReasonEnum::kGridOptimizationAdjustment;
+        mPowerAdjustCapabilityStruct.Value().cause = PowerAdjustReasonEnum::kGridOptimizationAdjustment;
         break;
 
     default:
@@ -192,7 +192,7 @@ void DeviceEnergyManagementDelegate::HandlePowerAdjustTimerExpiry()
 
     SetESAState(ESAStateEnum::kOnline);
 
-    mPowerAdjustmentCapabilityStruct.cause = PowerAdjustReasonEnum::kUnknownEnumValue;
+    mPowerAdjustCapabilityStruct.Value().cause = PowerAdjustReasonEnum::kNoAdjustment;
 
     // Send a PowerAdjustEnd event
     SendPowerAdjustEndEvent(CauseEnum::kNormalCompletion);
@@ -247,7 +247,7 @@ CHIP_ERROR DeviceEnergyManagementDelegate::CancelPowerAdjustRequestAndSendEvent(
 
     SetESAState(ESAStateEnum::kOnline);
 
-    mPowerAdjustmentCapabilityStruct.cause = PowerAdjustReasonEnum::kUnknownEnumValue;
+    mPowerAdjustCapabilityStruct.Value().cause = PowerAdjustReasonEnum::kNoAdjustment;
 
     DeviceLayer::SystemLayer().CancelTimer(PowerAdjustTimerExpiry, this);
 
@@ -726,9 +726,9 @@ int64_t DeviceEnergyManagementDelegate::GetAbsMaxPower()
     return mAbsMaxPower;
 }
 
-Structs::PowerAdjustCapabilityStruct::Type & DeviceEnergyManagementDelegate::GetPowerAdjustmentCapability()
+DataModel::Nullable<Structs::PowerAdjustCapabilityStruct::Type> & DeviceEnergyManagementDelegate::GetPowerAdjustmentCapability()
 {
-    return mPowerAdjustmentCapabilityStruct;
+    return mPowerAdjustCapabilityStruct;
 }
 
 DataModel::Nullable<Structs::ForecastStruct::Type> & DeviceEnergyManagementDelegate::GetForecast()
@@ -820,7 +820,6 @@ CHIP_ERROR DeviceEnergyManagementDelegate::SetAbsMaxPower(int64_t newValue)
     mAbsMaxPower = newValue;
     if (oldValue != newValue)
     {
-        ChipLogDetail(AppServer, "mAbsMaxPower updated to %d", static_cast<int>(mAbsMaxPower));
         MatterReportingAttributeChangeCallback(mEndpointId, DeviceEnergyManagement::Id, AbsMaxPower::Id);
     }
 
@@ -828,9 +827,18 @@ CHIP_ERROR DeviceEnergyManagementDelegate::SetAbsMaxPower(int64_t newValue)
 }
 
 CHIP_ERROR
-DeviceEnergyManagementDelegate::SetPowerAdjustmentCapability(Structs::PowerAdjustCapabilityStruct::Type & powerAdjustmentCapability)
+DeviceEnergyManagementDelegate::SetPowerAdjustmentCapability(DataModel::Nullable<Structs::PowerAdjustCapabilityStruct::Type> & powerAdjustCapabilityStruct)
 {
-    mPowerAdjustmentCapabilityStruct = powerAdjustmentCapability;
+    if (powerAdjustCapabilityStruct.IsNull())
+    {
+        ChipLogDetail(AppServer, "SetPowerAdjustmentCapability1");
+        mPowerAdjustCapabilityStruct.SetNull();
+    }
+    else
+    {
+        mPowerAdjustCapabilityStruct = powerAdjustCapabilityStruct;
+        ChipLogDetail(AppServer, "SetPowerAdjustmentCapability2 %d", (int)mPowerAdjustCapabilityStruct.Value().cause);
+    }
 
     return CHIP_NO_ERROR;
 }
@@ -845,7 +853,6 @@ CHIP_ERROR DeviceEnergyManagementDelegate::SetForecast(DataModel::Nullable<Struc
     else
     {
         mForecast = forecast;
-        ChipLogError(Zcl, "DeviceEnergyManagementDelegate::SetForecast activeSlotNumber %d", !forecast.Value().activeSlotNumber.IsNull() ? forecast.Value().activeSlotNumber.Value() : -1 );
     }
 
     return CHIP_NO_ERROR;
@@ -878,11 +885,11 @@ CHIP_ERROR DeviceEnergyManagementDelegate::SetOptOutState(OptOutStateEnum newVal
     // Cancel any outstanding PowerAdjustment
     if (mPowerAdjustmentInProgress)
     {
-        if (newValue == OptOutStateEnum::kLocalOptOut && mPowerAdjustmentCapabilityStruct.cause == PowerAdjustReasonEnum::kLocalOptimizationAdjustment)
+        if (newValue == OptOutStateEnum::kLocalOptOut && mPowerAdjustCapabilityStruct.Value().cause == PowerAdjustReasonEnum::kLocalOptimizationAdjustment)
         {
             err = CancelPowerAdjustRequestAndSendEvent(DeviceEnergyManagement::CauseEnum::kUserOptOut);
         }
-        else if (newValue == OptOutStateEnum::kGridOptOut && mPowerAdjustmentCapabilityStruct.cause == PowerAdjustReasonEnum::kGridOptimizationAdjustment)
+        else if (newValue == OptOutStateEnum::kGridOptOut && mPowerAdjustCapabilityStruct.Value().cause == PowerAdjustReasonEnum::kGridOptimizationAdjustment)
         {
             err = CancelPowerAdjustRequestAndSendEvent(DeviceEnergyManagement::CauseEnum::kUserOptOut);
         }

@@ -317,16 +317,23 @@ void Instance::HandlePowerAdjustRequest(HandlerContext & ctx, const Commands::Po
         return;
     }
 
-    Structs::PowerAdjustCapabilityStruct::Type & powerAdjustmentCapabilityStruct = mDelegate.GetPowerAdjustmentCapability();
-    if (powerAdjustmentCapabilityStruct.powerAdjustCapability.IsNull())
+    DataModel::Nullable<Structs::PowerAdjustCapabilityStruct::Type> powerAdjustmentCapabilityStruct = mDelegate.GetPowerAdjustmentCapability();
+    if (powerAdjustmentCapabilityStruct.IsNull())
     {
         ChipLogError(Zcl, "DEM: powerAdjustmentCapabilityStruct IsNull");
         ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::ConstraintError);
         return;
     }
 
+    if (powerAdjustmentCapabilityStruct.Value().powerAdjustCapability.IsNull())
+    {
+        ChipLogError(Zcl, "DEM: powerAdjustmentCapabilityStruct.powerAdjustCapability IsNull");
+        ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::ConstraintError);
+        return;
+    }
+
     /* PowerAdjustmentCapability is a list - so iterate through checking if the command is within one of the offers */
-    for (auto pas : powerAdjustmentCapabilityStruct.powerAdjustCapability.Value())
+    for (auto pas : powerAdjustmentCapabilityStruct.Value().powerAdjustCapability.Value())
     {
         if ((power >= pas.minPower) && (durationSec >= pas.minDuration) && (power <= pas.maxPower) &&
             (durationSec <= pas.maxDuration))
