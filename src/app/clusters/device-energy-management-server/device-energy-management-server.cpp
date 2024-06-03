@@ -698,9 +698,10 @@ void Instance::HandleModifyForecastRequest(HandlerContext & ctx, const Commands:
         // NominalPower is only relevant if PFR is supported
         if (HasFeature(Feature::kPowerForecastReporting))
         {
-            // TODO
-            if ((!slot.minPowerAdjustment.HasValue() || slotAdjustment.nominalPower.Value() < slot.minPowerAdjustment.Value()) ||
-                (!slot.maxPowerAdjustment.HasValue() || slotAdjustment.nominalPower.Value() > slot.maxPowerAdjustment.Value()))
+            if (!slot.minPowerAdjustment.HasValue() ||
+                !slot.maxPowerAdjustment.HasValue() ||
+                slotAdjustment.nominalPower.Value() < slot.minPowerAdjustment.Value() ||
+                slotAdjustment.nominalPower.Value() > slot.maxPowerAdjustment.Value())
             {
                 ChipLogError(Zcl, "DEM: Bad nominalPower");
                 ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::ConstraintError);
@@ -708,8 +709,10 @@ void Instance::HandleModifyForecastRequest(HandlerContext & ctx, const Commands:
             }
         }
 
-        if ((!slot.minDurationAdjustment.HasValue() || slotAdjustment.duration < slot.minDurationAdjustment.Value()) ||
-            (!slot.maxDurationAdjustment.HasValue() || slotAdjustment.duration > slot.maxDurationAdjustment.Value()))
+        if (!slot.minDurationAdjustment.HasValue() ||
+            !slot.maxDurationAdjustment.HasValue() ||
+            slotAdjustment.duration < slot.minDurationAdjustment.Value() ||
+            slotAdjustment.duration > slot.maxDurationAdjustment.Value())
         {
             ChipLogError(Zcl, "DEM: Bad min/max duration");
             ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::ConstraintError);
