@@ -7,13 +7,13 @@ rm -f evse.bin; out/debug/chip-energy-management-app --enable-key 00010203040506
 where the $featureSet should be set depending on the test being run:
 ```
 TC_DEM_2_2.py: 0x01  // PA
-TC_DEM_2_3.py: 0x3b  // PA, STA, PAU, FA, CON + (PFR | SFR)
-TC_DEM_2_4.py: 0x3b  // PA, STA, PAU, FA, CON + (PFR | SFR)
-TC_DEM_2_5.py: 0x3b  // PA, STA, PAU, FA, CON + PFR
-TC_DEM_2_6.py: 0x3d  // PA, STA, PAU, FA, CON + SFR
-TC_DEM_2_7.py: 0x3b  // PA, STA, PAU, FA, CON + PFR
-TC_DEM_2_8.py: 0x3d  // PA, STA, PAU, FA, CON + SFR
-TC_DEM_2_9.py: 0x3f  // PA, STA, PAU, FA, CON + PFR + SFR
+TC_DEM_2_3.py: 0x3b  // STA, PAU, FA, CON + (PFR | SFR)
+TC_DEM_2_4.py: 0x3b  // STA, PAU, FA, CON + (PFR | SFR)
+TC_DEM_2_5.py: 0x3b  // STA, PAU, FA, CON + PFR
+TC_DEM_2_6.py: 0x3d  // STA, PAU, FA, CON + SFR
+TC_DEM_2_7.py: 0x3b  // STA, PAU, FA, CON + PFR
+TC_DEM_2_8.py: 0x3d  // STA, PAU, FA, CON + SFR
+TC_DEM_2_9.py: 0x3f  // STA, PAU, FA, CON + PFR + SFR
 ```
 where
 ```
