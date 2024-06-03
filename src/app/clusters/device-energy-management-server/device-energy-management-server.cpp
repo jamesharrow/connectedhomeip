@@ -787,10 +787,7 @@ void Instance::HandleRequestConstraintBasedForecast(HandlerContext & ctx,
                 if (constraint.nominalPower.Value() < mDelegate.GetAbsMinPower() ||
                     constraint.nominalPower.Value() > mDelegate.GetAbsMaxPower())
                 {
-                    ChipLogError(Zcl, "DEM: RequestConstraintBasedForecast bad nominalPower %lu absMinPower %lu absMaxPower %lu",
-                                 constraint.nominalPower.HasValue() ? constraint.nominalPower.Value() : 0,
-                                 mDelegate.GetAbsMinPower(),
-                                 mDelegate.GetAbsMaxPower());
+                    ChipLogError(Zcl, "DEM: RequestConstraintBasedForecast nominalPower out of range [absMinPower, absMaxPower]");
                     ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::ConstraintError);
                     return;
                 }
