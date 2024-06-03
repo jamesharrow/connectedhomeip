@@ -359,6 +359,11 @@ Status DeviceEnergyManagementDelegate::StartTimeAdjustRequest(const uint32_t req
 
     uint32_t duration = mForecast.Value().endTime - mForecast.Value().startTime; // the current entire forecast duration
 
+    // Save the start and end time in case there is an issue with the mpDEMManufacturerDelegate handling this
+    // startTimeAdjustment request
+    uint32_t savedStartTime = mForecast.Value().startTime;
+    uint32_t savedEndTime   = mForecast.Value().endTime;
+
     /* Modify start time and end time */
     mForecast.Value().startTime = requestedStartTime;
     mForecast.Value().endTime   = requestedStartTime + duration;
@@ -370,8 +375,8 @@ Status DeviceEnergyManagementDelegate::StartTimeAdjustRequest(const uint32_t req
         {
             // Reset state
             mForecast.Value().forecastUpdateReason = ForecastUpdateReasonEnum::kInternalOptimization;
-            mForecast.Value().startTime = 0;
-            mForecast.Value().endTime   = 0;
+            mForecast.Value().startTime = savedStartTime;
+            mForecast.Value().endTime   = savedEndTime;
 
             return Status::Failure;
         }
@@ -882,6 +887,7 @@ CHIP_ERROR DeviceEnergyManagementDelegate::SetAbsMaxPower(int64_t newValue)
     mAbsMaxPower = newValue;
     if (oldValue != newValue)
     {
+        ChipLogDetail(AppServer, "mAbsMaxPower updated to %d", static_cast<int>(mAbsMaxPower));
         MatterReportingAttributeChangeCallback(mEndpointId, DeviceEnergyManagement::Id, AbsMaxPower::Id);
     }
 
@@ -893,13 +899,11 @@ DeviceEnergyManagementDelegate::SetPowerAdjustmentCapability(DataModel::Nullable
 {
     if (powerAdjustCapabilityStruct.IsNull())
     {
-        ChipLogDetail(AppServer, "SetPowerAdjustmentCapability1");
         mPowerAdjustCapabilityStruct.SetNull();
     }
     else
     {
         mPowerAdjustCapabilityStruct = powerAdjustCapabilityStruct;
-        ChipLogDetail(AppServer, "SetPowerAdjustmentCapability2 %d", (int)mPowerAdjustCapabilityStruct.Value().cause);
     }
 
     return CHIP_NO_ERROR;
@@ -922,7 +926,6 @@ CHIP_ERROR DeviceEnergyManagementDelegate::SetForecast(DataModel::Nullable<Struc
 
 CHIP_ERROR DeviceEnergyManagementDelegate::SetOptOutState(OptOutStateEnum newValue)
 {
-    ChipLogError(Zcl, "DeviceEnergyManagementDelegate::SetOptOutState currentValue mOptOutState%d newValue %d", (int) mOptOutState, (int)newValue);
     CHIP_ERROR err = CHIP_NO_ERROR;
 
     OptOutStateEnum oldValue = mOptOutState;
@@ -944,23 +947,27 @@ CHIP_ERROR DeviceEnergyManagementDelegate::SetOptOutState(OptOutStateEnum newVal
         MatterReportingAttributeChangeCallback(mEndpointId, DeviceEnergyManagement::Id, OptOutState::Id);
     }
 
-    // Cancel any outstanding PowerAdjustment
+    // Cancel any outstanding PowerAdjustment if necessary
     if (mPowerAdjustmentInProgress)
     {
-        if (newValue == OptOutStateEnum::kLocalOptOut && mPowerAdjustCapabilityStruct.Value().cause == PowerAdjustReasonEnum::kLocalOptimizationAdjustment)
-        {
-            err = CancelPowerAdjustRequestAndSendEvent(DeviceEnergyManagement::CauseEnum::kUserOptOut);
-        }
-        else if (newValue == OptOutStateEnum::kGridOptOut && mPowerAdjustCapabilityStruct.Value().cause == PowerAdjustReasonEnum::kGridOptimizationAdjustment)
+        if ((newValue == OptOutStateEnum::kLocalOptOut && mPowerAdjustCapabilityStruct.Value().cause == PowerAdjustReasonEnum::kLocalOptimizationAdjustment) ||
+            (newValue == OptOutStateEnum::kGridOptOut && mPowerAdjustCapabilityStruct.Value().cause == PowerAdjustReasonEnum::kGridOptimizationAdjustment) ||
+            newValue == OptOutStateEnum::kOptOut)
         {
             err = CancelPowerAdjustRequestAndSendEvent(DeviceEnergyManagement::CauseEnum::kUserOptOut);
         }
     }
 
-    // Cancel any outstanding PauseRequest
-    if (newValue == OptOutStateEnum::kLocalOptOut && mPauseRequestInProgress)
+    // Cancel any outstanding PauseRequest if necessary
+    if (mPauseRequestInProgress)
     {
-        err = CancelPauseRequestAndSendEvent(DeviceEnergyManagement::CauseEnum::kUserOptOut);
+        // Cancel any outstanding PauseRequest
+        if ((newValue == OptOutStateEnum::kLocalOptOut && mForecast.Value().forecastUpdateReason == ForecastUpdateReasonEnum::kLocalOptimization) ||
+            (newValue == OptOutStateEnum::kGridOptOut && mForecast.Value().forecastUpdateReason == ForecastUpdateReasonEnum::kGridOptimization) ||
+            newValue == OptOutStateEnum::kOptOut)
+        {
+            err = CancelPauseRequestAndSendEvent(DeviceEnergyManagement::CauseEnum::kUserOptOut);
+        }
     }
 
     if (!mForecast.IsNull())
