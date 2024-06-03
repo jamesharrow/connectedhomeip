@@ -1,6 +1,6 @@
 {
   "fileFormat": 2,
-  "featureLevel": 100,
+  "featureLevel": 102,
   "creator": "zap",
   "keyValuePairs": [
     {
@@ -29,6 +29,7 @@
       "pathRelativity": "relativeToZap",
       "path": "../../../src/app/zap-templates/app-templates.json",
       "type": "gen-templates-json",
+      "category": "matter",
       "version": "chip-v1"
     }
   ],
@@ -13580,7 +13581,7 @@
               "code": 5,
               "mfgCode": null,
               "side": "server",
-              "type": "array",
+              "type": "PowerAdjustCapabilityStruct",
               "included": 1,
               "storageOption": "External",
               "singleton": 0,
@@ -13758,7 +13759,6 @@
           "define": "ENERGY_EVSE_CLUSTER",
           "side": "server",
           "enabled": 1,
-          "apiMaturity": "provisional",
           "commands": [
             {
               "name": "GetTargetsResponse",
@@ -13929,38 +13929,6 @@
               "side": "server",
               "type": "amperage_ma",
               "included": 1,
-              "storageOption": "External",
-              "singleton": 0,
-              "bounded": 0,
-              "defaultValue": null,
-              "reportable": 1,
-              "minInterval": 1,
-              "maxInterval": 65534,
-              "reportableChange": 0
-            },
-            {
-              "name": "UserMaximumChargeCurrent",
-              "code": 9,
-              "mfgCode": null,
-              "side": "server",
-              "type": "amperage_ma",
-              "included": 0,
-              "storageOption": "External",
-              "singleton": 0,
-              "bounded": 0,
-              "defaultValue": null,
-              "reportable": 1,
-              "minInterval": 1,
-              "maxInterval": 65534,
-              "reportableChange": 0
-            },
-            {
-              "name": "RandomizationDelayWindow",
-              "code": 10,
-              "mfgCode": null,
-              "side": "server",
-              "type": "elapsed_s",
-              "included": 0,
               "storageOption": "External",
               "singleton": 0,
               "bounded": 0,
