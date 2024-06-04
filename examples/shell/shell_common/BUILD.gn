@@ -82,6 +82,7 @@ static_library("shell_common") {
     include_dirs = [
       "${chip_root}/examples/all-clusters-app/all-clusters-common/include",
       "${chip_root}/examples/energy-management-app/energy-management-common/include",
+      "${chip_root}/src/app/clusters/device-energy-management-server"
     ]
 
     public_deps +=
