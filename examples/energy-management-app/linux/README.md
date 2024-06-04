@@ -163,6 +163,10 @@ There are several test scripts provided for EVSE (in
 -   `TC_EEVSE_2_3`: This validates Get/Set/Clear target commands
 -   `TC_EEVSE_2_4`: This validates Faults
 -   `TC_EEVSE_2_5`: This validates EVSE diagnostic command (optional)
+-   `TC_EEVSE_2_6`: This validates EVSE Forecast Adjustment with State Forecast Reporting feature functionality
+-   `TC_EEVSE_2_7`: This validates EVSE Constraints-based Adjustment with Power Forecast Reporting feature functionality
+-   `TC_EEVSE_2_8`: This validates EVSE Constraints-based Adjustment with State Forecast Reporting feature functionality
+-   `TC_EEVSE_2_9`: This validates EVSE Power or State Forecast Reporting feature functionality
 
 These scripts require the use of Test Event Triggers via the GeneralDiagnostics
 cluster on Endpoint 0. This requires an `enableKey` (16 bytes) and a set of
