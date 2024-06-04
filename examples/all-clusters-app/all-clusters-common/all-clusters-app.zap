@@ -13939,6 +13939,38 @@
               "reportableChange": 0
             },
             {
+              "name": "UserMaximumChargeCurrent",
+              "code": 9,
+              "mfgCode": null,
+              "side": "server",
+              "type": "amperage_ma",
+              "included": 1,
+              "storageOption": "External",
+              "singleton": 0,
+              "bounded": 0,
+              "defaultValue": null,
+              "reportable": 1,
+              "minInterval": 1,
+              "maxInterval": 65534,
+              "reportableChange": 0
+            },
+            {
+              "name": "RandomizationDelayWindow",
+              "code": 10,
+              "mfgCode": null,
+              "side": "server",
+              "type": "elapsed_s",
+              "included": 1,
+              "storageOption": "External",
+              "singleton": 0,
+              "bounded": 0,
+              "defaultValue": null,
+              "reportable": 1,
+              "minInterval": 1,
+              "maxInterval": 65534,
+              "reportableChange": 0
+            },
+            {
               "name": "NextChargeStartTime",
               "code": 35,
               "mfgCode": null,

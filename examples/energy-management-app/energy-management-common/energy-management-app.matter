@@ -2291,6 +2291,8 @@ endpoint 1 {
     callback attribute circuitCapacity;
     callback attribute minimumChargeCurrent;
     callback attribute maximumChargeCurrent;
+    callback attribute userMaximumChargeCurrent;
+    callback attribute randomizationDelayWindow;
     callback attribute nextChargeStartTime;
     callback attribute nextChargeTargetTime;
     callback attribute nextChargeRequiredEnergy;

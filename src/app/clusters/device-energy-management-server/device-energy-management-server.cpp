@@ -302,7 +302,6 @@ Status Instance::CheckOptOutAllowsRequest(AdjustmentCauseEnum adjustmentCause)
 
 void Instance::HandlePowerAdjustRequest(HandlerContext & ctx, const Commands::PowerAdjustRequest::DecodableType & commandData)
 {
-    Status status;
     bool validArgs = false;
 
     int64_t power                       = commandData.power;
@@ -313,11 +312,11 @@ void Instance::HandlePowerAdjustRequest(HandlerContext & ctx, const Commands::Po
     if (!HasFeature(DeviceEnergyManagement::Feature::kPowerAdjustment))
     {
         ChipLogError(Zcl, "PowerAdjust not supported");
-        ctx.mCommandHandler.AddStatus(ctx.mRequestPath, status);
+        ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::Failure);
         return;
     }
 
-    status = CheckOptOutAllowsRequest(adjustmentCause);
+    Status status = CheckOptOutAllowsRequest(adjustmentCause);
     if (status != Status::Success)
     {
         ChipLogError(Zcl, "DEM: PowerAdjustRequest command rejected");
@@ -372,12 +371,10 @@ void Instance::HandlePowerAdjustRequest(HandlerContext & ctx, const Commands::Po
 void Instance::HandleCancelPowerAdjustRequest(HandlerContext & ctx,
                                               const Commands::CancelPowerAdjustRequest::DecodableType & commandData)
 {
-    Status status;
-
     if (!HasFeature(DeviceEnergyManagement::Feature::kPowerAdjustment))
     {
         ChipLogError(Zcl, "PowerAdjust not supported");
-        ctx.mCommandHandler.AddStatus(ctx.mRequestPath, status);
+        ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::Failure);
         return;
     }
 
@@ -390,7 +387,7 @@ void Instance::HandleCancelPowerAdjustRequest(HandlerContext & ctx,
         return;
     }
 
-    status = mDelegate.CancelPowerAdjustRequest();
+    Status status = mDelegate.CancelPowerAdjustRequest();
     ctx.mCommandHandler.AddStatus(ctx.mRequestPath, status);
     if (status != Status::Success)
     {
@@ -614,8 +611,6 @@ void Instance::HandlePauseRequest(HandlerContext & ctx, const Commands::PauseReq
 
 void Instance::HandleResumeRequest(HandlerContext & ctx, const Commands::ResumeRequest::DecodableType & commandData)
 {
-    Status status;
-
     if (!HasFeature(DeviceEnergyManagement::Feature::kPausable))
     {
         ChipLogError(AppServer, "Pause not supported");
@@ -630,7 +625,7 @@ void Instance::HandleResumeRequest(HandlerContext & ctx, const Commands::ResumeR
         return;
     }
 
-    status = mDelegate.ResumeRequest();
+    Status status = mDelegate.ResumeRequest();
     ctx.mCommandHandler.AddStatus(ctx.mRequestPath, status);
     if (status != Status::Success)
     {
