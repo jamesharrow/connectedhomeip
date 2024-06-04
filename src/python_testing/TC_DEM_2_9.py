@@ -17,13 +17,9 @@
 """Define Matter test case TC_DEM_2_9."""
 
 
-import sys
 import logging
-import datetime
 
 import chip.clusters as Clusters
-from chip.clusters.Types import NullValue
-from chip.interaction_model import Status
 from matter_testing_support import EventChangeCallback, MatterBaseTest, TestStep, async_test_body, default_matter_test_main
 from mobly import asserts
 from TC_DEM_Utils import DEMBaseTestHelper

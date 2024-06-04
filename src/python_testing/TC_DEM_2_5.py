@@ -17,12 +17,9 @@
 """Define Matter test case TC_DEM_2_5."""
 
 
-import sys
 import logging
-import datetime
 
 import chip.clusters as Clusters
-from chip.clusters.Types import NullValue
 from chip.interaction_model import Status
 from matter_testing_support import EventChangeCallback, MatterBaseTest, TestStep, async_test_body, default_matter_test_main
 from mobly import asserts
@@ -93,14 +90,6 @@ class TC_DEM_2_5(MatterBaseTest, DEMBaseTestHelper):
     async def test_TC_DEM_2_5(self):
         # pylint: disable=too-many-locals, too-many-statements
         """Run the test steps."""
-        # These values have to correlate with the values configured in
-        # DeviceEnergyManagementManufacturerImpl::SetTestEventTrigger_PowerAdjustment()
-        min_power = 5 * 1000 * 1000
-        max_power = 30 * 1000 * 1000
-
-        min_duration = 30
-        max_duration = 60
-
         self.step("1")
         # Commission DUT - already done
 

@@ -89,15 +89,6 @@ class TC_DEM_2_3(MatterBaseTest, DEMBaseTestHelper):
 
         feature_map = await self.read_dem_attribute_expect_success(attribute="FeatureMap")
 
-        is_power_adjustment_feature_supported = feature_map & Clusters.DeviceEnergyManagement.Bitmaps.Feature.kPowerAdjustment
-        is_power_forecast_reporting_feature_supported = feature_map & Clusters.DeviceEnergyManagement.Bitmaps.Feature.kPowerForecastReporting
-        is_state_forecast_reporting_feature_supported = feature_map & Clusters.DeviceEnergyManagement.Bitmaps.Feature.kStateForecastReporting
-        is_start_time_adjustment_feature_supported = feature_map & Clusters.DeviceEnergyManagement.Bitmaps.Feature.kStartTimeAdjustment
-        is_pausable_feature_supported = feature_map & Clusters.DeviceEnergyManagement.Bitmaps.Feature.kPausable
-        is_power_adjustment_feature_supported = feature_map & Clusters.DeviceEnergyManagement.Bitmaps.Feature.kPowerAdjustment
-        is_forecast_adjustment_feature_supported = feature_map & Clusters.DeviceEnergyManagement.Bitmaps.Feature.kForecastAdjustment
-        is_constraint_based_adjustment_feature_supported = feature_map & Clusters.DeviceEnergyManagement.Bitmaps.Feature.kConstraintBasedAdjustment
-
         self.step("1")
         # Commission DUT - already done
 
