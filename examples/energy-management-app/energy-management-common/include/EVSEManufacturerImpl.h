@@ -115,7 +115,7 @@ public:
                                    const DataModel::DecodableList<DeviceEnergyManagement::Structs::SlotAdjustmentStruct::DecodableType> & slotAdjustments,
                                    AdjustmentCauseEnum cause) override;
     CHIP_ERROR RequestConstraintBasedForecast(const DataModel::DecodableList<DeviceEnergyManagement::Structs::ConstraintsStruct::DecodableType> & constraints,
-                                              AdjustmentCauseEnum cause);
+                                              AdjustmentCauseEnum cause) override;
 
     /**
      * @brief   Called at start up to apply hardware settings
