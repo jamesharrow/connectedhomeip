@@ -189,7 +189,7 @@ list(
 
     ${chip_dir}/examples/energy-management-app/energy-management-common/src/DeviceEnergyManagementDelegateImpl.cpp
     ${chip_dir}/examples/energy-management-app/energy-management-common/src/DeviceEnergyManagementManager.cpp
-    ${chip_dir}/examples/energy-management-app/energy-management-common/src/DeviceEnergyManagementManufacturerImpl.cpp
+    ${chip_dir}/examples/energy-management-app/energy-management-common/src/EVSEManufacturerImpl.cpp
     ${chip_dir}/examples/energy-management-app/energy-management-common/src/ElectricalPowerMeasurementDelegate.cpp
     ${chip_dir}/examples/energy-management-app/energy-management-common/src/EnergyEvseDelegateImpl.cpp
     ${chip_dir}/examples/energy-management-app/energy-management-common/src/EnergyEvseManager.cpp

@@ -70,7 +70,7 @@ target_sources(${APP_TARGET}
         ${ENERGY_MANAGEMENT_COMMON}/src/EnergyEvseManager.cpp
         ${ENERGY_MANAGEMENT_COMMON_DIR}/src/DeviceEnergyManagementDelegateImpl.cpp
         ${ENERGY_MANAGEMENT_COMMON_DIR}/src/DeviceEnergyManagementManager.cpp
-        ${ENERGY_MANAGEMENT_COMMON_DIR}/src/DeviceEnergyManagementManufacturerImpl.cpp
+        ${ENERGY_MANAGEMENT_COMMON_DIR}/src/EVSEManufacturerImpl.cpp
         ${ENERGY_MANAGEMENT_COMMON_DIR}/src/utils.cpp
 )
 
