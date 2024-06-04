@@ -87,8 +87,6 @@ class TC_DEM_2_3(MatterBaseTest, DEMBaseTestHelper):
 
         logging.info(Clusters.Objects.DeviceEnergyManagement.Attributes.FeatureMap)
 
-        feature_map = await self.read_dem_attribute_expect_success(attribute="FeatureMap")
-
         self.step("1")
         # Commission DUT - already done
 
