@@ -32,9 +32,9 @@ using CostsList = DataModel::List<const Structs::CostStruct::Type>;
 
 DeviceEnergyManagementDelegate::DeviceEnergyManagementDelegate():
     mpDEMManufacturerDelegate(nullptr),
-    mEsaType(ESATypeEnum::kUnknownEnumValue),
+    mEsaType(ESATypeEnum::kEvse),
     mEsaCanGenerate(false),
-    mEsaState(ESAStateEnum::kUnknownEnumValue),
+    mEsaState(ESAStateEnum::kOffline),
     mAbsMinPower(0),
     mAbsMaxPower(0),
     mOptOutState(OptOutStateEnum::kNoOptOut),
