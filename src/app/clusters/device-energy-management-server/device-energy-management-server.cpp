@@ -324,7 +324,8 @@ void Instance::HandlePowerAdjustRequest(HandlerContext & ctx, const Commands::Po
         return;
     }
 
-    DataModel::Nullable<Structs::PowerAdjustCapabilityStruct::Type> powerAdjustmentCapabilityStruct = mDelegate.GetPowerAdjustmentCapability();
+    DataModel::Nullable<Structs::PowerAdjustCapabilityStruct::Type> powerAdjustmentCapabilityStruct =
+        mDelegate.GetPowerAdjustmentCapability();
     if (powerAdjustmentCapabilityStruct.IsNull())
     {
         ChipLogError(Zcl, "DEM: powerAdjustmentCapabilityStruct IsNull");
@@ -693,8 +694,7 @@ void Instance::HandleModifyForecastRequest(HandlerContext & ctx, const Commands:
         // NominalPower is only relevant if PFR is supported
         if (HasFeature(Feature::kPowerForecastReporting))
         {
-            if (!slot.minPowerAdjustment.HasValue() ||
-                !slot.maxPowerAdjustment.HasValue() ||
+            if (!slot.minPowerAdjustment.HasValue() || !slot.maxPowerAdjustment.HasValue() ||
                 slotAdjustment.nominalPower.Value() < slot.minPowerAdjustment.Value() ||
                 slotAdjustment.nominalPower.Value() > slot.maxPowerAdjustment.Value())
             {
@@ -704,8 +704,7 @@ void Instance::HandleModifyForecastRequest(HandlerContext & ctx, const Commands:
             }
         }
 
-        if (!slot.minDurationAdjustment.HasValue() ||
-            !slot.maxDurationAdjustment.HasValue() ||
+        if (!slot.minDurationAdjustment.HasValue() || !slot.maxDurationAdjustment.HasValue() ||
             slotAdjustment.duration < slot.minDurationAdjustment.Value() ||
             slotAdjustment.duration > slot.maxDurationAdjustment.Value())
         {
@@ -713,6 +712,11 @@ void Instance::HandleModifyForecastRequest(HandlerContext & ctx, const Commands:
             ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::ConstraintError);
             return;
         }
+    }
+    if (iterator.GetStatus() != CHIP_NO_ERROR)
+    {
+        ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::InvalidCommand);
+        return;
     }
 
     status = mDelegate.ModifyForecastRequest(forecastID, slotAdjustments, adjustmentCause);
@@ -748,10 +752,10 @@ void Instance::HandleRequestConstraintBasedForecast(HandlerContext & ctx,
     }
 
     uint32_t currentUtcTime = 0;
-    status = GetCurrentUtcTime(currentUtcTime);
+    status                  = GetCurrentTimeEpochS(currentUtcTime);
     if (status != Status::Success)
     {
-        ChipLogError(Zcl, "DEM: Forecast is Null");
+        ChipLogError(Zcl, "DEM: Failed to get UTC time");
         ctx.mCommandHandler.AddStatus(ctx.mRequestPath, status);
         return;
     }
@@ -782,7 +786,10 @@ void Instance::HandleRequestConstraintBasedForecast(HandlerContext & ctx,
                 if (constraint.nominalPower.Value() < mDelegate.GetAbsMinPower() ||
                     constraint.nominalPower.Value() > mDelegate.GetAbsMaxPower())
                 {
-                    ChipLogError(Zcl, "DEM: RequestConstraintBasedForecast nominalPower out of range [absMinPower, absMaxPower]");
+                    ChipLogError(Zcl, "DEM: RequestConstraintBasedForecast nominalPower " ChipLogFormatX64 " out of range [" ChipLogFormatX64 ", " ChipLogFormatX64 "]",
+                                 ChipLogValueX64(constraint.nominalPower.Value()),
+                                 ChipLogValueX64(mDelegate.GetAbsMinPower()),
+                                 ChipLogValueX64(mDelegate.GetAbsMaxPower()));
                     ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::ConstraintError);
                     return;
                 }
@@ -812,6 +819,11 @@ void Instance::HandleRequestConstraintBasedForecast(HandlerContext & ctx,
                 }
             }
         }
+        if (iterator.GetStatus() != CHIP_NO_ERROR)
+        {
+            ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::InvalidCommand);
+            return;
+        }
     }
 
     // Check for overlappping elements
@@ -820,20 +832,26 @@ void Instance::HandleRequestConstraintBasedForecast(HandlerContext & ctx,
         if (iterator.Next())
         {
             // Get the first constraint
-            const Structs::ConstraintsStruct::DecodableType & prevConstraint = iterator.GetValue();
+            const Structs::ConstraintsStruct::DecodableType *pPrevConstraint = &iterator.GetValue();
 
             // Start comparing next vs prev constraints
             while (iterator.Next())
             {
                 const Structs::ConstraintsStruct::DecodableType & constraint = iterator.GetValue();
-                if (constraint.startTime < prevConstraint.startTime ||
-                    prevConstraint.startTime + prevConstraint.duration >= constraint.startTime)
+                if (constraint.startTime < pPrevConstraint->startTime ||
+                    pPrevConstraint->startTime + pPrevConstraint->duration >= constraint.startTime)
                 {
                     ChipLogError(Zcl, "DEM: RequestConstraintBasedForecast overlapping constraint times");
                     ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::ConstraintError);
                     return;
                 }
+                pPrevConstraint = &iterator.GetValue();
             }
+        }
+        if (iterator.GetStatus() != CHIP_NO_ERROR)
+        {
+            ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::InvalidCommand);
+            return;
         }
     }
 
@@ -869,7 +887,7 @@ void Instance::HandleCancelRequest(HandlerContext & ctx, const Commands::CancelR
     ctx.mCommandHandler.AddStatus(ctx.mRequestPath, status);
 }
 
-Status Instance::GetCurrentUtcTime(uint32_t & currentUtcTime) const
+Status Instance::GetCurrentTimeEpochS(uint32_t & currentUtcTime) const
 {
     currentUtcTime = 0;
     System::Clock::Milliseconds64 cTMs;
