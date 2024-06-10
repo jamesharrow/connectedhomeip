@@ -681,7 +681,7 @@ void Instance::HandleModifyForecastRequest(HandlerContext & ctx, const Commands:
             return;
         }
 
-        // Check to see if trying to modify a slot which have already been run
+        // Check to see if trying to modify a slot which has already been run
         if (!forecast.Value().activeSlotNumber.IsNull() && slotAdjustment.slotIndex < forecast.Value().activeSlotNumber.Value())
         {
             ChipLogError(Zcl, "DEM: Modifying already run slot index %d", slotAdjustment.slotIndex);
@@ -713,6 +713,7 @@ void Instance::HandleModifyForecastRequest(HandlerContext & ctx, const Commands:
             return;
         }
     }
+
     if (iterator.GetStatus() != CHIP_NO_ERROR)
     {
         ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::InvalidCommand);
@@ -752,7 +753,7 @@ void Instance::HandleRequestConstraintBasedForecast(HandlerContext & ctx,
     }
 
     uint32_t currentUtcTime = 0;
-    status                  = GetCurrentTimeEpochS(currentUtcTime);
+    status                  = GetMatterEpochTimeFromUnixTime(currentUtcTime);
     if (status != Status::Success)
     {
         ChipLogError(Zcl, "DEM: Failed to get UTC time");
@@ -790,6 +791,7 @@ void Instance::HandleRequestConstraintBasedForecast(HandlerContext & ctx,
                                  ChipLogValueX64(constraint.nominalPower.Value()),
                                  ChipLogValueX64(mDelegate.GetAbsMinPower()),
                                  ChipLogValueX64(mDelegate.GetAbsMaxPower()));
+
                     ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::ConstraintError);
                     return;
                 }
@@ -813,12 +815,13 @@ void Instance::HandleRequestConstraintBasedForecast(HandlerContext & ctx,
 
                 if (constraint.loadControl.Value() < -100 || constraint.loadControl.Value() > 100)
                 {
-                    ChipLogError(Zcl, "DEM: RequestConstraintBasedForecast bad loadControl %d", constraint.loadControl.HasValue());
+                    ChipLogError(Zcl, "DEM: RequestConstraintBasedForecast bad loadControl %d", constraint.loadControl.Value());
                     ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::ConstraintError);
                     return;
                 }
             }
         }
+
         if (iterator.GetStatus() != CHIP_NO_ERROR)
         {
             ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::InvalidCommand);
@@ -832,22 +835,24 @@ void Instance::HandleRequestConstraintBasedForecast(HandlerContext & ctx,
         if (iterator.Next())
         {
             // Get the first constraint
-            const Structs::ConstraintsStruct::DecodableType *pPrevConstraint = &iterator.GetValue();
+            Structs::ConstraintsStruct::DecodableType prevConstraint = iterator.GetValue();
 
             // Start comparing next vs prev constraints
             while (iterator.Next())
             {
                 const Structs::ConstraintsStruct::DecodableType & constraint = iterator.GetValue();
-                if (constraint.startTime < pPrevConstraint->startTime ||
-                    pPrevConstraint->startTime + pPrevConstraint->duration >= constraint.startTime)
+                if (constraint.startTime < prevConstraint.startTime ||
+                    prevConstraint.startTime + prevConstraint.duration >= constraint.startTime)
                 {
                     ChipLogError(Zcl, "DEM: RequestConstraintBasedForecast overlapping constraint times");
                     ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::ConstraintError);
                     return;
                 }
-                pPrevConstraint = &iterator.GetValue();
+
+                prevConstraint = constraint;
             }
         }
+
         if (iterator.GetStatus() != CHIP_NO_ERROR)
         {
             ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::InvalidCommand);
@@ -866,7 +871,7 @@ void Instance::HandleRequestConstraintBasedForecast(HandlerContext & ctx,
 
 void Instance::HandleCancelRequest(HandlerContext & ctx, const Commands::CancelRequest::DecodableType & commandData)
 {
-    Status status = Status::Failure;
+    Status status                                               = Status::Failure;
     DataModel::Nullable<Structs::ForecastStruct::Type> forecast = mDelegate.GetForecast();
 
     if (forecast.IsNull())
@@ -887,7 +892,7 @@ void Instance::HandleCancelRequest(HandlerContext & ctx, const Commands::CancelR
     ctx.mCommandHandler.AddStatus(ctx.mRequestPath, status);
 }
 
-Status Instance::GetCurrentTimeEpochS(uint32_t & currentUtcTime) const
+Status Instance::GetMatterEpochTimeFromUnixTime(uint32_t & currentUtcTime) const
 {
     currentUtcTime = 0;
     System::Clock::Milliseconds64 cTMs;
