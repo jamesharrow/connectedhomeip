@@ -162,7 +162,7 @@ class TC_DEM_2_7(MatterBaseTest, DEMBaseTestHelper):
                           Clusters.DeviceEnergyManagement.Structs.ConstraintsStruct(startTime=now.total_seconds() + 30, duration=20, nominalPower=forecast.slots[0].nominalPower, maximumEnergy=forecast.slots[0].nominalEnergy)]
         await self.send_request_constraint_based_forecast(constraintList, cause=Clusters.DeviceEnergyManagement.Enums.AdjustmentCauseEnum.kLocalOptimization, expected_status=Status.ConstraintError)
 
-        self.step(9")
+        self.step("9")
         absMaxPower = await self.read_dem_attribute_expect_success(attribute="AbsMaxPower")
 
         self.step("9a")
