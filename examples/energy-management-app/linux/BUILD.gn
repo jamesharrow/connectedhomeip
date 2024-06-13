@@ -53,7 +53,7 @@ executable("chip-energy-management-app") {
 
     "${chip_root}/examples/energy-management-app/energy-management-common/src/device-energy-management-mode.cpp",
     "${chip_root}/examples/energy-management-app/energy-management-common/src/energy-evse-mode.cpp",
-    "${chip_root}/examples/energy-management-app/energy-management-common/src/utils.cpp",
+    "${chip_root}/examples/energy-management-app/energy-management-common/src/DEMUtils.cpp",
 
     "${chip_root}/examples/energy-management-app/energy-management-common/src/EVSEManufacturerImpl.cpp",
     "${chip_root}/examples/energy-management-app/energy-management-common/src/EnergyEvseMain.cpp",

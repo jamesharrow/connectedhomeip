@@ -18,7 +18,7 @@
 
 #include "DeviceEnergyManagementDelegateImpl.h"
 #include "DEMManufacturerDelegate.h"
-#include "utils.h"
+#include "DEMUtils.h"
 #include <app/EventLogging.h>
 
 using namespace chip;

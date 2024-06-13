@@ -27,7 +27,7 @@
 #include <app/clusters/energy-evse-server/EnergyEvseTestEventTriggerHandler.h>
 #include <app/clusters/power-source-server/power-source-server.h>
 #include <app/server/Server.h>
-#include <utils.h>
+#include <DEMUtils.h>
 
 #include <app-common/zap-generated/attributes/Accessors.h>
 #include <protocols/interaction_model/StatusCode.h>

@@ -20,7 +20,7 @@
 #include <DeviceEnergyManagementDelegateImpl.h>
 #include <app/clusters/device-energy-management-server/DeviceEnergyManagementTestEventTriggerHandler.h>
 
-#include <utils.h>
+#include <DEMUtils.h>
 
 #include "FakeReadings.h"
 
