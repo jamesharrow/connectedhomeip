@@ -759,9 +759,9 @@ cluster NetworkCommissioning = 49 {
   readonly attribute access(read: administer) nullable NetworkCommissioningStatusEnum lastNetworkingStatus = 5;
   readonly attribute access(read: administer) nullable octet_string<32> lastNetworkID = 6;
   readonly attribute access(read: administer) nullable int32s lastConnectErrorValue = 7;
-  readonly attribute optional WiFiBandEnum supportedWiFiBands[] = 8;
-  readonly attribute optional ThreadCapabilitiesBitmap supportedThreadFeatures = 9;
-  readonly attribute optional int16u threadVersion = 10;
+  provisional readonly attribute optional WiFiBandEnum supportedWiFiBands[] = 8;
+  provisional readonly attribute optional ThreadCapabilitiesBitmap supportedThreadFeatures = 9;
+  provisional readonly attribute optional int16u threadVersion = 10;
   readonly attribute command_id generatedCommandList[] = 65528;
   readonly attribute command_id acceptedCommandList[] = 65529;
   readonly attribute event_id eventList[] = 65530;
@@ -1237,7 +1237,7 @@ cluster GroupKeyManagement = 63 {
 }
 
 /** This cluster provides a mechanism for querying data about electrical power as measured by the server. */
-provisional cluster ElectricalPowerMeasurement = 144 {
+cluster ElectricalPowerMeasurement = 144 {
   revision 1;
 
   enum MeasurementTypeEnum : enum16 {
@@ -1342,7 +1342,7 @@ provisional cluster ElectricalPowerMeasurement = 144 {
 }
 
 /** This cluster provides a mechanism for querying data about the electrical energy imported or provided by the server. */
-provisional cluster ElectricalEnergyMeasurement = 145 {
+cluster ElectricalEnergyMeasurement = 145 {
   revision 1;
 
   enum MeasurementTypeEnum : enum16 {
@@ -1828,7 +1828,7 @@ cluster EnergyEvse = 153 {
 }
 
 /** The Power Topology Cluster provides a mechanism for expressing how power is flowing between endpoints. */
-provisional cluster PowerTopology = 156 {
+cluster PowerTopology = 156 {
   revision 1;
 
   bitmap Feature : bitmap32 {
@@ -1849,7 +1849,7 @@ provisional cluster PowerTopology = 156 {
 }
 
 /** Attributes and commands for selecting a mode from a list of supported options. */
-provisional cluster EnergyEvseMode = 157 {
+cluster EnergyEvseMode = 157 {
   revision 1;
 
   enum ModeTag : enum16 {
