@@ -16916,8 +16916,6 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
     ReturnErrorOnFailure(DataModel::Encode(aWriter, TLV::ContextTag(Fields::kSessionID), sessionID));
     ReturnErrorOnFailure(DataModel::Encode(aWriter, TLV::ContextTag(Fields::kState), state));
     ReturnErrorOnFailure(DataModel::Encode(aWriter, TLV::ContextTag(Fields::kMaximumCurrent), maximumCurrent));
-    ReturnErrorOnFailure(
-        DataModel::Encode(aWriter, TLV::ContextTag(Fields::kMaximumDischargingCurrent), maximumDischargingCurrent));
     return aWriter.EndContainer(outer);
 }
 
@@ -16947,10 +16945,6 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         {
             err = DataModel::Decode(reader, maximumCurrent);
         }
-        else if (__context_tag == to_underlying(Fields::kMaximumDischargingCurrent))
-        {
-            err = DataModel::Decode(reader, maximumDischargingCurrent);
-        }
         else
         {
         }
@@ -16968,7 +16962,6 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
     ReturnErrorOnFailure(DataModel::Encode(aWriter, TLV::ContextTag(Fields::kState), state));
     ReturnErrorOnFailure(DataModel::Encode(aWriter, TLV::ContextTag(Fields::kReason), reason));
     ReturnErrorOnFailure(DataModel::Encode(aWriter, TLV::ContextTag(Fields::kEnergyTransferred), energyTransferred));
-    ReturnErrorOnFailure(DataModel::Encode(aWriter, TLV::ContextTag(Fields::kEnergyDischarged), energyDischarged));
     return aWriter.EndContainer(outer);
 }
 
@@ -17001,10 +16994,6 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         else if (__context_tag == to_underlying(Fields::kEnergyTransferred))
         {
             err = DataModel::Decode(reader, energyTransferred);
-        }
-        else if (__context_tag == to_underlying(Fields::kEnergyDischarged))
-        {
-            err = DataModel::Decode(reader, energyDischarged);
         }
         else
         {
