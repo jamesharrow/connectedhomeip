@@ -18,7 +18,9 @@
 
 #pragma once
 
+#include <app-common/zap-generated/cluster-objects.h>
 #include <lib/core/DataModelTypes.h>
+#include <protocols/interaction_model/StatusCode.h>
 
 using chip::Protocols::InteractionModel::Status;
 

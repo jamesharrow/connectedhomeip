@@ -1,6 +1,6 @@
 {
   "fileFormat": 2,
-  "featureLevel": 102,
+  "featureLevel": 103,
   "creator": "zap",
   "keyValuePairs": [
     {
@@ -8227,7 +8227,6 @@
           "define": "OPERATIONAL_STATE_OVEN_CLUSTER",
           "side": "server",
           "enabled": 1,
-          "apiMaturity": "provisional",
           "commands": [
             {
               "name": "Pause",
@@ -8488,7 +8487,6 @@
           "define": "OVEN_MODE_CLUSTER",
           "side": "server",
           "enabled": 1,
-          "apiMaturity": "provisional",
           "commands": [
             {
               "name": "ChangeToMode",
@@ -8645,7 +8643,6 @@
           "define": "LAUNDRY_DRYER_CONTROLS_CLUSTER",
           "side": "server",
           "enabled": 1,
-          "apiMaturity": "provisional",
           "attributes": [
             {
               "name": "SupportedDrynessLevels",
@@ -10899,7 +10896,6 @@
           "define": "MICROWAVE_OVEN_MODE_CLUSTER",
           "side": "server",
           "enabled": 1,
-          "apiMaturity": "provisional",
           "attributes": [
             {
               "name": "SupportedModes",
@@ -12203,7 +12199,6 @@
           "define": "BOOLEAN_STATE_CONFIGURATION_CLUSTER",
           "side": "server",
           "enabled": 1,
-          "apiMaturity": "provisional",
           "commands": [
             {
               "name": "SuppressAlarm",
@@ -12472,7 +12467,6 @@
           "define": "VALVE_CONFIGURATION_AND_CONTROL_CLUSTER",
           "side": "server",
           "enabled": 1,
-          "apiMaturity": "provisional",
           "commands": [
             {
               "name": "Open",
@@ -12789,7 +12783,6 @@
           "define": "ELECTRICAL_POWER_MEASUREMENT_CLUSTER",
           "side": "server",
           "enabled": 1,
-          "apiMaturity": "provisional",
           "attributes": [
             {
               "name": "PowerMode",
@@ -13209,7 +13202,6 @@
           "define": "ELECTRICAL_ENERGY_MEASUREMENT_CLUSTER",
           "side": "server",
           "enabled": 1,
-          "apiMaturity": "provisional",
           "attributes": [
             {
               "name": "Accuracy",
@@ -14434,7 +14426,6 @@
           "define": "POWER_TOPOLOGY_CLUSTER",
           "side": "server",
           "enabled": 1,
-          "apiMaturity": "provisional",
           "attributes": [
             {
               "name": "AvailableEndpoints",
@@ -14573,7 +14564,6 @@
           "define": "ENERGY_EVSE_MODE_CLUSTER",
           "side": "server",
           "enabled": 1,
-          "apiMaturity": "provisional",
           "commands": [
             {
               "name": "ChangeToMode",
