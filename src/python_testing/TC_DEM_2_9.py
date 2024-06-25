@@ -22,12 +22,12 @@ import logging
 import chip.clusters as Clusters
 from matter_testing_support import EventChangeCallback, MatterBaseTest, TestStep, async_test_body, default_matter_test_main
 from mobly import asserts
-from TC_DEM_Utils import DEMBaseTestHelper
+from DEMTestBase import DEMTestBase
 
 logger = logging.getLogger(__name__)
 
 
-class TC_DEM_2_9(MatterBaseTest, DEMBaseTestHelper):
+class TC_DEM_2_9(MatterBaseTest, DEMTestBase):
     """Implementation of test case TC_DEM_2_9."""
 
     def desc_TC_DEM_2_9(self) -> str:

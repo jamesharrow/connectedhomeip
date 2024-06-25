@@ -23,12 +23,12 @@ from chip.clusters.Types import NullValue
 from chip.interaction_model import Status
 from matter_testing_support import EventChangeCallback, MatterBaseTest, TestStep, async_test_body, default_matter_test_main
 from mobly import asserts
-from TC_DEM_Utils import DEMBaseTestHelper
+from DEMTestBase import DEMTestBase
 
 logger = logging.getLogger(__name__)
 
 
-class TC_DEM_2_4(MatterBaseTest, DEMBaseTestHelper):
+class TC_DEM_2_4(MatterBaseTest, DEMTestBase):
 
     def desc_TC_DEM_2_4(self) -> str:
         """Returns a description of this test"""
