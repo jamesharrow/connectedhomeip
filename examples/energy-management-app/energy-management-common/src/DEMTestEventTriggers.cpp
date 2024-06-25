@@ -29,7 +29,7 @@ using namespace chip::app;
 using namespace chip::app::Clusters;
 using namespace chip::app::Clusters::DeviceEnergyManagement;
 
-static constexpr uint16_t MAX_SLOTS = 10;
+static constexpr uint16_t MAX_SLOTS             = 10;
 static constexpr uint16_t MAX_POWER_ADJUSTMENTS = 5;
 
 static chip::app::Clusters::DeviceEnergyManagement::Structs::SlotStruct::Type sSlots[MAX_SLOTS];
@@ -55,7 +55,7 @@ CHIP_ERROR ConfigureForecast(uint16_t numSlots)
 {
     uint32_t chipEpoch = 0;
 
-    CHIP_ERROR err = UtilsGetEpochTS(chipEpoch);
+    CHIP_ERROR err = GetEpochTS(chipEpoch);
     if (err != CHIP_NO_ERROR)
     {
         ChipLogError(Support, "ConfigureForecast could not get time");
@@ -198,7 +198,7 @@ void SetTestEventTrigger_StartTimeAdjustment()
 
     uint32_t chipEpoch = 0;
 
-    CHIP_ERROR err = UtilsGetEpochTS(chipEpoch);
+    CHIP_ERROR err = GetEpochTS(chipEpoch);
     if (err != CHIP_NO_ERROR)
     {
         ChipLogError(Support, "ConfigureForecast_EarliestStartLatestEndTimes could not get time");
