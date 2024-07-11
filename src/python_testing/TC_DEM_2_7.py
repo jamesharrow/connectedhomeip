@@ -17,7 +17,6 @@
 """Define Matter test case TC_DEM_2_7."""
 
 
-import datetime
 import logging
 
 import chip.clusters as Clusters
@@ -201,10 +200,12 @@ class TC_DEM_2_7(MatterBaseTest, DEMTestBase):
         self.step("8")
         now = int(utc_time_in_matter_epoch()/1000000)
 
-        constraintList = [Clusters.DeviceEnergyManagement.Structs.ConstraintsStruct(startTime=now + 10, duration=20, nominalPower=forecast.slots[0].nominalPower, maximumEnergy=forecast.slots[0].nominalEnergy),
-                          Clusters.DeviceEnergyManagement.Structs.ConstraintsStruct(
-                              startTime=now + 50, duration=20, nominalPower=forecast.slots[0].nominalPower, maximumEnergy=forecast.slots[0].nominalEnergy),
-                          Clusters.DeviceEnergyManagement.Structs.ConstraintsStruct(startTime=now + 30, duration=20, nominalPower=forecast.slots[0].nominalPower, maximumEnergy=forecast.slots[0].nominalEnergy)]
+        constraintList = [Clusters.DeviceEnergyManagement.Structs.ConstraintsStruct(startTime=now + 10,
+                                                                                    duration=20, nominalPower=forecast.slots[0].nominalPower, maximumEnergy=forecast.slots[0].nominalEnergy),
+                          Clusters.DeviceEnergyManagement.Structs.ConstraintsStruct(startTime=now + 50,
+                                                                                    duration=20, nominalPower=forecast.slots[0].nominalPower, maximumEnergy=forecast.slots[0].nominalEnergy),
+                          Clusters.DeviceEnergyManagement.Structs.ConstraintsStruct(startTime=now + 30,
+                                                                                    duration=20, nominalPower=forecast.slots[0].nominalPower, maximumEnergy=forecast.slots[0].nominalEnergy)]
         await self.send_request_constraint_based_forecast(constraintList, cause=Clusters.DeviceEnergyManagement.Enums.AdjustmentCauseEnum.kLocalOptimization, expected_status=Status.ConstraintError)
 
         self.step("9")
