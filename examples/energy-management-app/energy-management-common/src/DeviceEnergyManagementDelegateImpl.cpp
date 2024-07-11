@@ -631,7 +631,7 @@ Status DeviceEnergyManagementDelegate::ModifyForecastRequest(
     }
     else if (mForecast.Value().forecastID != forecastID)
     {
-        status = Status::ConstraintError;
+        status = Status::Failure;
     }
     else if (mpDEMManufacturerDelegate != nullptr)
     {
