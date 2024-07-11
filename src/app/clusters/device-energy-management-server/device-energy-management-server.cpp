@@ -581,7 +581,7 @@ void Instance::HandlePauseRequest(HandlerContext & ctx, const Commands::PauseReq
     if (!forecast.Value().slots[activeSlotNumber].slotIsPausable.Value())
     {
         ChipLogError(Zcl, "DEM: activeSlotNumber %d is NOT pausable.", activeSlotNumber);
-        ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::ConstraintError);
+        ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::Failure);
         return;
     }
 
@@ -606,6 +606,7 @@ void Instance::HandlePauseRequest(HandlerContext & ctx, const Commands::PauseReq
     if (status != Status::Success)
     {
         ChipLogError(Zcl, "DEM: PauseRequest(%ld) FAILURE", static_cast<long unsigned int>(duration));
+        ctx.mCommandHandler.AddStatus(ctx.mRequestPath, status);
         return;
     }
 }
@@ -622,7 +623,7 @@ void Instance::HandleResumeRequest(HandlerContext & ctx, const Commands::ResumeR
     if (ESAStateEnum::kPaused != mDelegate.GetESAState())
     {
         ChipLogError(Zcl, "DEM: ESAState not Paused.");
-        ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::Failure);
+        ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::InvalidInState);
         return;
     }
 
