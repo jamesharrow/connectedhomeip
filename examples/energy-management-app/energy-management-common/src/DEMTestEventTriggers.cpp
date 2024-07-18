@@ -63,21 +63,21 @@ CHIP_ERROR ConfigureForecast(uint16_t numSlots)
     }
 
     // planned start time, in UTC, for the entire Forecast.
-    sForecastStruct.startTime = static_cast<uint32_t>(chipEpoch);
+    sForecastStruct.startTime = chipEpoch;
 
     // earliest start time, in UTC, that the entire Forecast can be shifted to. null value indicates that it can be started
     // immediately.
-    sForecastStruct.earliestStartTime = Optional<DataModel::Nullable<uint32_t>>{ DataModel::Nullable<uint32_t>{ chipEpoch } };
+    sForecastStruct.earliestStartTime = MakeOptional(DataModel::MakeNullable(chipEpoch));
 
     // planned end time, in UTC, for the entire Forecast.
-    sForecastStruct.endTime = static_cast<uint32_t>(chipEpoch * 3);
+    sForecastStruct.endTime = chipEpoch * 3;
 
     // latest end time, in UTC, for the entire Forecast
-    sForecastStruct.latestEndTime = Optional<uint32_t>(static_cast<uint32_t>(chipEpoch * 3));
+    sForecastStruct.latestEndTime = MakeOptional(chipEpoch * 3);
 
     sForecastStruct.isPausable = true;
 
-    sForecastStruct.activeSlotNumber.SetNonNull<uint16_t>(0);
+    sForecastStruct.activeSlotNumber.SetNonNull(0);
 
     sSlots[0].minDuration       = 10;
     sSlots[0].maxDuration       = 20;
@@ -133,11 +133,8 @@ CHIP_ERROR ConfigureForecast(uint16_t numSlots)
 
     sForecastStruct.slots = DataModel::List<const DeviceEnergyManagement::Structs::SlotStruct::Type>(sSlots, numSlots);
 
-    DataModel::Nullable<DeviceEnergyManagement::Structs::ForecastStruct::Type> forecast(sForecastStruct);
-
     EVSEManufacturer * mn = GetEvseManufacturer();
-    mn->GetDEMDelegate()->SetForecast(forecast);
-
+    mn->GetDEMDelegate()->SetForecast(DataModel::MakeNullable(sForecastStruct));
     mn->GetDEMDelegate()->SetAbsMinPower(1000);
     mn->GetDEMDelegate()->SetAbsMaxPower(256 * 2000 * 1000);
 
@@ -155,9 +152,6 @@ void SetTestEventTrigger_PowerAdjustment()
 
     sPowerAdjustCapabilityStruct.cause = PowerAdjustReasonEnum::kNoAdjustment;
     sPowerAdjustCapabilityStruct.powerAdjustCapability.SetNonNull(powerAdjustmentList);
-
-    DataModel::Nullable<DeviceEnergyManagement::Structs::PowerAdjustCapabilityStruct::Type> powerAdjustmentCapability(
-        sPowerAdjustCapabilityStruct);
     sPowerAdjustmentCapability.SetNonNull(sPowerAdjustCapabilityStruct);
 
     CHIP_ERROR err = GetDEMDelegate()->SetPowerAdjustmentCapability(sPowerAdjustmentCapability);
@@ -205,20 +199,18 @@ void SetTestEventTrigger_StartTimeAdjustment()
     }
 
     // planned start time, in UTC, for the entire Forecast.
-    sForecastStruct.startTime = static_cast<uint32_t>(chipEpoch);
+    sForecastStruct.startTime = chipEpoch;
 
     // Set the earliest start time, in UTC, to that before the startTime
     sForecastStruct.earliestStartTime = Optional<DataModel::Nullable<uint32_t>>{ DataModel::Nullable<uint32_t>{ chipEpoch - 60 } };
 
     // Planned end time, in UTC, for the entire Forecast.
-    sForecastStruct.endTime = static_cast<uint32_t>(chipEpoch * 3);
+    sForecastStruct.endTime = chipEpoch * 3;
 
     // Latest end time, in UTC, for the entire Forecast which is > sForecastStruct.endTime
-    sForecastStruct.latestEndTime = Optional<uint32_t>(static_cast<uint32_t>(chipEpoch * 3 + 60));
+    sForecastStruct.latestEndTime = Optional<uint32_t>(chipEpoch * 3 + 60);
 
-    DataModel::Nullable<DeviceEnergyManagement::Structs::ForecastStruct::Type> forecast(sForecastStruct);
-
-    GetDEMDelegate()->SetForecast(forecast);
+    GetDEMDelegate()->SetForecast(DataModel::MakeNullable(sForecastStruct));
 }
 
 void SetTestEventTrigger_StartTimeAdjustmentClear()
@@ -232,9 +224,7 @@ void SetTestEventTrigger_StartTimeAdjustmentClear()
     sForecastStruct.earliestStartTime = Optional<DataModel::Nullable<uint32_t>>();
     sForecastStruct.latestEndTime     = Optional<uint32_t>();
 
-    DataModel::Nullable<DeviceEnergyManagement::Structs::ForecastStruct::Type> forecast(sForecastStruct);
-
-    GetDEMDelegate()->SetForecast(forecast);
+    GetDEMDelegate()->SetForecast(DataModel::MakeNullable(sForecastStruct));
 }
 
 void SetTestEventTrigger_UserOptOutOptimization(OptOutStateEnum optOutState)
@@ -253,9 +243,7 @@ void SetTestEventTrigger_PausableNextSlot()
     sForecastStruct = GetDEMDelegate()->GetForecast().Value();
     sForecastStruct.activeSlotNumber.SetNonNull(1);
 
-    DataModel::Nullable<DeviceEnergyManagement::Structs::ForecastStruct::Type> forecast(sForecastStruct);
-
-    GetDEMDelegate()->SetForecast(forecast);
+    GetDEMDelegate()->SetForecast(DataModel::MakeNullable(sForecastStruct));
 }
 
 void SetTestEventTrigger_Forecast()
@@ -273,9 +261,7 @@ void SetTestEventTrigger_ForecastClear()
     sForecastStruct.activeSlotNumber.SetNull();
     sForecastStruct.slots = DataModel::List<const DeviceEnergyManagement::Structs::SlotStruct::Type>();
 
-    DataModel::Nullable<DeviceEnergyManagement::Structs::ForecastStruct::Type> forecast(sForecastStruct);
-
-    GetDEMDelegate()->SetForecast(forecast);
+    GetDEMDelegate()->SetForecast(DataModel::MakeNullable(sForecastStruct));
 }
 
 void SetTestEventTrigger_ForecastAdjustment()
@@ -291,18 +277,15 @@ void SetTestEventTrigger_ForecastAdjustment()
 
     sForecastStruct.slots = DataModel::List<const DeviceEnergyManagement::Structs::SlotStruct::Type>(sSlots, 2);
 
-    DataModel::Nullable<DeviceEnergyManagement::Structs::ForecastStruct::Type> forecast(sForecastStruct);
-
-    GetDEMDelegate()->SetForecast(forecast);
+    GetDEMDelegate()->SetForecast(DataModel::MakeNullable(sForecastStruct));
 }
 
 void SetTestEventTrigger_ForecastAdjustmentNextSlot()
 {
     sForecastStruct = GetDEMDelegate()->GetForecast().Value();
     sForecastStruct.activeSlotNumber.SetNonNull(sForecastStruct.activeSlotNumber.Value() + 1);
-    DataModel::Nullable<DeviceEnergyManagement::Structs::ForecastStruct::Type> forecast(sForecastStruct);
 
-    GetDEMDelegate()->SetForecast(forecast);
+    GetDEMDelegate()->SetForecast(DataModel::MakeNullable(sForecastStruct));
 }
 
 void SetTestEventTrigger_ConstraintBasedAdjustment()
