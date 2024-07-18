@@ -581,7 +581,7 @@ void Instance::HandlePauseRequest(HandlerContext & ctx, const Commands::PauseReq
     if (!forecast.Value().slots[activeSlotNumber].slotIsPausable.Value())
     {
         ChipLogError(Zcl, "DEM: activeSlotNumber %d is NOT pausable.", activeSlotNumber);
-        ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::ConstraintError);
+        ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::Failure);
         return;
     }
 
@@ -678,7 +678,7 @@ void Instance::HandleModifyForecastRequest(HandlerContext & ctx, const Commands:
         if (slotAdjustment.slotIndex > forecast.Value().slots.size())
         {
             ChipLogError(Zcl, "DEM: Bad slot index %d", slotAdjustment.slotIndex);
-            ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::ConstraintError);
+            ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::Failure);
             return;
         }
 
@@ -726,6 +726,7 @@ void Instance::HandleModifyForecastRequest(HandlerContext & ctx, const Commands:
     if (status != Status::Success)
     {
         ChipLogError(Zcl, "DEM: ModifyForecastRequest FAILURE");
+        ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::Failure);
         return;
     }
 }
@@ -775,9 +776,10 @@ void Instance::HandleRequestConstraintBasedForecast(HandlerContext & ctx,
                 ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::ConstraintError);
                 return;
             }
-
+            ChipLogError(Zcl, "JOHN1");
             if (HasFeature(Feature::kPowerForecastReporting))
             {
+            ChipLogError(Zcl, "JOHN2");
                 if (!constraint.nominalPower.HasValue())
                 {
                     ChipLogError(Zcl, "DEM: RequestConstraintBasedForecast no nominalPower");
