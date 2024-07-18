@@ -20,12 +20,16 @@
 #include "DEMManufacturerDelegate.h"
 #include "EnergyTimeUtils.h"
 #include <app/EventLogging.h>
+#include <protocols/interaction_model/StatusCode.h>
 
 using namespace chip;
 using namespace chip::app;
 using namespace chip::app::Clusters;
 using namespace chip::app::Clusters::DeviceEnergyManagement;
 using namespace chip::app::Clusters::DeviceEnergyManagement::Attributes;
+
+using chip::Protocols::InteractionModel::Status;
+
 
 using chip::Optional;
 using CostsList = DataModel::List<const Structs::CostStruct::Type>;
@@ -631,7 +635,7 @@ Status DeviceEnergyManagementDelegate::ModifyForecastRequest(
     }
     else if (mForecast.Value().forecastID != forecastID)
     {
-        status = Status::Failure;
+        status = Status::ConstraintError;
     }
     else if (mpDEMManufacturerDelegate != nullptr)
     {
@@ -778,12 +782,12 @@ int64_t DeviceEnergyManagementDelegate::GetAbsMaxPower()
     return mAbsMaxPowerMw;
 }
 
-DataModel::Nullable<Structs::PowerAdjustCapabilityStruct::Type> & DeviceEnergyManagementDelegate::GetPowerAdjustmentCapability()
+const DataModel::Nullable<Structs::PowerAdjustCapabilityStruct::Type> & DeviceEnergyManagementDelegate::GetPowerAdjustmentCapability()
 {
     return mPowerAdjustCapabilityStruct;
 }
 
-DataModel::Nullable<Structs::ForecastStruct::Type> & DeviceEnergyManagementDelegate::GetForecast()
+const DataModel::Nullable<Structs::ForecastStruct::Type> & DeviceEnergyManagementDelegate::GetForecast()
 {
     ChipLogDetail(Zcl, "DeviceEnergyManagementDelegate::GetForecast");
 

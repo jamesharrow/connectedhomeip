@@ -170,26 +170,28 @@ public:
     /**
      * @brief Returns the current PowerAdjustCapability object
      *
-     * The caller of GetPowerAdjustmentCapability() must not store a pointer/reference to the
-     * DataModel::Nullable<Structs::PowerAdjustCapabilityStruct::Type> return value. Structs::PowerAdjustCapabilityStruct
-     * contains a list of powerAdjustCapabilities (of type PowerAdjustStruct). The memory allocated for these
-     * is managed by the application and could change once the caller of GetPowerAdjustmentCapability has finished its
-     * processing.
+     * The reference returned from GetPowerAdjustmentCapability() is only valid until the next Matter event
+     * is processed.  Callers must not hold on to that reference for any asynchronous processing.
+     *
+     * Once another Matter event has had a chance to run, the memory associated with the
+     * PowerAdjustCapabilityStruct is likely to change or be re-allocated, so would become invalid.
      *
      * @return  The current PowerAdjustCapability object
      */
-    virtual DataModel::Nullable<Structs::PowerAdjustCapabilityStruct::Type> & GetPowerAdjustmentCapability() = 0;
+    virtual const DataModel::Nullable<Structs::PowerAdjustCapabilityStruct::Type> & GetPowerAdjustmentCapability() = 0;
 
     /**
      * @brief Returns the current Forecast object
      *
-     * The caller of GetForecast() must not store a pointer/reference to the Structs::ForecastStruct return value.
-     * Structs::ForecastStruct contains a list of slots (of type SlotStruct). The memory allocated for the slots
-     * is managed by the application and could change once the caller of GetForecast has finished its processing.
+     * The reference returned from GetForecast() is only valid until the next Matter event
+     * is processed.  Callers must not hold on to that reference for any asynchronous processing.
+     *
+     * Once another Matter event has had a chance to run, the memory associated with the
+     * ForecastStruct is likely to change or be re-allocated, so would become invalid.
      *
      * @return  The current Forecast object
      */
-    virtual DataModel::Nullable<Structs::ForecastStruct::Type> & GetForecast() = 0;
+    virtual const DataModel::Nullable<Structs::ForecastStruct::Type> & GetForecast() = 0;
 
     // ------------------------------------------------------------------
     // Set attribute methods

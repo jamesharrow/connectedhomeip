@@ -337,7 +337,7 @@ class TC_DEM_2_4(MatterBaseTest, DEMTestBase):
         self.step("18")
         await self.send_pause_request_command(forecast.slots[0].minPauseDuration,
                                               Clusters.DeviceEnergyManagement.Enums.AdjustmentCauseEnum.kLocalOptimization,
-                                              expected_status=Status.Failure)
+                                              expected_status=Status.ConstraintError)
 
         self.step("18a")
         await self.check_dem_attribute("ESAState", Clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kOnline)
