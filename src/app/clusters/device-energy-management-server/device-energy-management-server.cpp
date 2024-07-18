@@ -776,10 +776,9 @@ void Instance::HandleRequestConstraintBasedForecast(HandlerContext & ctx,
                 ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Status::ConstraintError);
                 return;
             }
-            ChipLogError(Zcl, "JOHN1");
+
             if (HasFeature(Feature::kPowerForecastReporting))
             {
-            ChipLogError(Zcl, "JOHN2");
                 if (!constraint.nominalPower.HasValue())
                 {
                     ChipLogError(Zcl, "DEM: RequestConstraintBasedForecast no nominalPower");
