@@ -65,7 +65,7 @@ CHIP_ERROR GetEpochTS(uint32_t & chipEpoch)
     if (!UnixEpochToChipEpochTime(unixEpoch, chipEpoch))
     {
         ChipLogError(Zcl, "Unable to convert Unix Epoch time to Matter Epoch Time");
-        return err;
+        return CHIP_ERROR_INCORRECT_STATE;
     }
 
     return CHIP_NO_ERROR;
@@ -80,10 +80,10 @@ CHIP_ERROR GetEpochTS(uint32_t & chipEpoch)
  *
  * @param   unixEpoch (as time_t)
  *
- * @return  bitmap value for day of week
- * Sunday = 0x01, Monday = 0x01 ... Saturday = 0x40 (1<<6)
+ * @return  bitmap value for day of week as defined by EnergyEvse::TargetDayOfWeekBitmap. Note
+ *          only one bit will be set for the day of the week.
  */
-uint8_t GetLocalDayOfWeekFromUnixEpoch(time_t unixEpoch)
+BitMask<EnergyEvse::TargetDayOfWeekBitmap> GetLocalDayOfWeekFromUnixEpoch(time_t unixEpoch)
 {
     // Define a timezone structure and initialize it to the local timezone
     // This will capture any daylight saving time changes
@@ -93,7 +93,8 @@ uint8_t GetLocalDayOfWeekFromUnixEpoch(time_t unixEpoch)
     // Get the day of the week (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
     uint8_t dayOfWeek = static_cast<uint8_t>(local_time.tm_wday);
 
-    // Calculate the bitmap value based on the day of the week
+    // Calculate the bitmap value based on the day of the week. Note that the value in bitmap
+    // maps directly to the definition in EnergyEvse::TargetDayOfWeekBitmap.
     uint8_t bitmap = static_cast<uint8_t>(1 << dayOfWeek);
 
     return bitmap;
@@ -101,13 +102,12 @@ uint8_t GetLocalDayOfWeekFromUnixEpoch(time_t unixEpoch)
 /**
  * @brief   Helper function to get current timestamp and work out the day of week based on localtime
  *
- * @param   reference to hold the day of week as a bitmap
- *
- * Sunday = 0x01, Monday = 0x01 ... Saturday = 0x40 (1<<6)
+ * @return  bitmap value for day of week as defined by EnergyEvse::TargetDayOfWeekBitmap. Note
+ *          only one bit will be set for the current day.
  */
-CHIP_ERROR GetLocalDayOfWeekNow(uint8_t & dayOfWeekMap)
+CHIP_ERROR GetLocalDayOfWeekNow(BitMask<EnergyEvse::TargetDayOfWeekBitmap> & dayOfWeekMap)
 {
-    chip::System::Clock::Milliseconds64 cTMs;
+    System::Clock::Milliseconds64 cTMs;
     CHIP_ERROR err = chip::System::SystemClock().GetClock_RealTimeMS(cTMs);
     if (err != CHIP_NO_ERROR)
     {
@@ -118,6 +118,33 @@ CHIP_ERROR GetLocalDayOfWeekNow(uint8_t & dayOfWeekMap)
     dayOfWeekMap     = GetLocalDayOfWeekFromUnixEpoch(unixEpoch);
 
     return CHIP_NO_ERROR;
+}
+
+/**
+ * @brief   Helper function to get current timestamp and work out the current number of minutes
+ *          past midnight based on localtime
+ *
+ * @param   reference to hold the number of minutes past midnight
+ */
+CHIP_ERROR GetMinutesPastMidnight(uint16_t & minutesPastMidnight)
+{
+    chip::System::Clock::Milliseconds64 cTMs;
+    CHIP_ERROR err = chip::System::SystemClock().GetClock_RealTimeMS(cTMs);
+    if (err != CHIP_NO_ERROR)
+    {
+        ChipLogError(Zcl, "EVSE: unable to get current time to check user schedules error=%" CHIP_ERROR_FORMAT, err.Format());
+        return err;
+    }
+    time_t unixEpoch = std::chrono::duration_cast<chip::System::Clock::Seconds32>(cTMs).count();
+
+    // Define a timezone structure and initialize it to the local timezone
+    // This will capture any daylight saving time changes
+    struct tm local_time;
+    localtime_r(&unixEpoch, &local_time);
+
+    minutesPastMidnight = static_cast<uint16_t>((local_time.tm_hour * 60) + local_time.tm_min);
+
+    return err;
 }
 
 } // namespace DeviceEnergyManagement
