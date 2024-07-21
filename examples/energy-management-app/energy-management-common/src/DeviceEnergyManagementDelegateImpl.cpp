@@ -175,9 +175,6 @@ void DeviceEnergyManagementDelegate::HandlePowerAdjustRequestFailure()
 
     mPowerAdjustmentInProgress = false;
 
-    // mPowerAdjustCapabilityStruct is guaranteed to have a value as validated in Instance::HandlePowerAdjustRequest.
-    // If it did not have a value, this method would not have been called as only called from
-    // DeviceEnergyManagementDelegate::PowerAdjustRequest which also would not have been called.
     mPowerAdjustCapabilityStruct.Value().cause = PowerAdjustReasonEnum::kNoAdjustment;
 
     // TODO
@@ -213,12 +210,7 @@ void DeviceEnergyManagementDelegate::HandlePowerAdjustTimerExpiry()
 
     SetESAState(ESAStateEnum::kOnline);
 
-    // Check mPowerAdjustCapabilityStruct has a value just in case it has been to set NULL since the
-    // PowerAdjustTimer was started.
-    if (mPowerAdjustCapabilityStruct.HasValue())
-    {
-        mPowerAdjustCapabilityStruct.Value().cause = PowerAdjustReasonEnum::kNoAdjustment;
-    }
+    mPowerAdjustCapabilityStruct.Value().cause = PowerAdjustReasonEnum::kNoAdjustment;
 
     // Generate a PowerAdjustEnd event
     GeneratePowerAdjustEndEvent(CauseEnum::kNormalCompletion);
@@ -273,12 +265,7 @@ CHIP_ERROR DeviceEnergyManagementDelegate::CancelPowerAdjustRequestAndGenerateEv
 
     mPowerAdjustmentInProgress = false;
 
-    // Check mPowerAdjustCapabilityStruct has a value just in case it has been to set NULL since the
-    // PowerAdjustTimer was started.
-    if (mPowerAdjustCapabilityStruct.HasValue())
-    {
-        mPowerAdjustCapabilityStruct.Value().cause = PowerAdjustReasonEnum::kNoAdjustment;
-    }
+    mPowerAdjustCapabilityStruct.Value().cause = PowerAdjustReasonEnum::kNoAdjustment;
 
     CHIP_ERROR err = GeneratePowerAdjustEndEvent(cause);
 
