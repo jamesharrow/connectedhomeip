@@ -160,25 +160,42 @@ public:
 
     // ------------------------------------------------------------------
     // Get attribute methods
-    virtual ESATypeEnum GetESAType()                                                                       = 0;
-    virtual bool GetESACanGenerate()                                                                       = 0;
-    virtual ESAStateEnum GetESAState()                                                                     = 0;
-    virtual int64_t GetAbsMinPower()                                                                       = 0;
-    virtual int64_t GetAbsMaxPower()                                                                       = 0;
-    virtual DataModel::Nullable<Structs::PowerAdjustCapabilityStruct::Type> GetPowerAdjustmentCapability() = 0;
-    virtual DataModel::Nullable<Structs::ForecastStruct::Type> GetForecast()                               = 0;
-    virtual OptOutStateEnum GetOptOutState()                                                               = 0;
+    virtual ESATypeEnum GetESAType()         = 0;
+    virtual bool GetESACanGenerate()         = 0;
+    virtual ESAStateEnum GetESAState()       = 0;
+    virtual int64_t GetAbsMinPower()         = 0;
+    virtual int64_t GetAbsMaxPower()         = 0;
+    virtual OptOutStateEnum GetOptOutState() = 0;
+
+    /**
+     * @brief Returns the current PowerAdjustCapability object
+     *
+     * The reference returned from GetPowerAdjustmentCapability() is only valid until the next Matter event
+     * is processed.  Callers must not hold on to that reference for any asynchronous processing.
+     *
+     * Once another Matter event has had a chance to run, the memory associated with the
+     * PowerAdjustCapabilityStruct is likely to change or be re-allocated, so would become invalid.
+     *
+     * @return  The current PowerAdjustCapability object
+     */
+    virtual const DataModel::Nullable<Structs::PowerAdjustCapabilityStruct::Type> & GetPowerAdjustmentCapability() = 0;
+
+    /**
+     * @brief Returns the current Forecast object
+     *
+     * The reference returned from GetForecast() is only valid until the next Matter event
+     * is processed.  Callers must not hold on to that reference for any asynchronous processing.
+     *
+     * Once another Matter event has had a chance to run, the memory associated with the
+     * ForecastStruct is likely to change or be re-allocated, so would become invalid.
+     *
+     * @return  The current Forecast object
+     */
+    virtual const DataModel::Nullable<Structs::ForecastStruct::Type> & GetForecast() = 0;
 
     // ------------------------------------------------------------------
     // Set attribute methods
-    virtual CHIP_ERROR SetESAType(ESATypeEnum)                                                                       = 0;
-    virtual CHIP_ERROR SetESACanGenerate(bool)                                                                       = 0;
-    virtual CHIP_ERROR SetESAState(ESAStateEnum)                                                                     = 0;
-    virtual CHIP_ERROR SetAbsMinPower(int64_t)                                                                       = 0;
-    virtual CHIP_ERROR SetAbsMaxPower(int64_t)                                                                       = 0;
-    virtual CHIP_ERROR SetPowerAdjustmentCapability(DataModel::Nullable<Structs::PowerAdjustCapabilityStruct::Type>) = 0;
-    virtual CHIP_ERROR SetForecast(DataModel::Nullable<Structs::ForecastStruct::Type>)                               = 0;
-    virtual CHIP_ERROR SetOptOutState(OptOutStateEnum)                                                               = 0;
+    virtual CHIP_ERROR SetESAState(ESAStateEnum) = 0;
 
 protected:
     EndpointId mEndpointId = 0;
