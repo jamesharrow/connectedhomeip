@@ -20,7 +20,6 @@
 #include <DEMDelegate.h>
 #include <EnergyEvseMain.h>
 #include <WhmMain.h>
-#include <VaillantWaterHeater.h>
 #include <app-common/zap-generated/cluster-objects.h>
 #include <lib/support/BitMask.h>
 
@@ -42,6 +41,8 @@ constexpr uint16_t kOptionApplication  = 0xffd0;
 constexpr uint16_t kOptionFeatureMap   = 0xffd1;
 constexpr uint16_t kOptionSerialNumber = 0xffd2;
 constexpr uint16_t kOptionBaseUrl      = 0xffd3;
+constexpr uint16_t kOptionUsername     = 0xffd4;
+constexpr uint16_t kOptionPassword     = 0xffd5;
 
 constexpr const char * kEvseApp = "evse";
 constexpr const char * kWhmApp  = "water-heater";
@@ -53,26 +54,34 @@ constexpr const char * kValidApps[] = { kEvseApp, kWhmApp };
 static chip::ArgParser::OptionDef sEnergyAppOptionDefs[] = {
     { "application", chip::ArgParser::kArgumentRequired, kOptionApplication },
     { "featureSet", chip::ArgParser::kArgumentRequired, kOptionFeatureMap },
-	{ "serialNumber", chip::ArgParser::kArgumentRequired, kOptionSerialNumber },
+    { "serialNumber", chip::ArgParser::kArgumentRequired, kOptionSerialNumber },
     { "baseURL", chip::ArgParser::kArgumentRequired, kOptionBaseUrl },
+    { "username", chip::ArgParser::kArgumentRequired, kOptionUsername },
+    { "password", chip::ArgParser::kArgumentRequired, kOptionPassword },
     { nullptr }
 };
 
 static chip::ArgParser::OptionSet sCmdLineOptions = { EnergyAppOptionHandler, // handler function
                                                       sEnergyAppOptionDefs,   // array of option definitions
                                                       "PROGRAM OPTIONS",      // help group
-                                                      "-a,  --application <evse|water-heater>\n"
-                                                      "-f,  --featureSet <value>\n"
+                                                      "  --application <evse|water-heater>\n"
+                                                      "  --featureSet <value>\n"
                                                       "       Specify the FeatureMap used in DEM cluster\n"
-													  "  --serialNumber <value>\n"
+                                                      "  --serialNumber <value>\n"
                                                       "       Specify the serial number to report in BasicInfo cluster\n"
                                                       "  --baseURL <url>\n"
-                                                      "       Specify the URL of the Heatpump Matter Bridge\n"  };
+                                                      "       Specify the URL of the API\n"
+                                                      "  --username <username>\n"
+                                                      "       Specify the email address/username\n"
+                                                      "  --password <password>\n"
+                                                      "       Specify the password\n" };
 
 // Make EVSE the default app
 static const char * spApp = kEvseApp;
 std::string sSerialNumber = "Unknown Serialnumber";
-std::string sBaseUrl = "http://localhost:5000/";
+std::string sBaseUrl      = "http://localhost:5000/";
+std::string sUsername     = "Unknown user@domain.com";
+std::string sPassword     = "Unknown password";
 
 static uint32_t ParseNumber(const char * pString)
 {
@@ -152,6 +161,14 @@ static bool EnergyAppOptionHandler(const char * aProgram, chip::ArgParser::Optio
     case kOptionBaseUrl:
         sBaseUrl = aValue;
         ChipLogDetail(Support, "Using baseURL %s", sBaseUrl.c_str());
+        break;
+    case kOptionUsername:
+        sUsername = aValue;
+        ChipLogDetail(Support, "Using username %s", sUsername.c_str());
+        break;
+    case kOptionPassword:
+        sPassword = aValue;
+        ChipLogDetail(Support, "Using password %s", sPassword.c_str());
         break;
     default:
         ChipLogError(Support, "%s: INTERNAL ERROR: Unhandled option: %s\n", aProgram, aName);
