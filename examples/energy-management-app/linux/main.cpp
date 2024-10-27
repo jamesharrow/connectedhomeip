@@ -17,8 +17,10 @@
  */
 
 #include <AppMain.h>
+#include <DEMDelegate.h>
 #include <EnergyEvseMain.h>
-#include <WaterHeaterMain.h>
+#include <WhmMain.h>
+#include <VaillantWaterHeater.h>
 #include <app-common/zap-generated/cluster-objects.h>
 #include <lib/support/BitMask.h>
 
@@ -36,8 +38,10 @@ static uint32_t ParseNumber(const char * pString);
 static bool EnergyAppOptionHandler(const char * aProgram, chip::ArgParser::OptionSet * aOptions, int aIdentifier,
                                    const char * aName, const char * aValue);
 
-constexpr uint16_t kOptionApplication = 0xffd0;
-constexpr uint16_t kOptionFeatureMap  = 0xffd1;
+constexpr uint16_t kOptionApplication  = 0xffd0;
+constexpr uint16_t kOptionFeatureMap   = 0xffd1;
+constexpr uint16_t kOptionSerialNumber = 0xffd2;
+constexpr uint16_t kOptionBaseUrl      = 0xffd3;
 
 constexpr const char * kEvseApp = "evse";
 constexpr const char * kWhmApp  = "water-heater";
@@ -49,37 +53,26 @@ constexpr const char * kValidApps[] = { kEvseApp, kWhmApp };
 static chip::ArgParser::OptionDef sEnergyAppOptionDefs[] = {
     { "application", chip::ArgParser::kArgumentRequired, kOptionApplication },
     { "featureSet", chip::ArgParser::kArgumentRequired, kOptionFeatureMap },
+	{ "serialNumber", chip::ArgParser::kArgumentRequired, kOptionSerialNumber },
+    { "baseURL", chip::ArgParser::kArgumentRequired, kOptionBaseUrl },
     { nullptr }
 };
 
 static chip::ArgParser::OptionSet sCmdLineOptions = { EnergyAppOptionHandler, // handler function
                                                       sEnergyAppOptionDefs,   // array of option definitions
                                                       "PROGRAM OPTIONS",      // help group
-                                                      "-a, --application <evse|water-heater>\n"
-                                                      "-f, --featureSet <value>\n" };
-
-namespace chip {
-namespace app {
-namespace Clusters {
-namespace DeviceEnergyManagement {
-
-// Keep track of the parsed featureMap option
-static chip::BitMask<Feature> sFeatureMap(Feature::kPowerAdjustment, Feature::kPowerForecastReporting,
-                                          Feature::kStateForecastReporting, Feature::kStartTimeAdjustment, Feature::kPausable,
-                                          Feature::kForecastAdjustment, Feature::kConstraintBasedAdjustment);
+                                                      "-a,  --application <evse|water-heater>\n"
+                                                      "-f,  --featureSet <value>\n"
+                                                      "       Specify the FeatureMap used in DEM cluster\n"
+													  "  --serialNumber <value>\n"
+                                                      "       Specify the serial number to report in BasicInfo cluster\n"
+                                                      "  --baseURL <url>\n"
+                                                      "       Specify the URL of the Heatpump Matter Bridge\n"  };
 
 // Make EVSE the default app
 static const char * spApp = kEvseApp;
-
-chip::BitMask<Feature> GetFeatureMapFromCmdLine()
-{
-    return sFeatureMap;
-}
-
-} // namespace DeviceEnergyManagement
-} // namespace Clusters
-} // namespace app
-} // namespace chip
+std::string sSerialNumber = "Unknown Serialnumber";
+std::string sBaseUrl = "http://localhost:5000/";
 
 static uint32_t ParseNumber(const char * pString)
 {
@@ -105,7 +98,7 @@ void ApplicationInit()
     }
     else if (strcmp(spApp, kWhmApp) == 0)
     {
-        FullWhmApplicationInit();
+        WhmApplicationInit();
     }
     else
     {
@@ -118,7 +111,7 @@ void ApplicationShutdown()
     ChipLogDetail(AppServer, "Energy Management App: ApplicationShutdown()");
 
     EvseApplicationShutdown();
-    FullWhmApplicationShutdown();
+    WhmApplicationShutdown();
 }
 
 static bool EnergyAppOptionHandler(const char * aProgram, chip::ArgParser::OptionSet * aOptions, int aIdentifier,
@@ -149,8 +142,16 @@ static bool EnergyAppOptionHandler(const char * aProgram, chip::ArgParser::Optio
         }
         break;
     case kOptionFeatureMap:
-        sFeatureMap = BitMask<chip::app::Clusters::DeviceEnergyManagement::Feature>(ParseNumber(aValue));
-        ChipLogDetail(Support, "Using FeatureMap 0x%04x", sFeatureMap.Raw());
+        SetDEMFeatureMap(ParseNumber(aValue));
+        ChipLogDetail(Support, "Using FeatureMap 0x%04x", GetDEMFeatureMap().Raw());
+        break;
+    case kOptionSerialNumber:
+        sSerialNumber = aValue;
+        ChipLogDetail(Support, "Using serialNumber %s", sSerialNumber.c_str());
+        break;
+    case kOptionBaseUrl:
+        sBaseUrl = aValue;
+        ChipLogDetail(Support, "Using baseURL %s", sBaseUrl.c_str());
         break;
     default:
         ChipLogError(Support, "%s: INTERNAL ERROR: Unhandled option: %s\n", aProgram, aName);

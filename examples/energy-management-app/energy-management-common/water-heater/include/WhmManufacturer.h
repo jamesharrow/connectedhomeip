@@ -19,9 +19,15 @@
 #pragma once
 
 #include <DEMManufacturerDelegate.h>
+#include <DeviceEnergyManagementManager.h>
+#include <ElectricalPowerMeasurementDelegate.h>
+#include <PowerTopologyDelegate.h>
+
 #include <WhmDelegate.h>
 #include <WhmInstance.h>
-
+/* START GEO */
+#include <ExampleAPI.h>
+/* END GEO */
 namespace chip {
 namespace app {
 namespace Clusters {
@@ -36,7 +42,15 @@ namespace WaterHeaterManagement {
 class WhmManufacturer : public DeviceEnergyManagement::DEMManufacturerDelegate
 {
 public:
-    WhmManufacturer(WaterHeaterManagementInstance * whmInstance) { mWhmInstance = whmInstance; }
+    WhmManufacturer(WaterHeaterManagementInstance * whmInstance,
+                    ElectricalPowerMeasurement::ElectricalPowerMeasurementInstance * aEPMInstance,
+                    PowerTopology::PowerTopologyInstance * aPTInstance, DeviceEnergyManagementManager * aDEMInstance)
+    {
+        mWhmInstance = whmInstance;
+        mEPMInstance = aEPMInstance;
+        mPTInstance  = aPTInstance;
+        mDEMInstance = aDEMInstance;
+    }
 
     WaterHeaterManagementInstance * GetWhmInstance() { return mWhmInstance; }
 
@@ -47,6 +61,33 @@ public:
             return mWhmInstance->GetDelegate();
         }
 
+        return nullptr;
+    }
+
+    ElectricalPowerMeasurement::ElectricalPowerMeasurementDelegate * GetEPMDelegate()
+    {
+        if (mEPMInstance)
+        {
+            return mEPMInstance->GetDelegate();
+        }
+        return nullptr;
+    }
+
+    PowerTopology::PowerTopologyDelegate * GetPTDelegate()
+    {
+        if (mPTInstance)
+        {
+            return mPTInstance->GetDelegate();
+        }
+        return nullptr;
+    }
+
+    DeviceEnergyManagementDelegate * GetDEMDelegate()
+    {
+        if (mDEMInstance)
+        {
+            return mDEMInstance->GetDelegate();
+        }
         return nullptr;
     }
 
@@ -140,6 +181,9 @@ public:
      */
     void BoostCommandFinished();
 
+    CHIP_ERROR SendPowerReading(EndpointId aEndpointId, Power_mW aActivePower_mW, Voltage_mV aVoltage_mV,
+                                Amperage_mA aActiveCurrent_mA);
+
     /* Implement the DEMManufacturerDelegate interface */
 
     /**
@@ -149,6 +193,13 @@ public:
 
 private:
     WaterHeaterManagementInstance * mWhmInstance;
+    ElectricalPowerMeasurement::ElectricalPowerMeasurementInstance * mEPMInstance;
+    PowerTopology::PowerTopologyInstance * mPTInstance;
+    DeviceEnergyManagementManager * mDEMInstance;
+
+    /* START GEO */
+    ExampleAPI mExampleWaterHeater;
+    /* END GEO*/
 };
 
 /** @brief Helper function to return the singleton WhmManufacturer instance
