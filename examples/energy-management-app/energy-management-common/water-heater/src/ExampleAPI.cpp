@@ -51,6 +51,12 @@ ExampleAPI::ExampleAPI()
 
     VerifyOrDie(Login() == Status::Success);
 
+    std::string tanksUrl;
+    VerifyOrDie(HandleGetHref(sBaseUrl, "tanks", tanksUrl) == Status::Success);
+
+    std::string myTankUrl;
+    VerifyOrDie(HandleGetTanksURL(tanksUrl, myTankUrl) == Status::Success);
+
     CHIP_ERROR err = DeviceLayer::SystemLayer().StartTimer(System::Clock::Seconds32(1), GetPowerMeasurementsTimer, this);
     if (err != CHIP_NO_ERROR)
     {
@@ -202,7 +208,7 @@ Status ExampleAPI::Logout()
 }
 
 // This API fetches a resource to get a child key looking for the _href element
-Status ExampleAPI::HandleGetHref(std::string baseUrl, const char * resource)
+Status ExampleAPI::HandleGetHref(std::string baseUrl, std::string resource, std::string & link)
 {
     Status status = Status::Success;
     CURLcode res;
@@ -221,14 +227,11 @@ Status ExampleAPI::HandleGetHref(std::string baseUrl, const char * resource)
     headers             = curl_slist_append(headers, authStr.c_str());
 
     std::string postResponse;
-    //  curl_easy_setopt(pCurlHandle, CURLOPT_WRITEFUNCTION, VaillantWaterHeater::WriteCallback);
+    curl_easy_setopt(pCurlHandle, CURLOPT_WRITEFUNCTION, ExampleAPI::WriteCallback);
     curl_easy_setopt(pCurlHandle, CURLOPT_WRITEDATA, &postResponse);
 
     curl_easy_setopt(pCurlHandle, CURLOPT_HTTPHEADER, headers);
     curl_easy_setopt(pCurlHandle, CURLOPT_HTTPGET, 1L);
-
-    // Set the request body for the GET request
-    curl_easy_setopt(pCurlHandle, CURLOPT_POSTFIELDS, "");
 
     // Perform the GET request
     res = curl_easy_perform(pCurlHandle);
@@ -236,12 +239,12 @@ Status ExampleAPI::HandleGetHref(std::string baseUrl, const char * resource)
     // Check for errors
     if (res != CURLE_OK)
     {
-        ChipLogError(AppServer, "HttpGetRequest::HandleGet: request failed %s", curl_easy_strerror(res));
+        ChipLogError(AppServer, "HttpGetRequest::HandleGetHref: request failed %s", curl_easy_strerror(res));
         curl_slist_free_all(headers);
         return Status::Failure;
     }
 
-    ChipLogProgress(AppServer, "HttpGetRequest::HandleGet: response %s", postResponse.c_str());
+    // ChipLogProgress(AppServer, "HttpGetRequest::HandleGetHref: response %s", postResponse.c_str());
 
     //  Parse the JSON response
     Json::Value jsonResponse;
@@ -251,12 +254,124 @@ Status ExampleAPI::HandleGetHref(std::string baseUrl, const char * resource)
 
     if (!Json::parseFromStream(jsonReader, responseStream, &jsonResponse, nullptr))
     {
-        ChipLogError(AppServer, "HttpGetRequest::HandleGet request failed to parse responseStream %s", errs.c_str());
+        ChipLogError(AppServer, "HttpGetRequest::HandleGetHref request failed to parse responseStream %s", errs.c_str());
         curl_slist_free_all(headers);
         return Status::Failure;
     }
 
-    ChipLogProgress(AppServer, "HttpGetRequest::HandleGet response %s", jsonResponse.toStyledString().c_str());
+    if (!jsonResponse.isMember("_links"))
+    {
+        ChipLogError(AppServer, "HandleGetHref: Could not find _links");
+        return Status::Failure;
+    }
+
+    if (!jsonResponse["_links"].isMember(resource))
+    {
+        ChipLogError(AppServer, "HandleGetHref Could not find '%s'", resource.c_str());
+        return Status::Failure;
+    }
+
+    if (!jsonResponse["_links"][resource].isMember("href"))
+    {
+        ChipLogError(AppServer, "HandleGetHref Could not find '%s'.href", resource.c_str());
+        return Status::Failure;
+    }
+
+    link = jsonResponse["_links"][resource]["href"].asString();
+
+    ChipLogProgress(AppServer, "HandleGetHref link is %s", link.c_str());
+
+    curl_slist_free_all(headers);
+    curl_easy_cleanup(pCurlHandle);
+
+    return status;
+}
+
+Status ExampleAPI::HandleGetTanksURL(std::string baseUrl, std::string & link)
+{
+    Status status = Status::Success;
+    CURLcode res;
+    struct curl_slist * headers = NULL;
+
+    CURL * pCurlHandle = curl_easy_init();
+    if (pCurlHandle == nullptr)
+    {
+        ChipLogError(AppServer, "ExampleAPI::HandleGetTanksURL failed to initialised CURL");
+        return Status::Failure;
+    }
+
+    curl_easy_setopt(pCurlHandle, CURLOPT_URL, baseUrl.c_str());
+
+    std::string authStr = "Authorization: Bearer " + mAccessToken;
+    headers             = curl_slist_append(headers, authStr.c_str());
+
+    std::string postResponse;
+    curl_easy_setopt(pCurlHandle, CURLOPT_WRITEFUNCTION, ExampleAPI::WriteCallback);
+    curl_easy_setopt(pCurlHandle, CURLOPT_WRITEDATA, &postResponse);
+
+    curl_easy_setopt(pCurlHandle, CURLOPT_HTTPHEADER, headers);
+    curl_easy_setopt(pCurlHandle, CURLOPT_HTTPGET, 1L);
+
+    // Perform the GET request
+    res = curl_easy_perform(pCurlHandle);
+
+    // Check for errors
+    if (res != CURLE_OK)
+    {
+        ChipLogError(AppServer, "HttpGetRequest::HandleGetTanksURL: request failed %s", curl_easy_strerror(res));
+        curl_slist_free_all(headers);
+        return Status::Failure;
+    }
+
+    ChipLogProgress(AppServer, "HttpGetRequest::HandleGetTanksURL: response %s", postResponse.c_str());
+
+    //  Parse the JSON response
+    Json::Value jsonResponse;
+    Json::CharReaderBuilder jsonReader;
+    std::istringstream responseStream(postResponse);
+    std::string errs;
+
+    if (!Json::parseFromStream(jsonReader, responseStream, &jsonResponse, nullptr))
+    {
+        ChipLogError(AppServer, "HttpGetRequest::HandleGetTanksURL request failed to parse responseStream %s", errs.c_str());
+        curl_slist_free_all(headers);
+        return Status::Failure;
+    }
+
+    if (!jsonResponse.isMember("_embedded"))
+    {
+        ChipLogError(AppServer, "HandleGetTanksURL: Could not find _embedded");
+        return Status::Failure;
+    }
+
+    if (!jsonResponse["_embedded"].isMember("tankList"))
+    {
+        ChipLogError(AppServer, "HandleGetTanksURL Could not find 'tankList'");
+        return Status::Failure;
+    }
+
+    // Assume 1 tank
+    if (!jsonResponse["_embedded"]["tankList"][0].isMember("_links"))
+    {
+        ChipLogError(AppServer, "HandleGetTanksURL Could not find ._links");
+        return Status::Failure;
+    }
+
+    if (!jsonResponse["_embedded"]["tankList"][0]["_links"].isMember("self"))
+    {
+        ChipLogError(AppServer, "HandleGetTanksURL Could not find .self");
+        return Status::Failure;
+    }
+
+    if (!jsonResponse["_embedded"]["tankList"][0]["_links"]["self"].isMember("href"))
+    {
+        ChipLogError(AppServer, "HandleGetTanksURL Could not find .href");
+        return Status::Failure;
+    }
+
+    link = jsonResponse["_embedded"]["tankList"][0]["_links"]["self"]["href"].asString();
+
+    ChipLogProgress(AppServer, "HandleGetTanksURL link is %s", link.c_str());
 
     curl_slist_free_all(headers);
     curl_easy_cleanup(pCurlHandle);
@@ -339,7 +454,8 @@ void ExampleAPI::GetHeaterData()
         return;
     }
 
-    std::string powerMeasUrl = sBaseUrl + "/water_heater";
+    // We need to get the URL from the 'tanks' endpoint
+    std::string powerMeasUrl = sBaseUrl + "/tanks";
     curl_easy_setopt(pCurlHandle, CURLOPT_URL, powerMeasUrl.c_str());
 
     std::string postResponse;

@@ -54,7 +54,8 @@ public:
     Protocols::InteractionModel::Status Login();
     Protocols::InteractionModel::Status Logout();
 
-    Protocols::InteractionModel::Status HandleGetHref(std::string baseUrl, const char * resource);
+    Protocols::InteractionModel::Status HandleGetHref(std::string baseUrl, std::string resource, std::string & link);
+    Protocols::InteractionModel::Status HandleGetTanksURL(std::string baseUrl, std::string & link);
 
     static size_t WriteCallback(void * contents, size_t size, size_t nmemb, void * userp);
 
