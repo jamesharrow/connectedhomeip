@@ -46,12 +46,10 @@ static constexpr uint16_t sGetDataTimerDurationS              = 60;
 
 ExampleAPI::ExampleAPI()
 {
-    mpCurlHandle = static_cast<CURL *>(curl_easy_init());
-    if (mpCurlHandle == nullptr)
-    {
-        ChipLogError(AppServer, "ExampleAPI::ExampleAPI failed to initialised CURL");
-        chipDie();
-    }
+
+    mAccessToken = "";
+
+    VerifyOrDie(Login() == Status::Success);
 
     CHIP_ERROR err = DeviceLayer::SystemLayer().StartTimer(System::Clock::Seconds32(1), GetPowerMeasurementsTimer, this);
     if (err != CHIP_NO_ERROR)
@@ -68,27 +66,224 @@ ExampleAPI::ExampleAPI()
 
 ExampleAPI::~ExampleAPI()
 {
-    if (mpCurlHandle)
-    {
-        curl_easy_cleanup(mpCurlHandle);
-    }
+
+    Logout();
+
     DeviceLayer::SystemLayer().CancelTimer(GetPowerMeasurementsTimer, this);
     DeviceLayer::SystemLayer().CancelTimer(GetDataTimer, this);
+}
+
+Status ExampleAPI::Login()
+{
+    Status status = Status::Success;
+
+    if (mAccessToken != "")
+    {
+        ChipLogError(AppServer, "ExampleAPI::Login - mAccessToken already set and not logged out");
+        return Status::Failure;
+    }
+
+    CURL * pCurlHandle = curl_easy_init();
+    if (pCurlHandle == nullptr)
+    {
+        ChipLogError(AppServer, "ExampleAPI::Login failed to initialised CURL");
+        chipDie();
+    }
+
+    std::string data     = "{\"username\": \"" + sUsername + "\", \"password\": \"" + sPassword + "\"}";
+    std::string loginUrl = sBaseUrl + "/account/login";
+    curl_easy_setopt(pCurlHandle, CURLOPT_URL, loginUrl.c_str());
+
+    std::string postResponse;
+    curl_easy_setopt(pCurlHandle, CURLOPT_WRITEFUNCTION, ExampleAPI::WriteCallback);
+    curl_easy_setopt(pCurlHandle, CURLOPT_WRITEDATA, &postResponse);
+
+    // Set HTTP POST method
+    curl_easy_setopt(pCurlHandle, CURLOPT_POST, 1L);
+
+    // Set headers
+    struct curl_slist * headers = NULL;
+    headers                     = curl_slist_append(headers, "Content-Type: application/json");
+    curl_easy_setopt(pCurlHandle, CURLOPT_HTTPHEADER, headers);
+
+    // Set JSON data
+    curl_easy_setopt(pCurlHandle, CURLOPT_POSTFIELDS, data.c_str());
+
+    // Perform the POST request
+    CURLcode res = curl_easy_perform(pCurlHandle);
+    // Check for errors
+    if (res != CURLE_OK)
+    {
+        ChipLogError(AppServer, "ExampleAPI::Login: request failed %s", curl_easy_strerror(res));
+        curl_slist_free_all(headers);
+        return Status::Failure;
+    }
+
+    //  Parse the JSON response
+    Json::Value jsonResponse;
+    Json::CharReaderBuilder jsonReader;
+    std::istringstream responseStream(postResponse);
+    if (Json::parseFromStream(jsonReader, responseStream, &jsonResponse, nullptr))
+    {
+        // Extract values from the parsed JSON
+        mAccessToken = jsonResponse["token"].asString();
+
+        ChipLogProgress(AppServer, "ExampleAPI::Login Access token %s", mAccessToken.c_str());
+    }
+
+    if (mAccessToken == "")
+    {
+        ChipLogProgress(AppServer, "ExampleAPI::Login: No token received - Login Failure!");
+        status = Status::Failure;
+    }
+    else
+    {
+        ChipLogProgress(AppServer, "ExampleAPI::Login: Login successful!");
+    }
+
+    curl_slist_free_all(headers);
+    curl_easy_cleanup(pCurlHandle);
+
+    return status;
+}
+
+Status ExampleAPI::Logout()
+{
+    Status status = Status::Success;
+
+    if (mAccessToken == "")
+    {
+        ChipLogProgress(AppServer, "Access Token empty - so cannot logout!");
+        return Status::Failure;
+    }
+
+    CURL * pCurlHandle = curl_easy_init();
+    if (pCurlHandle == nullptr)
+    {
+        ChipLogError(AppServer, "ExampleAPI::Logout failed to initialised CURL");
+        return Status::Failure;
+    }
+
+    std::string loginUrl = sBaseUrl + "/account/login";
+    curl_easy_setopt(pCurlHandle, CURLOPT_URL, loginUrl.c_str());
+
+    std::string postResponse;
+    curl_easy_setopt(pCurlHandle, CURLOPT_WRITEFUNCTION, ExampleAPI::WriteCallback);
+    curl_easy_setopt(pCurlHandle, CURLOPT_WRITEDATA, &postResponse);
+
+    // Set HTTP DELETE method
+    curl_easy_setopt(pCurlHandle, CURLOPT_CUSTOMREQUEST, "DELETE");
+
+    // Set headers
+    struct curl_slist * headers = NULL;
+    std::string authStr         = "Authorization: Bearer " + mAccessToken;
+    headers                     = curl_slist_append(headers, authStr.c_str());
+
+    // Set JSON data
+    curl_easy_setopt(pCurlHandle, CURLOPT_POSTFIELDS, "");
+
+    // Perform the POST request
+    CURLcode res = curl_easy_perform(pCurlHandle);
+    // Check for errors
+    if (res != CURLE_OK)
+    {
+        ChipLogError(AppServer, "ExampleAPI::Logout: request failed %s", curl_easy_strerror(res));
+        curl_slist_free_all(headers);
+        return Status::Failure;
+    }
+
+    ChipLogProgress(AppServer, "ExampleAPI::Login: Logout successful!");
+    mAccessToken = "";
+
+    curl_slist_free_all(headers);
+    curl_easy_cleanup(pCurlHandle);
+
+    return status;
+}
+
+// This API fetches a resource to get a child key looking for the _href element
+Status ExampleAPI::HandleGetHref(std::string baseUrl, const char * resource)
+{
+    Status status = Status::Success;
+    CURLcode res;
+    struct curl_slist * headers = NULL;
+
+    CURL * pCurlHandle = curl_easy_init();
+    if (pCurlHandle == nullptr)
+    {
+        ChipLogError(AppServer, "ExampleAPI::HandleGetHref failed to initialised CURL");
+        return Status::Failure;
+    }
+
+    curl_easy_setopt(pCurlHandle, CURLOPT_URL, baseUrl.c_str());
+
+    std::string authStr = "Authorization: Bearer " + mAccessToken;
+    headers             = curl_slist_append(headers, authStr.c_str());
+
+    std::string postResponse;
+    //  curl_easy_setopt(pCurlHandle, CURLOPT_WRITEFUNCTION, VaillantWaterHeater::WriteCallback);
+    curl_easy_setopt(pCurlHandle, CURLOPT_WRITEDATA, &postResponse);
+
+    curl_easy_setopt(pCurlHandle, CURLOPT_HTTPHEADER, headers);
+    curl_easy_setopt(pCurlHandle, CURLOPT_HTTPGET, 1L);
+
+    // Set the request body for the GET request
+    curl_easy_setopt(pCurlHandle, CURLOPT_POSTFIELDS, "");
+
+    // Perform the GET request
+    res = curl_easy_perform(pCurlHandle);
+
+    // Check for errors
+    if (res != CURLE_OK)
+    {
+        ChipLogError(AppServer, "HttpGetRequest::HandleGet: request failed %s", curl_easy_strerror(res));
+        curl_slist_free_all(headers);
+        return Status::Failure;
+    }
+
+    ChipLogProgress(AppServer, "HttpGetRequest::HandleGet: response %s", postResponse.c_str());
+
+    //  Parse the JSON response
+    Json::Value jsonResponse;
+    Json::CharReaderBuilder jsonReader;
+    std::istringstream responseStream(postResponse);
+    std::string errs;
+
+    if (!Json::parseFromStream(jsonReader, responseStream, &jsonResponse, nullptr))
+    {
+        ChipLogError(AppServer, "HttpGetRequest::HandleGet request failed to parse responseStream %s", errs.c_str());
+        curl_slist_free_all(headers);
+        return Status::Failure;
+    }
+
+    ChipLogProgress(AppServer, "HttpGetRequest::HandleGet response %s", jsonResponse.toStyledString().c_str());
+
+    curl_slist_free_all(headers);
+    curl_easy_cleanup(pCurlHandle);
+
+    return status;
 }
 
 void ExampleAPI::GetPowerMeasurements()
 {
     static Power_mW oldValue_mW = 0;
 
+    CURL * pCurlHandle = curl_easy_init();
+    if (pCurlHandle == nullptr)
+    {
+        ChipLogError(AppServer, "ExampleAPI::GetPowerMeasurements failed to initialised CURL");
+        return;
+    }
+
     std::string powerMeasUrl = sBaseUrl + "/get_mqtt_data";
-    curl_easy_setopt(mpCurlHandle, CURLOPT_URL, powerMeasUrl.c_str());
+    curl_easy_setopt(pCurlHandle, CURLOPT_URL, powerMeasUrl.c_str());
 
     std::string postResponse;
-    curl_easy_setopt(mpCurlHandle, CURLOPT_WRITEFUNCTION, ExampleAPI::WriteCallback);
-    curl_easy_setopt(mpCurlHandle, CURLOPT_WRITEDATA, &postResponse);
+    curl_easy_setopt(pCurlHandle, CURLOPT_WRITEFUNCTION, ExampleAPI::WriteCallback);
+    curl_easy_setopt(pCurlHandle, CURLOPT_WRITEDATA, &postResponse);
 
     // Perform the POST request
-    CURLcode res = curl_easy_perform(mpCurlHandle);
+    CURLcode res = curl_easy_perform(pCurlHandle);
     if (res != CURLE_OK)
     {
         ChipLogError(AppServer, "ExampleAPI::GetPowerMeasurements: request failed %s", curl_easy_strerror(res));
@@ -132,119 +327,32 @@ void ExampleAPI::GetPowerMeasurements()
             ChipLogError(AppServer, "Unable to SendPowerReading: %" CHIP_ERROR_FORMAT, err.Format());
         }
     }
+    curl_easy_cleanup(pCurlHandle);
 }
 
 void ExampleAPI::GetHeaterData()
 {
+    CURL * pCurlHandle = curl_easy_init();
+    if (pCurlHandle == nullptr)
+    {
+        ChipLogError(AppServer, "ExampleAPI::GetHeaterData failed to initialised CURL");
+        return;
+    }
+
     std::string powerMeasUrl = sBaseUrl + "/water_heater";
-    curl_easy_setopt(mpCurlHandle, CURLOPT_URL, powerMeasUrl.c_str());
+    curl_easy_setopt(pCurlHandle, CURLOPT_URL, powerMeasUrl.c_str());
 
     std::string postResponse;
-    curl_easy_setopt(mpCurlHandle, CURLOPT_WRITEFUNCTION, ExampleAPI::WriteCallback);
-    curl_easy_setopt(mpCurlHandle, CURLOPT_WRITEDATA, &postResponse);
+    curl_easy_setopt(pCurlHandle, CURLOPT_WRITEFUNCTION, ExampleAPI::WriteCallback);
+    curl_easy_setopt(pCurlHandle, CURLOPT_WRITEDATA, &postResponse);
 
     // Perform the POST request
-    CURLcode res = curl_easy_perform(mpCurlHandle);
+    CURLcode res = curl_easy_perform(pCurlHandle);
     if (res != CURLE_OK)
     {
         ChipLogError(AppServer, "ExampleAPI::GetHeaterData: request failed %s", curl_easy_strerror(res));
         return;
     }
-
-    // We expect a complex JSON structure in return which contains
-    // {
-    //   "temperatureMeasurement": {
-    //     "value": 39.5
-    //   },
-    //   "thermostat": {
-    //     "occupiedSetpoint": 62,
-    //     "schedule": {
-    //       "schedule": [
-    //         {
-    //           "daysBitmap": 2,
-    //           "transitions": [
-    //             {
-    //               "setpoint": 62,
-    //               "transitionTime": 610
-    //             },
-    //             {
-    //               "setpoint": 40,
-    //               "transitionTime": 1020
-    //             }
-    //           ]
-    //         },
-    //         {
-    //           "daysBitmap": 4,
-    //           "transitions": [
-    //             {
-    //               "setpoint": 62,
-    //               "transitionTime": 650
-    //             },
-    //             {
-    //               "setpoint": 40,
-    //               "transitionTime": 1010
-    //             }
-    //           ]
-    //         },
-    //         {
-    //           "daysBitmap": 8,
-    //           "transitions": [
-    //             {
-    //               "setpoint": 62,
-    //               "transitionTime": 430
-    //             },
-    //             {
-    //               "setpoint": 40,
-    //               "transitionTime": 610
-    //             },
-    //             {
-    //               "setpoint": 62,
-    //               "transitionTime": 660
-    //             },
-    //             {
-    //               "setpoint": 40,
-    //               "transitionTime": 1020
-    //             }
-    //           ]
-    //         },
-    //         {
-    //           "daysBitmap": 16,
-    //           "transitions": [
-    //             {
-    //               "setpoint": 62,
-    //               "transitionTime": 660
-    //             },
-    //             {
-    //               "setpoint": 40,
-    //               "transitionTime": 1020
-    //             }
-    //           ]
-    //         },
-    //         {
-    //           "daysBitmap": 97,
-    //           "transitions": [
-    //             {
-    //               "setpoint": 62,
-    //               "transitionTime": 360
-    //             },
-    //             {
-    //               "setpoint": 40,
-    //               "transitionTime": 1320
-    //             }
-    //           ]
-    //         }
-    //       ]
-    //     },
-    //     "systemMode": 4
-    //   },
-    //   "waterHeater": {
-    //     "estimatedHeatRequired_mWh": 2613.75,
-    //     "heatDemand": 2,
-    //     "heaterTypes": 2,
-    //     "tankPercentage": 52,
-    //     "tankVolume": 100
-    //   }
-    // }
 
     //  Parse the JSON response
     Json::Value jsonResponse;
@@ -286,6 +394,7 @@ void ExampleAPI::GetHeaterData()
             }
         }
     }
+    curl_easy_cleanup(pCurlHandle);
 }
 
 void ExampleAPI::GetPowerMeasurementsTimer(System::Layer * systemLayer, void * delegate)
@@ -340,21 +449,28 @@ Status ExampleAPI::SetBoost(bool on)
     struct curl_slist * headers = NULL;
     const char * pOp            = on ? "on" : "off";
 
+    CURL * pCurlHandle = curl_easy_init();
+    if (pCurlHandle == nullptr)
+    {
+        ChipLogError(AppServer, "ExampleAPI::SetBoost failed to initialised CURL");
+        return Status::Failure;
+    }
+
     std::string boostActivateUrl = sBaseUrl + "/toggle_boost_" + pOp;
 
-    curl_easy_setopt(mpCurlHandle, CURLOPT_URL, boostActivateUrl.c_str());
+    curl_easy_setopt(pCurlHandle, CURLOPT_URL, boostActivateUrl.c_str());
 
     std::string postResponse;
-    curl_easy_setopt(mpCurlHandle, CURLOPT_WRITEFUNCTION, ExampleAPI::WriteCallback);
-    curl_easy_setopt(mpCurlHandle, CURLOPT_WRITEDATA, &postResponse);
+    curl_easy_setopt(pCurlHandle, CURLOPT_WRITEFUNCTION, ExampleAPI::WriteCallback);
+    curl_easy_setopt(pCurlHandle, CURLOPT_WRITEDATA, &postResponse);
 
-    curl_easy_setopt(mpCurlHandle, CURLOPT_HTTPHEADER, headers);
+    curl_easy_setopt(pCurlHandle, CURLOPT_HTTPHEADER, headers);
 
     // Set the request body for the GET request
-    curl_easy_setopt(mpCurlHandle, CURLOPT_POSTFIELDS, "");
+    curl_easy_setopt(pCurlHandle, CURLOPT_POSTFIELDS, "");
 
     // Perform the POST request
-    res = curl_easy_perform(mpCurlHandle);
+    res = curl_easy_perform(pCurlHandle);
 
     // Check for errors
     if (res != CURLE_OK)
@@ -381,7 +497,7 @@ Status ExampleAPI::SetBoost(bool on)
     // ChipLogProgress(AppServer, "ExampleAPI::SetBoost %s response: %s", pOp, jsonResponse.toStyledString().c_str());
 
     // curl_slist_free_all(headers);
-
+    curl_easy_cleanup(pCurlHandle);
     return Status::Success;
 }
 
@@ -391,63 +507,6 @@ size_t ExampleAPI::WriteCallback(void * contents, size_t size, size_t nmemb, voi
 {
     ((string *) userp)->append((char *) contents, size * nmemb);
     return size * nmemb;
-}
-
-Status ExampleAPI::Login()
-{
-    // CURLcode res;
-    // struct curl_slist * headers = NULL;
-
-    // std::string authUrl = sBaseUrl + "/uaa/oauth/token";
-    // curl_easy_setopt(mpCurlHandle, CURLOPT_URL, authUrl.c_str());
-
-    // // Set the callback function to handle the response
-    // std::string getTokenResponse;
-    // curl_easy_setopt(mpCurlHandle, CURLOPT_WRITEFUNCTION, WriteCallback);
-    // curl_easy_setopt(mpCurlHandle, CURLOPT_WRITEDATA, &getTokenResponse);
-
-    // // Set the HTTP POST data for the login request in JSON format
-    // Json::Value jsonPostData;
-    // jsonPostData["grant_type"] = "client_credentials";
-    // std::string postData       = jsonPostData.toStyledString();
-    // curl_easy_setopt(mpCurlHandle, CURLOPT_POSTFIELDS, postData.c_str());
-
-    // // Set the content type to JSON
-    // headers = curl_slist_append(headers, "Content-Type: application/x-www-form-urlencoded");
-    // headers = curl_slist_append(headers, "Authorization: Basic ZEVvdGDiEKJpLXJfd2hpIuIlbjpPNnlLOL1Zcmh1WGZyNwTF"),
-    // headers = curl_slist_append(headers, "Ocp-Apim-Subscription-Key: f292pp12345640519b7d3345cc999999");
-    // curl_easy_setopt(mpCurlHandle, CURLOPT_HTTPHEADER, headers);
-
-    // // Set the callback function to handle the response
-    // std::string postResponse;
-    // curl_easy_setopt(mpCurlHandle, CURLOPT_WRITEFUNCTION, WriteCallback);
-    // curl_easy_setopt(mpCurlHandle, CURLOPT_WRITEDATA, &postResponse);
-    // //    curl_easy_setopt(mpCurlHandle, CURLOPT_VERBOSE, 1);
-
-    // // Perform the POST request
-    // res = curl_easy_perform(mpCurlHandle);
-    // if (res != CURLE_OK)
-    // {
-    //     ChipLogError(AppServer, "ExampleAPI::Login: Login request failed %s", curl_easy_strerror(res));
-    //     return Status::Failure;
-    // }
-
-    // ChipLogProgress(AppServer, "ExampleAPI::Login: Login successful!");
-
-    // //  Parse the JSON response
-    // Json::Value jsonResponse;
-    // Json::CharReaderBuilder jsonReader;
-    // std::istringstream responseStream(postResponse);
-    // if (Json::parseFromStream(jsonReader, responseStream, &jsonResponse, nullptr))
-    // {
-    //     // Extract values from the parsed JSON
-    //     mAccessToken          = jsonResponse["access_token"].asString();
-    //     mAccessTokenExpiresIn = jsonResponse["expires_in"].asInt();
-
-    //     ChipLogProgress(AppServer, "ExampleAPI::Login Access token %s", mAccessToken.c_str());
-    // }
-
-    return Status::Success;
 }
 
 Status ExampleAPI::GetSchedule()

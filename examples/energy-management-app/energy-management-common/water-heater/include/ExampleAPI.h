@@ -25,12 +25,13 @@
 #include <protocols/interaction_model/StatusCode.h>
 
 extern std::string sBaseUrl;
+extern std::string sUsername;
+extern std::string sPassword;
+
 namespace chip {
 namespace app {
 namespace Clusters {
 namespace WaterHeaterManagement {
-
-class CURL;
 
 class ExampleAPI
 {
@@ -51,6 +52,9 @@ public:
     Protocols::InteractionModel::Status GetStates();
 
     Protocols::InteractionModel::Status Login();
+    Protocols::InteractionModel::Status Logout();
+
+    Protocols::InteractionModel::Status HandleGetHref(std::string baseUrl, const char * resource);
 
     static size_t WriteCallback(void * contents, size_t size, size_t nmemb, void * userp);
 
@@ -64,9 +68,8 @@ private:
     void GetHeaterData();
 
 private:
-    CURL * mpCurlHandle;
     std::string mSerialNumber;
-    std::string mBaseUrl;
+    std::string mAccessToken;
 };
 
 } // namespace WaterHeaterManagement
