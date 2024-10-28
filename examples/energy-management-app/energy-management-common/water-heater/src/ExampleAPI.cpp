@@ -54,8 +54,9 @@ ExampleAPI::ExampleAPI()
     std::string tanksUrl;
     VerifyOrDie(HandleGetHref(sBaseUrl, "tanks", tanksUrl) == Status::Success);
 
-    std::string myTankUrl;
-    VerifyOrDie(HandleGetTanksURL(tanksUrl, myTankUrl) == Status::Success);
+    // Find our tank specific URL
+    VerifyOrDie(HandleGetTanksURL(tanksUrl, mTankUrl) == Status::Success);
+    VerifyOrDie(HandleGetHref(mTankUrl, "latest_measurement", mMeasurementUrl) == Status::Success);
 
     CHIP_ERROR err = DeviceLayer::SystemLayer().StartTimer(System::Clock::Seconds32(1), GetPowerMeasurementsTimer, this);
     if (err != CHIP_NO_ERROR)
@@ -447,6 +448,9 @@ void ExampleAPI::GetPowerMeasurements()
 
 void ExampleAPI::GetHeaterData()
 {
+    CURLcode res;
+    struct curl_slist * headers = NULL;
+
     CURL * pCurlHandle = curl_easy_init();
     if (pCurlHandle == nullptr)
     {
@@ -454,63 +458,97 @@ void ExampleAPI::GetHeaterData()
         return;
     }
 
-    // We need to get the URL from the 'tanks' endpoint
-    std::string powerMeasUrl = sBaseUrl + "/tanks";
-    curl_easy_setopt(pCurlHandle, CURLOPT_URL, powerMeasUrl.c_str());
+    curl_easy_setopt(pCurlHandle, CURLOPT_URL, mMeasurementUrl.c_str());
+
+    std::string authStr = "Authorization: Bearer " + mAccessToken;
+    headers             = curl_slist_append(headers, authStr.c_str());
 
     std::string postResponse;
     curl_easy_setopt(pCurlHandle, CURLOPT_WRITEFUNCTION, ExampleAPI::WriteCallback);
     curl_easy_setopt(pCurlHandle, CURLOPT_WRITEDATA, &postResponse);
 
-    // Perform the POST request
-    CURLcode res = curl_easy_perform(pCurlHandle);
+    curl_easy_setopt(pCurlHandle, CURLOPT_HTTPHEADER, headers);
+    curl_easy_setopt(pCurlHandle, CURLOPT_HTTPGET, 1L);
+
+    // Perform the GET request
+    res = curl_easy_perform(pCurlHandle);
+
+    // Check for errors
     if (res != CURLE_OK)
     {
         ChipLogError(AppServer, "ExampleAPI::GetHeaterData: request failed %s", curl_easy_strerror(res));
+        curl_slist_free_all(headers);
         return;
     }
+
+    curl_slist_free_all(headers);
+    curl_easy_cleanup(pCurlHandle);
 
     //  Parse the JSON response
     Json::Value jsonResponse;
     Json::CharReaderBuilder jsonReader;
     std::istringstream responseStream(postResponse);
-    if (Json::parseFromStream(jsonReader, responseStream, &jsonResponse, nullptr))
+    std::string errs;
+
+    if (!Json::parseFromStream(jsonReader, responseStream, &jsonResponse, nullptr))
     {
-        const float temperatureMeasurement = jsonResponse["temperatureMeasurement"]["value"].asFloat();
-        const int estimatedHeatRequiredmWh = jsonResponse["waterHeater"]["estimatedHeatRequired_mWh"].asInt();
-        const int occupiedSetpoint         = jsonResponse["thermostat"]["occupiedSetpoint"].asInt();
-        const int heatDemand               = jsonResponse["waterHeater"]["heatDemand"].asInt();
-        const int heaterTypes              = jsonResponse["waterHeater"]["heaterTypes"].asInt();
-        const int tankPercentage           = jsonResponse["waterHeater"]["tankPercentage"].asInt();
-        const int tankVolume               = jsonResponse["waterHeater"]["tankVolume"].asInt();
+        ChipLogError(AppServer, "GetHeaterData request failed to parse responseStream %s", errs.c_str());
+        return;
+    }
 
-        ChipLogProgress(AppServer, "ExampleAPI::GetHeaterData temperatureMeasurement %f", temperatureMeasurement);
-        ChipLogProgress(AppServer, "ExampleAPI::GetHeaterData estimatedHeatRequired_mWh %d", estimatedHeatRequiredmWh);
-        ChipLogProgress(AppServer, "ExampleAPI::GetHeaterData occupiedSetpoint %d", occupiedSetpoint);
-        ChipLogProgress(AppServer, "ExampleAPI::GetHeaterData heatDemand %d", heatDemand);
-        ChipLogProgress(AppServer, "ExampleAPI::GetHeaterData heaterTypes %d", heaterTypes);
-        ChipLogProgress(AppServer, "ExampleAPI::GetHeaterData tankPercentage %d", tankPercentage);
-        ChipLogProgress(AppServer, "ExampleAPI::GetHeaterData tankVolume %d", tankVolume);
+    if (!jsonResponse.isMember("topTemperature"))
+    {
+        ChipLogError(AppServer, "GetHeaterData: Could not find topTemperature");
+        return;
+    }
 
-        WhmManufacturer * mn = GetWhmManufacturer();
-        if (mn)
+    if (!jsonResponse.isMember("charge"))
+    {
+        ChipLogError(AppServer, "GetHeaterData: Could not find charge");
+        return;
+    }
+
+    if (!jsonResponse.isMember("state"))
+    {
+        ChipLogError(AppServer, "GetHeaterData: Could not find state");
+        return;
+    }
+
+    std::string state = jsonResponse["state"].asString();
+    ChipLogProgress(AppServer, "State %s", state.c_str());
+
+    const float temperatureMeasurement = jsonResponse["topTemperature"].asFloat();
+    const int estimatedHeatRequiredmWh = 2400;
+    const int occupiedSetpoint         = 55;
+    const int heatDemand               = 0x2; // TODO work this out from state
+    const int heaterTypes              = 0x2;
+    const int tankPercentage           = static_cast<int>(jsonResponse["charge"].asFloat());
+    const int tankVolume               = 120; // TODO work this out from model number
+
+    ChipLogProgress(AppServer, "ExampleAPI::GetHeaterData temperatureMeasurement %f", temperatureMeasurement);
+    ChipLogProgress(AppServer, "ExampleAPI::GetHeaterData estimatedHeatRequired_mWh %d", estimatedHeatRequiredmWh);
+    ChipLogProgress(AppServer, "ExampleAPI::GetHeaterData occupiedSetpoint %d", occupiedSetpoint);
+    ChipLogProgress(AppServer, "ExampleAPI::GetHeaterData heatDemand %d", heatDemand);
+    ChipLogProgress(AppServer, "ExampleAPI::GetHeaterData heaterTypes %d", heaterTypes);
+    ChipLogProgress(AppServer, "ExampleAPI::GetHeaterData tankPercentage %d", tankPercentage);
+    ChipLogProgress(AppServer, "ExampleAPI::GetHeaterData tankVolume %d", tankVolume);
+
+    WhmManufacturer * mn = GetWhmManufacturer();
+    if (mn)
+    {
+        WaterHeaterManagementDelegate * dg = mn->GetWhmDelegate();
+        if (dg)
         {
-            WaterHeaterManagementDelegate * dg = mn->GetWhmDelegate();
-            if (dg)
-            {
-                // Note we don't bother with the HeaterTypes and HeatDemand for now - this is handled elsewhere
-                // TODO set current temperature using Ember
-                TemperatureMeasurement::Attributes::MeasuredValue::Set(kTempSensorEndpoint,
-                                                                       static_cast<int16_t>(temperatureMeasurement * 100));
+            // Note we don't bother with the HeaterTypes and HeatDemand for now - this is handled elsewhere
+            TemperatureMeasurement::Attributes::MeasuredValue::Set(kTempSensorEndpoint,
+                                                                   static_cast<int16_t>(temperatureMeasurement * 100));
 
-                dg->SetTargetWaterTemperature(static_cast<int16_t>(occupiedSetpoint * 100));
-                dg->SetEstimatedHeatRequired(static_cast<chip::Energy_mWh>(estimatedHeatRequiredmWh));
-                dg->SetTankPercentage(static_cast<chip::Percent>(tankPercentage));
-                dg->SetTankVolume(static_cast<uint16_t>(tankVolume));
-            }
+            dg->SetTargetWaterTemperature(static_cast<int16_t>(occupiedSetpoint * 100));
+            dg->SetEstimatedHeatRequired(static_cast<chip::Energy_mWh>(estimatedHeatRequiredmWh));
+            dg->SetTankPercentage(static_cast<chip::Percent>(tankPercentage));
+            dg->SetTankVolume(static_cast<uint16_t>(tankVolume));
         }
     }
-    curl_easy_cleanup(pCurlHandle);
 }
 
 void ExampleAPI::GetPowerMeasurementsTimer(System::Layer * systemLayer, void * delegate)

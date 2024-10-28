@@ -71,6 +71,8 @@ private:
 private:
     std::string mSerialNumber;
     std::string mAccessToken;
+    std::string mTankUrl;
+    std::string mMeasurementUrl;
 };
 
 } // namespace WaterHeaterManagement
