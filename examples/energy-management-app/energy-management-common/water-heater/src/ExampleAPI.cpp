@@ -514,16 +514,40 @@ void ExampleAPI::GetHeaterData()
         return;
     }
 
-    std::string state = jsonResponse["state"].asString();
-    ChipLogProgress(AppServer, "State %s", state.c_str());
+    std::string stateJson = jsonResponse["state"].asString();
+    ChipLogProgress(AppServer, "State %s", stateJson.c_str());
 
     const float temperatureMeasurement = jsonResponse["topTemperature"].asFloat();
     const int estimatedHeatRequiredmWh = 2400;
     const int occupiedSetpoint         = 55;
-    const int heatDemand               = 0x2; // TODO work this out from state
     const int heaterTypes              = 0x2;
     const int tankPercentage           = static_cast<int>(jsonResponse["charge"].asFloat());
     const int tankVolume               = 120; // TODO work this out from model number
+
+    //  Parse the 'state' JSON response
+    Json::Value jsonResponse2;
+    Json::CharReaderBuilder jsonReader2;
+    std::istringstream responseStream2(stateJson);
+
+    if (!Json::parseFromStream(jsonReader2, responseStream2, &jsonResponse2, nullptr))
+    {
+        ChipLogError(AppServer, "GetHeaterData request failed to parse responseStream2 %s", errs.c_str());
+        return;
+    }
+
+    if (!jsonResponse2.isMember("current"))
+    {
+        ChipLogError(AppServer, "GetHeaterData could not find 'current' in state");
+        return;
+    }
+    if (!jsonResponse2["current"].isMember("immersion"))
+    {
+        ChipLogError(AppServer, "GetHeaterData could not find 'immersion' in state");
+        return;
+    }
+
+    std::string onOffStr = jsonResponse2["current"]["immersion"].asString();
+    const int heatDemand = (onOffStr == "On") ? 0x2 : 0x0; // Set or Clear bit 1 if On/Off
 
     ChipLogProgress(AppServer, "ExampleAPI::GetHeaterData temperatureMeasurement %f", temperatureMeasurement);
     ChipLogProgress(AppServer, "ExampleAPI::GetHeaterData estimatedHeatRequired_mWh %d", estimatedHeatRequiredmWh);
