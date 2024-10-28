@@ -174,9 +174,9 @@ Status ExampleAPI::Logout()
     std::string loginUrl = sBaseUrl + "/account/login";
     curl_easy_setopt(pCurlHandle, CURLOPT_URL, loginUrl.c_str());
 
-    std::string postResponse;
-    curl_easy_setopt(pCurlHandle, CURLOPT_WRITEFUNCTION, ExampleAPI::WriteCallback);
-    curl_easy_setopt(pCurlHandle, CURLOPT_WRITEDATA, &postResponse);
+    // std::string postResponse;
+    // curl_easy_setopt(pCurlHandle, CURLOPT_WRITEFUNCTION, ExampleAPI::WriteCallback);
+    // curl_easy_setopt(pCurlHandle, CURLOPT_WRITEDATA, &postResponse);
 
     // Set HTTP DELETE method
     curl_easy_setopt(pCurlHandle, CURLOPT_CUSTOMREQUEST, "DELETE");
@@ -185,9 +185,10 @@ Status ExampleAPI::Logout()
     struct curl_slist * headers = NULL;
     std::string authStr         = "Authorization: Bearer " + mAccessToken;
     headers                     = curl_slist_append(headers, authStr.c_str());
+    curl_easy_setopt(pCurlHandle, CURLOPT_HTTPHEADER, headers);
 
     // Set JSON data
-    curl_easy_setopt(pCurlHandle, CURLOPT_POSTFIELDS, "");
+    // curl_easy_setopt(pCurlHandle, CURLOPT_POSTFIELDS, "");
 
     // Perform the POST request
     CURLcode res = curl_easy_perform(pCurlHandle);
