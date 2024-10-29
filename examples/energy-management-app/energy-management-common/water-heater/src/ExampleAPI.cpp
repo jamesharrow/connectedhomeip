@@ -44,6 +44,29 @@ static constexpr EndpointId kTempSensorEndpoint               = 1;
 static constexpr uint16_t sGetPowerMeasurementsTimerDurationS = 2;
 static constexpr uint16_t sGetDataTimerDurationS              = 60;
 
+void MatterPostAttributeChangeCallback(const chip::app::ConcreteAttributePath & attributePath, uint8_t type, uint16_t size,
+                                       uint8_t * value)
+{
+    if (attributePath.mClusterId == OnOff::Id && attributePath.mAttributeId == OnOff::Attributes::OnOff::Id)
+    {
+        ChipLogProgress(AppServer,"OnOff changed to %d", *value);
+
+        WhmManufacturer * mn = GetWhmManufacturer();
+        if (mn)
+        {
+            if (*value)
+            {
+                mn->GetExampleAPI()->BoostActivate();
+            }
+            else
+            {
+                mn->GetExampleAPI()->BoostDeactivate();
+            }
+        }
+    }
+}
+
+
 ExampleAPI::ExampleAPI()
 {
 

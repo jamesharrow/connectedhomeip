@@ -91,6 +91,11 @@ public:
         return nullptr;
     }
 
+    ExampleAPI * GetExampleAPI()
+    {
+        return &mExampleWaterHeater;
+    }
+
     /**
      * @brief   Called at start up to apply hardware settings
      */
