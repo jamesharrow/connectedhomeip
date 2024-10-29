@@ -57,6 +57,7 @@ ExampleAPI::ExampleAPI()
     // Find our tank specific URL
     VerifyOrDie(HandleGetTanksURL(tanksUrl, mTankUrl) == Status::Success);
     VerifyOrDie(HandleGetHref(mTankUrl, "latest_measurement", mMeasurementUrl) == Status::Success);
+    VerifyOrDie(HandleGetHref(mTankUrl, "control", mControlUrl) == Status::Success);
 
     CHIP_ERROR err = DeviceLayer::SystemLayer().StartTimer(System::Clock::Seconds32(1), GetPowerMeasurementsTimer, this);
     if (err != CHIP_NO_ERROR)
@@ -624,9 +625,9 @@ Status ExampleAPI::BoostDeactivate()
 
 Status ExampleAPI::SetBoost(bool on)
 {
+    Status status = Status::Success;
+
     CURLcode res;
-    struct curl_slist * headers = NULL;
-    const char * pOp            = on ? "on" : "off";
 
     CURL * pCurlHandle = curl_easy_init();
     if (pCurlHandle == nullptr)
@@ -635,18 +636,27 @@ Status ExampleAPI::SetBoost(bool on)
         return Status::Failure;
     }
 
-    std::string boostActivateUrl = sBaseUrl + "/toggle_boost_" + pOp;
+    curl_easy_setopt(pCurlHandle, CURLOPT_URL, mControlUrl.c_str());
 
-    curl_easy_setopt(pCurlHandle, CURLOPT_URL, boostActivateUrl.c_str());
+    // Set HTTP method to PUT
+    curl_easy_setopt(pCurlHandle, CURLOPT_CUSTOMREQUEST, "PUT");
+
+    // Set headers
+    struct curl_slist * headers = NULL;
+    headers                     = curl_slist_append(headers, "Content-Type: application/json");
+    std::string authStr         = "Authorization: Bearer " + mAccessToken;
+    headers                     = curl_slist_append(headers, authStr.c_str());
+
+    curl_easy_setopt(pCurlHandle, CURLOPT_HTTPHEADER, headers);
+
+    // Set JSON data
+    std::string charge_target = on ? "100" : "0";
+    std::string data          = "{ \"charge\": " + charge_target + " }";
+    curl_easy_setopt(pCurlHandle, CURLOPT_POSTFIELDS, data.c_str());
 
     std::string postResponse;
     curl_easy_setopt(pCurlHandle, CURLOPT_WRITEFUNCTION, ExampleAPI::WriteCallback);
     curl_easy_setopt(pCurlHandle, CURLOPT_WRITEDATA, &postResponse);
-
-    curl_easy_setopt(pCurlHandle, CURLOPT_HTTPHEADER, headers);
-
-    // Set the request body for the GET request
-    curl_easy_setopt(pCurlHandle, CURLOPT_POSTFIELDS, "");
 
     // Perform the POST request
     res = curl_easy_perform(pCurlHandle);
@@ -654,30 +664,13 @@ Status ExampleAPI::SetBoost(bool on)
     // Check for errors
     if (res != CURLE_OK)
     {
-        ChipLogError(AppServer, "ExampleAPI::SetBoost %s request failed %s", pOp, curl_easy_strerror(res));
-        curl_slist_free_all(headers);
-        return Status::Failure;
+        ChipLogError(AppServer, "ExampleAPI::SetBoost %s request failed %s", data.c_str(), curl_easy_strerror(res));
+        status = Status::Failure;
     }
 
-    ChipLogProgress(AppServer, "ExampleAPI::SetBoost %s successful. Response: %s", pOp, postResponse.c_str());
-
-    //  Parse the JSON response
-    // Json::Value jsonResponse;
-    // Json::CharReaderBuilder jsonReader;
-    // std::istringstream responseStream(postResponse);
-    // std::string errs;
-
-    // if (!Json::parseFromStream(jsonReader, responseStream, &jsonResponse, nullptr))
-    // {
-    //     ChipLogError(AppServer, "ExampleAPI::SetBoost %s request failed to parse responseStream: %s", pOp,
-    //     errs.c_str()); curl_slist_free_all(headers); return Status::Failure;
-    // }
-
-    // ChipLogProgress(AppServer, "ExampleAPI::SetBoost %s response: %s", pOp, jsonResponse.toStyledString().c_str());
-
-    // curl_slist_free_all(headers);
+    curl_slist_free_all(headers);
     curl_easy_cleanup(pCurlHandle);
-    return Status::Success;
+    return status;
 }
 
 // Callback function to handle curl's response

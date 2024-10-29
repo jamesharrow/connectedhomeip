@@ -73,6 +73,7 @@ private:
     std::string mAccessToken;
     std::string mTankUrl;
     std::string mMeasurementUrl;
+    std::string mControlUrl;
 };
 
 } // namespace WaterHeaterManagement
