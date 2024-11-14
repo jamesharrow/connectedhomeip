@@ -79,18 +79,36 @@ CHIP_ERROR EVSEManufacturer::Init()
     /*
      * This is an example implementation for manufacturers to consider
      *
-     * For Manufacturer to specify the hardware capability in mA:
-     *  dg->HwSetMaxHardwareCurrentLimit(32000);    // 32A
-     *
-     * For Manufacturer to specify the CircuitCapacity in mA (e.g. from DIP switches)
-     *  dg->HwSetCircuitCapacity(20000);            // 20A
-     *
-     */
+     * For Manufacturer to specify the hardware capability in mA: */
+    dg->HwSetMaxHardwareCurrentLimit(32000); // 32A
+
+    /*
+     * For Manufacturer to specify the CircuitCapacity in mA (e.g. from DIP switches) */
+    dg->HwSetCircuitCapacity(32000); // 32A
+
+    /* Force the State to be plugged in with EV demand for demo */
+    dg->HwSetState(StateEnum::kPluggedInDemand);
+
+    /* Force cable capacity to be 63A */
+    dg->HwSetCableAssemblyLimit(63000);
 
     /* Once the system is initialised then check to see if the state was restored
      * (e.g. after a power outage), and if the Enable timer check needs to be started
      */
     dg->ScheduleCheckOnEnabledTimeout();
+
+    /* By default start fake readings */
+    int64_t aPower_mW              = 7'360'000; // Fake load 7.36 W
+    uint32_t aPowerRandomness_mW   = 20'000;    // randomness 20W
+    int64_t aVoltage_mV            = 230'000;   // Fake Voltage 230V
+    uint32_t aVoltageRandomness_mV = 1'000;     // randomness 1V
+    int64_t aCurrent_mA            = 32'000;    // Fake Current (at 32 Amps)
+    uint32_t aCurrentRandomness_mA = 500;       // randomness 500mA
+    uint8_t aInterval_s            = 2;         // 2s updates
+    bool bReset                    = true;
+
+    FakeReadings::GetInstance().StartFakeReadings(EndpointId(1), aPower_mW, aPowerRandomness_mW, aVoltage_mV, aVoltageRandomness_mV,
+                                                  aCurrent_mA, aCurrentRandomness_mA, aInterval_s, bReset);
 
     return CHIP_NO_ERROR;
 }
