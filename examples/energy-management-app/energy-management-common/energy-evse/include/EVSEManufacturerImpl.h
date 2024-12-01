@@ -24,6 +24,9 @@
 #include <EnergyEvseManager.h>
 #include <PowerTopologyDelegate.h>
 
+extern std::string sBaseUrl;
+extern int fifo_fd;
+
 using chip::Protocols::InteractionModel::Status;
 namespace chip {
 namespace app {
@@ -219,6 +222,24 @@ public:
      * @param   maximumChargeCurrent   Maximum Charge current in mA
      */
     void UpdateEVFakeReadings(const Amperage_mA maximumChargeCurrent);
+
+    /*
+     * @brief   Updates a FIFO or other device via a REST API
+     * 
+     * If current == 0, then the state = 1 (Off)
+     * If current == 10mA, then state = 6 (discharging) [SPECIAL HACK]
+     * If 10 < current <= 16,000 then the state = 4 (slow charging)
+     * If 16,000 < current <= 32,000 then the state = 5 (fast charging)
+     * 
+     * State 1 - Off (Car is Away, Charger is Not Connected/Off) [http://10.1.0.10/win&PL=1]
+     * State 2 - Solid Red (Car is available, Charger Is Not Connected/Off) [http://10.1.0.10/win&PL=2]
+     * State 3 - Solid Green to car (Car is available, Charger is Connected/On) [http://10.1.0.10/win&PL=3]
+     * State 4 - Slow Running Green (Car is available, Charger is set to Low) [http://10.1.0.10/win&PL=4]
+     * State 5 - Fast Running Green (Car is available, Charger is set to High) [http://10.1.0.10/win&PL=5]
+     * State 6 - Running Blue back to charger [http://10.1.0.10/win&PL=6]
+     * 
+     */
+    void UpdateLEDStatus();
 
 private:
     EnergyEvseManager * mEvseInstance;

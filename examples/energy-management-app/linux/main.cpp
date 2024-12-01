@@ -38,6 +38,8 @@ static bool EnergyAppOptionHandler(const char * aProgram, chip::ArgParser::Optio
 
 constexpr uint16_t kOptionApplication = 0xffd0;
 constexpr uint16_t kOptionFeatureMap  = 0xffd1;
+constexpr uint16_t kOptionFifo        = 0xffd2;
+constexpr uint16_t kOptionBaseUrl     = 0xffd3;
 
 constexpr const char * kEvseApp = "evse";
 constexpr const char * kWhmApp  = "water-heater";
@@ -49,14 +51,24 @@ constexpr const char * kValidApps[] = { kEvseApp, kWhmApp };
 static chip::ArgParser::OptionDef sEnergyAppOptionDefs[] = {
     { "application", chip::ArgParser::kArgumentRequired, kOptionApplication },
     { "featureSet", chip::ArgParser::kArgumentRequired, kOptionFeatureMap },
+    { "fifo", chip::ArgParser::kArgumentRequired, kOptionFifo },     
+    { "baseURL", chip::ArgParser::kArgumentRequired, kOptionBaseUrl },
     { nullptr }
 };
 
 static chip::ArgParser::OptionSet sCmdLineOptions = { EnergyAppOptionHandler, // handler function
                                                       sEnergyAppOptionDefs,   // array of option definitions
                                                       "PROGRAM OPTIONS",      // help group
-                                                      "-a, --application <evse|water-heater>\n"
-                                                      "-f, --featureSet <value>\n" };
+                                                      "--application <evse|water-heater>\n"
+                                                      "--featureSet <value>\n"
+                                                      "--fifo <path to output fifo>\n"
+                                                      "--baseURL <url>\n" };
+
+// Make EVSE the default app
+static const char * spApp = kEvseApp;
+std::string sBaseUrl      = ""; // http://10.1.0.10win&PL=
+std::string sFifoPath     = ""; // /tmp/chip_evse_led_state
+int fifo_fd = -1;    // Named PIPE File descriptor
 
 namespace chip {
 namespace app {
@@ -67,9 +79,6 @@ namespace DeviceEnergyManagement {
 static chip::BitMask<Feature> sFeatureMap(Feature::kPowerAdjustment, Feature::kPowerForecastReporting,
                                           Feature::kStateForecastReporting, Feature::kStartTimeAdjustment, Feature::kPausable,
                                           Feature::kForecastAdjustment, Feature::kConstraintBasedAdjustment);
-
-// Make EVSE the default app
-static const char * spApp = kEvseApp;
 
 chip::BitMask<Feature> GetFeatureMapFromCmdLine()
 {
@@ -102,6 +111,14 @@ void ApplicationInit()
     if (strcmp(spApp, kEvseApp) == 0)
     {
         EvseApplicationInit();
+
+        if (strcmp(sFifoPath.c_str(), "") != 0)
+        {
+            // Try to open named PIPE
+            fifo_fd = open(sFifoPath.c_str(), O_WRONLY | O_NONBLOCK);
+            ChipLogDetail(AppServer, "Open of Fifo: %d", fifo_fd);
+            VerifyOrDieWithMsg(fifo_fd >= 0, AppServer, "Could not open named pipe %s [%s] check Rx'er is running?", sFifoPath.c_str(), strerror(errno));
+        }
     }
     else if (strcmp(spApp, kWhmApp) == 0)
     {
@@ -152,6 +169,14 @@ static bool EnergyAppOptionHandler(const char * aProgram, chip::ArgParser::Optio
         sFeatureMap = BitMask<chip::app::Clusters::DeviceEnergyManagement::Feature>(ParseNumber(aValue));
         ChipLogDetail(Support, "Using FeatureMap 0x%04x", sFeatureMap.Raw());
         break;
+    case kOptionBaseUrl:
+        sBaseUrl = aValue;
+        ChipLogDetail(Support, "Using baseURL %s", sBaseUrl.c_str());
+        break;
+    case kOptionFifo:
+        sFifoPath = aValue;
+        ChipLogDetail(Support, "Using FIFO output %s", sFifoPath.c_str());
+        break;                
     default:
         ChipLogError(Support, "%s: INTERNAL ERROR: Unhandled option: %s\n", aProgram, aName);
         retval = false;

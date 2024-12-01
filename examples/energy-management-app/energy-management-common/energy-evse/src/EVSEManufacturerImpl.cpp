@@ -578,6 +578,119 @@ void EVSEManufacturer::UpdateEVFakeReadings(const Amperage_mA maximumChargeCurre
     FakeReadings::GetInstance().SetPower((FakeReadings::GetInstance().GetVoltage() * maximumChargeCurrent) / 1000);
 }
 
+/*
+ * If current == 0, then the state = 1 (Off)
+ * If current == 10mA, then state = 6 (discharging) [SPECIAL HACK]
+ * If 10 < current <= 16,000 then the state = 4 (slow charging)
+ * If 16,000 < current <= 32,000 then the state = 5 (fast charging)
+ * 
+ * State 1 - Off (Car is Away, Charger is Not Connected/Off) [http://10.1.0.10/win&PL=1]
+ * State 2 - Solid Red (Car is available, Charger Is Not Connected/Off) [http://10.1.0.10/win&PL=2]
+ * State 3 - Solid Green to car (Car is available, Charger is Connected/On) [http://10.1.0.10/win&PL=3]
+ * State 4 - Slow Running Green (Car is available, Charger is set to Low) [http://10.1.0.10/win&PL=4]
+ * State 5 - Fast Running Green (Car is available, Charger is set to High) [http://10.1.0.10/win&PL=5]
+ * State 6 - Running Blue back to charger [http://10.1.0.10/win&PL=6]
+ * 
+ */
+enum class EvseLEDStateEnum : uint8_t
+{
+    kOff          = 0x01,
+    kDisabled     = 0x02,
+    kEnabled      = 0x03,
+    kChargingSlow = 0x04,
+    kChargingFast = 0x05,
+    kDischarging  = 0x06,
+    kUnknownEnumValue = 7,
+};
+void EVSEManufacturer::UpdateLEDStatus()
+{
+    EvseLEDStateEnum led_state;
+
+    EVSEManufacturer * mn = GetEvseManufacturer();
+    VerifyOrReturn(mn != nullptr);
+
+    EnergyEvseDelegate * dg = mn->GetEvseDelegate();
+    VerifyOrReturn(dg != nullptr);
+
+    StateEnum state = dg->GetState();
+    SupplyStateEnum supplyState = dg->GetSupplyState();
+    int64_t maxChargeCurrent = dg->GetMaximumChargeCurrent();
+
+    switch (state)
+    {
+        case StateEnum::kNotPluggedIn:
+            led_state = EvseLEDStateEnum::kOff;
+            break;
+
+        case StateEnum::kPluggedInNoDemand:
+            if( supplyState == SupplyStateEnum::kDisabled)
+            {
+                led_state = EvseLEDStateEnum::kDisabled;    // Red solid
+            }
+            else
+            {
+                led_state = EvseLEDStateEnum::kEnabled;     // Green solid
+            }
+            break;
+
+        case StateEnum::kPluggedInDemand:
+        case StateEnum::kPluggedInCharging:
+            if( supplyState == SupplyStateEnum::kDisabled)
+            {
+                led_state = EvseLEDStateEnum::kDisabled;    // Red solid
+            }
+            else if ( maxChargeCurrent == 0)
+            {
+                led_state = EvseLEDStateEnum::kEnabled;     // Green solid
+            }
+            else if (maxChargeCurrent == 10)
+            {
+                led_state = EvseLEDStateEnum::kDischarging; // Blue backwards
+            }
+            else if (maxChargeCurrent >= 16000)
+            {
+                led_state = EvseLEDStateEnum::kChargingFast; // Green Fast
+            }
+            else if (maxChargeCurrent < 0)
+            {
+                // Not sure we can have a negative charging current so this probably can't be reached
+                led_state = EvseLEDStateEnum::kDischarging; // Blue backwards
+            }
+            else
+            {
+                led_state = EvseLEDStateEnum::kChargingSlow; // Green Slow
+            }
+            break;
+        
+        case StateEnum::kPluggedInDischarging:
+            // We aren't likely to get this unless we have a 1.4 EnableDischarging
+            led_state = EvseLEDStateEnum::kDischarging; // Blue backwards
+            break;
+
+        case StateEnum::kFault:
+        default:
+            led_state = EvseLEDStateEnum::kDisabled;
+            break;
+    }
+
+    char out[3];
+    sprintf(out, "%d\n", static_cast<uint8_t>(led_state));
+
+    ChipLogDetail(AppServer, "\n\nLED State: %s\n\n", out);
+
+    // Write to FIFO if it is open
+    if (fifo_fd > 0)
+    {
+        ssize_t result = write(fifo_fd, out, strlen(out));
+        if (result == -1 && errno == EAGAIN)
+        {
+            ChipLogError(AppServer, "FIFO queue full");
+        }
+        fsync(fifo_fd);
+    }
+
+}
+
 /**
  * @brief    Main Callback handler - to be implemented by Manufacturer
  *
@@ -595,12 +708,14 @@ void EVSEManufacturer::ApplicationCallbackHandler(const EVSECbInfo * cb, intptr_
     case EVSECallbackType::StateChanged:
         ChipLogProgress(AppServer, "EVSE callback - state changed");
         pClass->ComputeChargingSchedule();
+        pClass->UpdateLEDStatus();
         break;
     case EVSECallbackType::ChargeCurrentChanged:
         ChipLogProgress(AppServer, "EVSE callback - maxChargeCurrent changed to %ld",
                         static_cast<long>(cb->ChargingCurrent.maximumChargeCurrent));
         pClass->ComputeChargingSchedule();
         pClass->UpdateEVFakeReadings(cb->ChargingCurrent.maximumChargeCurrent);
+        pClass->UpdateLEDStatus();
         break;
     case EVSECallbackType::EnergyMeterReadingRequested:
         ChipLogProgress(AppServer, "EVSE callback - EnergyMeterReadingRequested");
