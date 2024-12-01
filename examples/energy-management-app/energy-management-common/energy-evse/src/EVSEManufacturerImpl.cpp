@@ -35,6 +35,8 @@
 #include <app-common/zap-generated/attributes/Accessors.h>
 #include <protocols/interaction_model/StatusCode.h>
 
+#include <curl/curl.h>
+
 using namespace chip;
 using namespace chip::app;
 using namespace chip::app::DataModel;
@@ -602,6 +604,54 @@ enum class EvseLEDStateEnum : uint8_t
     kDischarging  = 0x06,
     kUnknownEnumValue = 7,
 };
+
+/* static */
+size_t EVSEManufacturer::WriteCallback(void * contents, size_t size, size_t nmemb, void * userp)
+{
+    ((std::string *) userp)->append((char *) contents, size * nmemb);
+    return size * nmemb;
+}
+
+void EVSEManufacturer::MakeRESTAPI_Call( char* led_state )
+{
+    CURL * pCurlHandle = curl_easy_init();
+    if (pCurlHandle == nullptr)
+    {
+        ChipLogError(AppServer, "MakeRESTAPI_Call failed to initialised CURL");
+    }
+
+    std::string url = sBaseUrl + led_state;
+    curl_easy_setopt(pCurlHandle, CURLOPT_URL, url.c_str());
+
+    curl_easy_setopt(pCurlHandle, CURLOPT_CONNECTTIMEOUT_MS, 300);  // 300ms should be enough
+
+    std::string getResponse;
+    curl_easy_setopt(pCurlHandle, CURLOPT_WRITEFUNCTION, EVSEManufacturer::WriteCallback);
+    curl_easy_setopt(pCurlHandle, CURLOPT_WRITEDATA, &getResponse);
+
+    // Set HTTP GET method
+    curl_easy_setopt(pCurlHandle, CURLOPT_HTTPGET, 1L);
+    
+    // Set headers
+    struct curl_slist * headers = NULL;
+    // No headers needed?
+    // headers                     = curl_slist_append(headers, "Content-Type: application/json");
+    curl_easy_setopt(pCurlHandle, CURLOPT_HTTPHEADER, headers);
+
+
+    // Perform the GET request
+    CURLcode res = curl_easy_perform(pCurlHandle);
+    // Check for errors
+    if (res != CURLE_OK)
+    {
+        ChipLogError(AppServer, "MakeRESTAPI_Call request failed to %s - %s", url.c_str(), curl_easy_strerror(res));
+    }
+
+    // Cleanup
+    curl_slist_free_all(headers);
+    curl_easy_cleanup(pCurlHandle);
+}
+
 void EVSEManufacturer::UpdateLEDStatus()
 {
     EvseLEDStateEnum led_state;
@@ -687,6 +737,13 @@ void EVSEManufacturer::UpdateLEDStatus()
             ChipLogError(AppServer, "FIFO queue full");
         }
         fsync(fifo_fd);
+    }
+
+    if (! sBaseUrl.empty())
+    {
+        // sBaseURL is valid so try to make a REST API call
+        sprintf(out, "%d", static_cast<uint8_t>(led_state));
+        MakeRESTAPI_Call(out);
     }
 
 }

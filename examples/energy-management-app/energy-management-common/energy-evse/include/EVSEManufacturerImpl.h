@@ -241,6 +241,13 @@ public:
      */
     void UpdateLEDStatus();
 
+    /* This function makes a GET REST API call to the baseURL with the LED state appended */
+    void MakeRESTAPI_Call(char* led_state);
+
+    /* Helper function for curl API */
+    static size_t WriteCallback(void*, size_t, size_t, void*);
+
+
 private:
     EnergyEvseManager * mEvseInstance;
     ElectricalPowerMeasurement::ElectricalPowerMeasurementInstance * mEPMInstance;
