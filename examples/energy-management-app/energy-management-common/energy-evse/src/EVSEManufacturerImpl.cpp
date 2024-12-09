@@ -675,7 +675,7 @@ void EVSEManufacturer::UpdateLEDStatus()
         case StateEnum::kPluggedInNoDemand:
             if( supplyState == SupplyStateEnum::kDisabled)
             {
-                led_state = EvseLEDStateEnum::kDisabled;    // Red solid
+                led_state = EvseLEDStateEnum::kOff;    // Off
             }
             else
             {
@@ -687,7 +687,7 @@ void EVSEManufacturer::UpdateLEDStatus()
         case StateEnum::kPluggedInCharging:
             if( supplyState == SupplyStateEnum::kDisabled)
             {
-                led_state = EvseLEDStateEnum::kDisabled;    // Red solid
+                led_state = EvseLEDStateEnum::kOff;    // Off 
             }
             else if ( maxChargeCurrent == 0)
             {
