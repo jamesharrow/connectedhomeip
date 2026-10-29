@@ -1,0 +1,81 @@
+#
+#    Copyright (c) 2026 Project CHIP Authors
+#    All rights reserved.
+#
+#    Licensed under the Apache License, Version 2.0 (the "License");
+#    you may not use this file except in compliance with the License.
+#    You may obtain a copy of the License at
+#
+#        http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS,
+#    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#    See the License for the specific language governing permissions and
+#    limitations under the License.
+#
+#    Description:
+#      Some useful defaults for optimizing binary size
+#
+
+CONFIG_COMPILER_OPTIMIZATION_SIZE=y
+CONFIG_COMPILER_OPTIMIZATION_ASSERTIONS_DISABLE=y
+
+CONFIG_BOOTLOADER_COMPILER_OPTIMIZATION_SIZE=y
+CONFIG_BOOTLOADER_LOG_LEVEL_NONE=y
+
+CONFIG_LOG_DEFAULT_LEVEL_NONE=y
+CONFIG_LOG_MAXIMUM_LEVEL_INFO=y
+
+CONFIG_PARTITION_TABLE_SINGLE_APP=y
+CONFIG_PARTITION_TABLE_SINGLE_APP_LARGE=y
+
+# Use this config option if binary size is more than 1.5MB
+# CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
+
+# lwip optimizations
+CONFIG_LWIP_MAX_SOCKETS=8
+CONFIG_LWIP_TCPIP_RECVMBOX_SIZE=16
+CONFIG_LWIP_TCP_RECVMBOX_SIZE=8
+CONFIG_LWIP_UDP_RECVMBOX_SIZE=8
+
+# mbedtls
+CONFIG_MBEDTLS_SSL_IN_CONTENT_LEN=4096
+CONFIG_MBEDTLS_SSL_OUT_CONTENT_LEN=4096
+
+# FreeRTOS
+CONFIG_FREERTOS_IDLE_TASK_STACKSIZE=1024
+
+# SPI RAM
+CONFIG_SPIRAM=n
+
+# Bluetooth
+CONFIG_BT_ENABLED=n
+CONFIG_BT_NIMBLE_MAX_CONNECTIONS=1
+
+# Wi-Fi
+CONFIG_ESP_WIFI_STATIC_RX_BUFFER_NUM=4
+CONFIG_ESP_WIFI_DYNAMIC_RX_BUFFER_NUM=8
+CONFIG_ESP_WIFI_DYNAMIC_TX_BUFFER_NUM=16
+CONFIG_ESP_WIFI_AMPDU_TX_ENABLED=n
+CONFIG_ESP_WIFI_AMPDU_RX_ENABLED=n
+CONFIG_ESP_WIFI_AMSDU_TX_ENABLED=n
+CONFIG_ESP_WIFI_NVS_ENABLED=n
+
+# TCP
+CONFIG_LWIP_MAX_ACTIVE_TCP=4
+CONFIG_LWIP_MAX_LISTENING_TCP=4
+
+# Ethernet
+CONFIG_ETH_ENABLED=n
+
+# ADC
+CONFIG_ADC_CAL_EFUSE_TP_ENABLE=n
+CONFIG_ADC_CAL_EFUSE_VREF_ENABLE=n
+CONFIG_ADC_CAL_LUT_ENABLE=n
+
+# Task WDT
+CONFIG_ESP_TASK_WDT=n
+
+# Debug
+CONFIG_OPTIMIZATION_ASSERTIONS_DISABLED=y
