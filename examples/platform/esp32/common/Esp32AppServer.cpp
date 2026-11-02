@@ -70,6 +70,12 @@
 #if CONFIG_CHIP_DEVICE_CONFIG_ENABLE_COMMODITY_TARIFF_TRIGGER
 #include <app/clusters/commodity-tariff-server/CommodityTariffTestEventTriggerHandler.h>
 #endif
+#if CONFIG_CHIP_DEVICE_CONFIG_ENABLE_ELECTRICAL_ALARM_TRIGGER
+#include <app/clusters/electrical-alarm-server/ElectricalAlarmTestEventTriggerHandler.h>
+#endif
+#if CONFIG_CHIP_DEVICE_CONFIG_ENABLE_ELECTRICAL_PROTECTION_ALARM_TRIGGER
+#include <app/clusters/electrical-protection-alarm-server/ElectricalProtectionAlarmTestEventTriggerHandler.h>
+#endif
 
 #ifdef CONFIG_ENABLE_CHIP_SHELL
 #include <lib/shell/commands/WiFi.h>
@@ -223,6 +229,14 @@ void Esp32AppServer::Init(AppDelegate * sAppDelegate)
 #if CONFIG_CHIP_DEVICE_CONFIG_ENABLE_COMMODITY_TARIFF_TRIGGER
     static CommodityTariffTestEventTriggerHandler sCommodityTariffTestEventTriggerHandler;
     RETURN_SAFELY_IGNORED sTestEventTriggerDelegate.AddHandler(&sCommodityTariffTestEventTriggerHandler);
+#endif
+#if CONFIG_CHIP_DEVICE_CONFIG_ENABLE_ELECTRICAL_ALARM_TRIGGER
+    static ElectricalAlarmTestEventTriggerHandler sElectricalAlarmTestEventTriggerHandler;
+    RETURN_SAFELY_IGNORED sTestEventTriggerDelegate.AddHandler(&sElectricalAlarmTestEventTriggerHandler);
+#endif
+#if CONFIG_CHIP_DEVICE_CONFIG_ENABLE_ELECTRICAL_PROTECTION_ALARM_TRIGGER
+    static ElectricalProtectionAlarmTestEventTriggerHandler sElectricalProtectionAlarmTestEventTriggerHandler;
+    RETURN_SAFELY_IGNORED sTestEventTriggerDelegate.AddHandler(&sElectricalProtectionAlarmTestEventTriggerHandler);
 #endif
 
 #if CONFIG_ENABLE_OTA_REQUESTOR

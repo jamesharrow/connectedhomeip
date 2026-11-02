@@ -60,3 +60,9 @@ CONFIG_LWIP_IPV6_NUM_ADDRESSES=6
 
 # Enable sntp time sync
 CONFIG_ENABLE_SNTP_TIME_SYNC=y
+
+# Enable test triggers used by the ElectricalAlarm tests
+CONFIG_CHIP_DEVICE_CONFIG_ENABLE_ELECTRICAL_ALARM_TRIGGER=y
+
+# Enable test triggers used by the ElectricalProtectionAlarm tests
+CONFIG_CHIP_DEVICE_CONFIG_ENABLE_ELECTRICAL_PROTECTION_ALARM_TRIGGER=y

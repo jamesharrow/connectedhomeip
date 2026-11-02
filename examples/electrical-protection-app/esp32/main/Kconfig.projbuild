@@ -101,3 +101,19 @@ menu "Demo"
        default 8 if RENDEZVOUS_MODE_ETHERNET
 
 endmenu
+
+menu "Electrical Protection Example App Configuration"
+
+    config CHIP_DEVICE_CONFIG_ENABLE_ELECTRICAL_ALARM_TRIGGER
+        bool "Enable ESALM (Electrical Alarm) triggers"
+        default "n"
+        help
+            Enable test triggers used by the Electrical Alarm tests
+
+    config CHIP_DEVICE_CONFIG_ENABLE_ELECTRICAL_PROTECTION_ALARM_TRIGGER
+        bool "Enable EPALM (Electrical Protection Alarm) triggers"
+        default "n"
+        help
+            Enable test triggers used by the Electrical Protection Alarm tests
+
+endmenu

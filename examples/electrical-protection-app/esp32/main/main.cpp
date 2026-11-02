@@ -25,20 +25,15 @@
 #endif
 
 #include "esp_err.h"
-#include "esp_heap_caps_init.h"
 #include "esp_log.h"
-#include "esp_netif.h"
 #include "esp_system.h"
-#include "esp_wifi.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "nvs_flash.h"
 #include "shell_extension/launch.h"
 #include "shell_extension/openthread_cli_register.h"
-#include <app/clusters/network-commissioning/network-commissioning.h>
 #include <app/server/Dnssd.h>
 #include <setup_payload/OnboardingCodesUtil.h>
-#include <app/server/Server.h>
 #include <app/util/attribute-storage.h>
 #include <lib/support/CodeUtils.h>
 #include <credentials/DeviceAttestationCredsProvider.h>
@@ -49,11 +44,19 @@
 #include <platform/ESP32/ESP32FactoryDataProvider.h>
 #endif // CONFIG_ENABLE_ESP32_FACTORY_DATA_PROVIDER
 
+#if CONFIG_ENABLE_PW_RPC
+#include "Rpc.h"
+#endif
+
 #if CONFIG_ENABLE_ESP32_DEVICE_INFO_PROVIDER
 #include <platform/ESP32/ESP32DeviceInfoProvider.h>
 #else
 #include <DeviceInfoProviderImpl.h>
 #endif // CONFIG_ENABLE_ESP32_DEVICE_INFO_PROVIDER
+
+#if CONFIG_SEC_CERT_DAC_PROVIDER
+#include <platform/ESP32/ESP32SecureCertDACProvider.h>
+#endif
 
 #include <electrical-alarm-stub.h>
 #include <electrical-distribution-stub.h>
@@ -90,13 +93,26 @@ DeviceLayer::ESP32DeviceInfoProvider gExampleDeviceInfoProvider;
 #else
 DeviceLayer::DeviceInfoProviderImpl gExampleDeviceInfoProvider;
 #endif // CONFIG_ENABLE_ESP32_DEVICE_INFO_PROVIDER
+
+#if CONFIG_SEC_CERT_DAC_PROVIDER
+DeviceLayer::ESP32SecureCertDACProvider gSecureCertDACProvider;
+#endif // CONFIG_SEC_CERT_DAC_PROVIDER
+
+chip::Credentials::DeviceAttestationCredentialsProvider * get_dac_provider(void)
+{
+#if CONFIG_SEC_CERT_DAC_PROVIDER
+    return &gSecureCertDACProvider;
+#elif CONFIG_ENABLE_ESP32_FACTORY_DATA_PROVIDER
+    return &sFactoryDataProvider;
+#else // EXAMPLE_DAC_PROVIDER
+    return chip::Credentials::Examples::GetExampleDACProvider();
+#endif
+}
 } // namespace
 
-static void InitServer(intptr_t context)
+void ApplicationInit()
 {
-    PrintOnboardingCodes(chip::RendezvousInformationFlags(CONFIG_RENDEZVOUS_MODE));
-
-    Esp32AppServer::Init(); // Init ZCL Data Model and CHIP App Server AND Initialize device attestation config
+    ESP_LOGD(TAG, "Electrical Protection App: ApplicationInit()");
 
     using namespace chip::app::Clusters;
 
@@ -116,6 +132,30 @@ static void InitServer(intptr_t context)
                 CHIP_NO_ERROR);
 
     VerifyOrDie(ElectricalAlarm::ElectricalAlarmInit(kBreakerEndpointId, ElectricalAlarm::kAllFeatures) == CHIP_NO_ERROR);
+}
+
+void ApplicationShutdown()
+{
+    ESP_LOGD(TAG, "Electrical Protection App: ApplicationShutdown()");
+
+    using namespace chip::app::Clusters;
+
+    ElectricalAlarm::ElectricalAlarmShutdown();
+    ElectricalProtectionAlarm::ElectricalProtectionAlarmShutdown();
+    PowerTopology::PowerTopologyShutdown();
+    ElectricalDistribution::ElectricalDistributionShutdown();
+}
+
+static void InitServer(intptr_t context)
+{
+    // Print QR Code URL
+    PrintOnboardingCodes(chip::RendezvousInformationFlags(CONFIG_RENDEZVOUS_MODE));
+
+    Esp32AppServer::Init(); // Init ZCL Data Model and CHIP App Server AND
+                            // Initialize device attestation config
+    // Application code should always be initialised after the initialisation of
+    // server.
+    ApplicationInit();
 
 #if CONFIG_ENABLE_SNTP_TIME_SYNC
     const char kNtpServerUrl[]             = "pool.ntp.org";
@@ -126,8 +166,6 @@ static void InitServer(intptr_t context)
 
 extern "C" void app_main()
 {
-    ESP_LOGI(TAG, "Electrical Protection App");
-
     // Initialize the ESP NVS layer.
     esp_err_t err = nvs_flash_init();
     if (err != ESP_OK)
@@ -165,6 +203,8 @@ extern "C" void app_main()
     }
 #endif // CHIP_DEVICE_CONFIG_ENABLE_WIFI
 
+    DeviceLayer::SetDeviceInfoProvider(&gExampleDeviceInfoProvider);
+
     CHIPDeviceManager & deviceMgr = CHIPDeviceManager::GetInstance();
 
     CHIP_ERROR error = deviceMgr.Init(&EchoCallbacks);
@@ -176,13 +216,12 @@ extern "C" void app_main()
 
 #if CONFIG_ENABLE_ESP32_FACTORY_DATA_PROVIDER
     SetCommissionableDataProvider(&sFactoryDataProvider);
-    SetDeviceAttestationCredentialsProvider(&sFactoryDataProvider);
 #if CONFIG_ENABLE_ESP32_DEVICE_INSTANCE_INFO_PROVIDER
     SetDeviceInstanceInfoProvider(&sFactoryDataProvider);
 #endif
 #endif
 
-    SetDeviceInfoProvider(&gExampleDeviceInfoProvider);
+    SetDeviceAttestationCredentialsProvider(get_dac_provider());
 
     RETURN_SAFELY_IGNORED chip::DeviceLayer::PlatformMgr().ScheduleWork(InitServer, reinterpret_cast<intptr_t>(nullptr));
 }
