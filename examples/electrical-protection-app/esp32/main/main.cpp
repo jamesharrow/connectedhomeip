@@ -20,6 +20,9 @@
 #include <common/CHIPDeviceManager.h>
 #include <common/Esp32AppServer.h>
 #include <common/Esp32ThreadInit.h>
+#if CONFIG_ENABLE_SNTP_TIME_SYNC
+#include <time/TimeSync.h>
+#endif
 
 #include "esp_err.h"
 #include "esp_heap_caps_init.h"
@@ -31,6 +34,7 @@
 #include "freertos/task.h"
 #include "nvs_flash.h"
 #include "shell_extension/launch.h"
+#include "shell_extension/openthread_cli_register.h"
 #include <app/clusters/network-commissioning/network-commissioning.h>
 #include <app/server/Dnssd.h>
 #include <setup_payload/OnboardingCodesUtil.h>
@@ -90,6 +94,8 @@ DeviceLayer::DeviceInfoProviderImpl gExampleDeviceInfoProvider;
 
 static void InitServer(intptr_t context)
 {
+    PrintOnboardingCodes(chip::RendezvousInformationFlags(CONFIG_RENDEZVOUS_MODE));
+
     Esp32AppServer::Init(); // Init ZCL Data Model and CHIP App Server AND Initialize device attestation config
 
     using namespace chip::app::Clusters;
@@ -110,6 +116,12 @@ static void InitServer(intptr_t context)
                 CHIP_NO_ERROR);
 
     VerifyOrDie(ElectricalAlarm::ElectricalAlarmInit(kBreakerEndpointId, ElectricalAlarm::kAllFeatures) == CHIP_NO_ERROR);
+
+#if CONFIG_ENABLE_SNTP_TIME_SYNC
+    const char kNtpServerUrl[]             = "pool.ntp.org";
+    const uint16_t kSyncNtpTimeIntervalDay = 1;
+    chip::Esp32TimeSync::Init(kNtpServerUrl, kSyncNtpTimeIntervalDay);
+#endif
 }
 
 extern "C" void app_main()
@@ -137,6 +149,21 @@ extern "C" void app_main()
 #if CONFIG_ENABLE_PW_RPC
     chip::rpc::Init();
 #endif
+
+#if CONFIG_ENABLE_CHIP_SHELL
+#if CONFIG_OPENTHREAD_CLI
+    chip::RegisterOpenThreadCliCommands();
+#endif
+    chip::LaunchShell();
+#endif
+
+#if CHIP_DEVICE_CONFIG_ENABLE_WIFI
+    if (DeviceLayer::Internal::ESP32Utils::InitWiFiStack() != CHIP_NO_ERROR)
+    {
+        ESP_LOGE(TAG, "Failed to initialize WiFi stack");
+        return;
+    }
+#endif // CHIP_DEVICE_CONFIG_ENABLE_WIFI
 
     CHIPDeviceManager & deviceMgr = CHIPDeviceManager::GetInstance();
 
