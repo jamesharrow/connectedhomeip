@@ -32,7 +32,6 @@ set(SRC_DIRS_LIST
   "${APP_COMMON_GEN_DIR}"
   "${CHIP_ROOT}/examples/providers"
   "${ELEC_PROT_COMMON_DIR}/src"
-  "${CHIP_ROOT}/examples/platform/esp32/ota"
   "${CHIP_ROOT}/examples/platform/esp32/common"
   "${CHIP_ROOT}/examples/platform/esp32/time"
   "${CHIP_ROOT}/examples/platform/esp32/shell_extension"

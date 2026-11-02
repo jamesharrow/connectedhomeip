@@ -33,8 +33,10 @@
 #include "shell_extension/launch.h"
 #include <app/clusters/network-commissioning/network-commissioning.h>
 #include <app/server/Dnssd.h>
-#include <app/server/OnboardingCodesUtil.h>
+#include <setup_payload/OnboardingCodesUtil.h>
 #include <app/server/Server.h>
+#include <app/util/attribute-storage.h>
+#include <lib/support/CodeUtils.h>
 #include <credentials/DeviceAttestationCredsProvider.h>
 #include <credentials/examples/DeviceAttestationCredsExample.h>
 #include <platform/ESP32/ESP32Utils.h>
@@ -49,7 +51,6 @@
 #include <DeviceInfoProviderImpl.h>
 #endif // CONFIG_ENABLE_ESP32_DEVICE_INFO_PROVIDER
 
-#include <DeviceInfoProviderImpl.h>
 #include <electrical-alarm-stub.h>
 #include <electrical-distribution-stub.h>
 #include <electrical-protection-alarm-stub.h>
@@ -64,6 +65,18 @@ static const char * TAG = "electrical-protection-app";
 static AppDeviceCallbacks EchoCallbacks;
 
 namespace {
+constexpr EndpointId kEnclosureEndpointId = 1; // Electrical Distribution Enclosure (0x0517)
+constexpr EndpointId kBreakerEndpointId   = 2; // Electrical Circuit Breaker (0x0516)
+
+// The enclosure device type requires each breaker child endpoint to carry a semantic tag from the
+// Common Number namespace, so this one is breaker number one.
+constexpr uint8_t kCommonNumberNamespaceId = 0x07;
+constexpr uint8_t kNumberOneTag            = 0x01;
+
+const app::Clusters::Descriptor::Structs::SemanticTagStruct::Type kBreakerTagList[] = {
+    { .namespaceID = kCommonNumberNamespaceId, .tag = kNumberOneTag },
+};
+
 #if CONFIG_ENABLE_ESP32_FACTORY_DATA_PROVIDER
 DeviceLayer::ESP32FactoryDataProvider sFactoryDataProvider;
 #endif // CONFIG_ENABLE_ESP32_FACTORY_DATA_PROVIDER
@@ -79,11 +92,24 @@ static void InitServer(intptr_t context)
 {
     Esp32AppServer::Init(); // Init ZCL Data Model and CHIP App Server AND Initialize device attestation config
 
-    // Initialize electrical protection cluster stubs
-    chip::app::Clusters::ElectricalProtectionAlarm::Init();
-    chip::app::Clusters::ElectricalEnergyMeasurement::Init();
-    chip::app::Clusters::ElectricalPowerMeasurement::Init();
-    chip::app::Clusters::PowerTopology::Init();
+    using namespace chip::app::Clusters;
+
+    // The generated Init callbacks of these clusters are no-ops, so the app owns the instances and
+    // registers them imperatively. Endpoint layout and features match the Linux app.
+    VerifyOrDie(ElectricalDistribution::ElectricalDistributionInit(kEnclosureEndpointId) == CHIP_NO_ERROR);
+    VerifyOrDie(ElectricalProtectionAlarm::ElectricalProtectionAlarmInit(kEnclosureEndpointId) == CHIP_NO_ERROR);
+
+    VerifyOrDie(PowerTopology::PowerTopologyInit(
+                    kEnclosureEndpointId, BitMask<PowerTopology::Feature>(PowerTopology::Feature::kTreeTopology)) == CHIP_NO_ERROR);
+    VerifyOrDie(PowerTopology::PowerTopologyInit(kBreakerEndpointId,
+                                                 BitMask<PowerTopology::Feature>(PowerTopology::Feature::kTreeTopology,
+                                                                                 PowerTopology::Feature::kElectricalCircuit)) ==
+                CHIP_NO_ERROR);
+
+    VerifyOrDie(SetTagList(kBreakerEndpointId, Span<const Descriptor::Structs::SemanticTagStruct::Type>(kBreakerTagList)) ==
+                CHIP_NO_ERROR);
+
+    VerifyOrDie(ElectricalAlarm::ElectricalAlarmInit(kBreakerEndpointId, ElectricalAlarm::kAllFeatures) == CHIP_NO_ERROR);
 }
 
 extern "C" void app_main()
@@ -131,5 +157,5 @@ extern "C" void app_main()
 
     SetDeviceInfoProvider(&gExampleDeviceInfoProvider);
 
-    chip::DeviceLayer::PlatformMgr().ScheduleWork(InitServer, reinterpret_cast<intptr_t>(nullptr));
+    RETURN_SAFELY_IGNORED chip::DeviceLayer::PlatformMgr().ScheduleWork(InitServer, reinterpret_cast<intptr_t>(nullptr));
 }
